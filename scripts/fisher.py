@@ -194,7 +194,7 @@ def makedirs():
             os.makedirs(directory)
 
 
-def msphylo(threads, max_hits, spec_queries=None):
+def phylofisher(threads, max_hits, spec_queries=None):
     infile_proteins = get_infile_proteins()
     if spec_queries:
         makeblastdb()
@@ -203,6 +203,7 @@ def msphylo(threads, max_hits, spec_queries=None):
         gene_dict = get_gene_dict(threads, infile_proteins)
 
     candidates = get_candidates(threads, max_hits, gene_dict.values())
+
     with open('tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
             if candi_list:
@@ -331,6 +332,7 @@ def parse_diamond_output():
             proccesed.add(full_name)
             org = sline[1].split('|')[0]
             og = sline[1].split('|')[2].strip()
+            #TODO are we sure that we want to control only best hit?
             if org not in bacterial and og in gene_og[gene]:
                 correct_hits.add(full_name)
     return correct_hits
@@ -372,12 +374,11 @@ def prepare_good_hits():
     main_func(list(gene_hits.values()))
 
 
-input_taxonomy = {}
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
-    parser = argparse.ArgumentParser(description='some description', usage="blabla")
+    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher [OPTIONS]")
     parser.add_argument('--add', action='store_true')
     parser.add_argument('-t', '--threads', type=int,
                         help='Number of threads, default:1', default=1)
@@ -396,6 +397,8 @@ if __name__ == '__main__':
     bacterial, gene_og = bac_gog_db()
     profiles = get_hmm_profiles()
 
+    input_taxonomy = {}
+
     if args.add is not True:
         makedirs()
     for line in open(multi_input):
@@ -413,8 +416,8 @@ if __name__ == '__main__':
             specific_queries = specific_queries.strip()
             if specific_queries.lower() == 'none':
                 specific_queries = None
-            msphylo(args.threads,
-                    args.max_hits, specific_queries)
+            phylofisher(args.threads,
+                        args.max_hits, specific_queries)
     diamond()
     correct_hits = parse_diamond_output()
     prepare_good_hits()
