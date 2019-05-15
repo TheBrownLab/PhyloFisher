@@ -99,19 +99,6 @@ class SpecQuery:
                 yield hit
 
 
-class Counter:
-    def __init__(self):
-        self.val = Value('i', 0)
-
-    def increment(self, n=1):
-        with self.val.get_lock():
-            self.val.value += n
-
-    @property
-    def value(self):
-        return self.val.value
-
-
 def length_check(trimmed_aln):
     correct_length = {}
     for record in SeqIO.parse(trimmed_aln, 'fasta'):
@@ -154,8 +141,7 @@ def get_gene_dict(threads, infile_proteins, spec_queries=None):
     return gene_dict
 
 
-def best_hits(max_hits, n_profiles, gene):
-    global progress
+def best_hits(max_hits, gene):
     candidates = []
     hits = gene.hits()
     counter = 0
@@ -187,9 +173,9 @@ def get_infile_proteins():
     return infile_proteins
 
 
-def get_candidates(threads, max_hits, queries, n_profiles):
+def get_candidates(threads, max_hits, queries):
     with Pool(processes=threads) as pool:
-        func = partial(best_hits, max_hits, n_profiles)
+        func = partial(best_hits, max_hits)
         candidates = list(pool.map(func, queries))
         return candidates
 
@@ -216,8 +202,7 @@ def msphylo(threads, max_hits, spec_queries=None):
     else:
         gene_dict = get_gene_dict(threads, infile_proteins)
 
-    n_profiles = len(gene_dict)
-    candidates = get_candidates(threads, max_hits, gene_dict.values(), n_profiles)
+    candidates = get_candidates(threads, max_hits, gene_dict.values())
     with open('tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
             if candi_list:
@@ -393,7 +378,6 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     parser = argparse.ArgumentParser(description='some description', usage="blabla")
-    parser.add_argument('-o', '--output')
     parser.add_argument('--add', action='store_true')
     parser.add_argument('-t', '--threads', type=int,
                         help='Number of threads, default:1', default=1)
@@ -411,13 +395,10 @@ if __name__ == '__main__':
 
     bacterial, gene_og = bac_gog_db()
     profiles = get_hmm_profiles()
-    if args.add is not True:
-        os.mkdir(args.output)
 
     if args.add is not True:
         makedirs()
     for line in open(multi_input):
-        progress = Counter()
         total_profiles = len(profiles)
         if "FILE_NAME" not in line:
             metadata_input = line.split('\t')
