@@ -6,10 +6,11 @@ import argparse
 from multiprocessing import Pool, Value
 from functools import partial
 from pathlib import Path
+import configparser
+import warnings
+from shutil import copyfile
 from Bio import SeqIO
 from ete3 import Tree
-from shutil import copyfile
-import warnings
 from Bio import BiopythonExperimentalWarning
 
 with warnings.catch_warnings():
@@ -217,7 +218,7 @@ def msphylo(threads, max_hits, spec_queries=None):
 
     n_profiles = len(gene_dict)
     candidates = get_candidates(threads, max_hits, gene_dict.values(), n_profiles)
-    with open(Path(output_dir, 'tmp/for_diamond.fasta'), 'a') as f:
+    with open('tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
             if candi_list:
                 for hit in candi_list:
@@ -273,9 +274,9 @@ def check_input():
 
 
 def diamond():
-    for_blast = str(Path(output_dir, 'tmp/for_diamond.fasta'))
+    for_blast = 'tmp/for_diamond.fasta'
     db = str(Path(dfo, 'orthomcl/orthomcl.diamonddb'))
-    out = str(Path(output_dir, 'tmp/diamond.res'))
+    out = 'tmp/diamond.res'
     cmd = (
         f'diamond blastp -e 1e-10 -q {for_blast} --more-sensitive '
         f'--db {db} -o {out} -p {args.threads} --outfmt 6 qseqid stitle evalue')
@@ -337,7 +338,7 @@ def fasttree(checked_hits):
 def parse_diamond_output():
     correct_hits = set()
     proccesed = set()
-    for line in open(str(Path(output_dir, 'tmp/diamond.res'))):
+    for line in open('tmp/diamond.res'):
         sline = line.split("\t")
         full_name = sline[0]
         hit, gene = full_name.split('@')
@@ -360,7 +361,7 @@ def new_best_hits(candidate_hits):
 
     if top_candidates:
         gene = top_candidates[0].name.split('@')[1]
-        dataset = str(Path(output_dir, f'fasta/{gene}.fas'))
+        dataset = f'fasta/{gene}.fas'
         if not os.path.isfile(dataset):
             copyfile(str(Path(dfo, f'genes/{gene}.fas')), dataset)
         n = 0
@@ -377,7 +378,7 @@ def main_func(gene_hits):
 
 def prepare_good_hits():
     gene_hits = defaultdict(list)
-    for record in SeqIO.parse(str(Path(output_dir, 'tmp/for_diamond.fasta')), 'fasta'):
+    for record in SeqIO.parse('tmp/for_diamond.fasta', 'fasta'):
         if record.name in correct_hits:
             gene = record.name.split('@')[1]
             org = record.name.split('_')[0]
@@ -389,9 +390,9 @@ def prepare_good_hits():
 input_taxonomy = {}
 
 if __name__ == '__main__':
+    config = configparser.ConfigParser()
+    config.read('config.ini')
     parser = argparse.ArgumentParser(description='some description', usage="blabla")
-    parser.add_argument('-df', '--dataset_folder')
-    parser.add_argument('-i', '--infile')
     parser.add_argument('-o', '--output')
     parser.add_argument('--add', action='store_true')
     parser.add_argument('-t', '--threads', type=int,
@@ -402,11 +403,10 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--prequal', action='store_true')
     args = parser.parse_args()
 
-    dfo = str(Path(args.dataset_folder).resolve())
-    output_dir = str(Path(args.output).resolve())
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
     tax_group = taxonomy_dict()
-    multi_input = os.path.abspath(args.infile)
+    multi_input = os.path.abspath(config['PATHS']['input_file'])
     check_input()
 
     bacterial, gene_og = bac_gog_db()
@@ -414,7 +414,6 @@ if __name__ == '__main__':
     if args.add is not True:
         os.mkdir(args.output)
 
-    os.chdir(output_dir)
     if args.add is not True:
         makedirs()
     for line in open(multi_input):
@@ -438,4 +437,4 @@ if __name__ == '__main__':
     diamond()
     correct_hits = parse_diamond_output()
     prepare_good_hits()
-    os.remove(str(Path(output_dir, "tmp/for_diamond.fasta")))
+    os.remove("tmp/for_diamond.fasta")
