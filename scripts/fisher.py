@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 import subprocess
 import argparse
-from multiprocessing import Pool, Value
+from multiprocessing import Pool
 from functools import partial
 from pathlib import Path
 import configparser
@@ -241,7 +241,7 @@ def cluster_rename_sequences():
 
 
 def check_input():
-    taxonimic_groups = tax_group.values()
+    taxonomic_groups = tax_group.values()
     for line in open(multi_input):
         if "FILE_NAME" not in line:
             metadata_input = line.split('\t')
@@ -255,7 +255,7 @@ def check_input():
                     assert q.strip() in tax_group, f'{q} not in metadata'
                 tax = metadata_input[3].strip()
                 if '*' not in tax:
-                    assert tax in taxonimic_groups, f'{tax} not in metadata'
+                    assert tax in taxonomic_groups, f'{tax} not in metadata'
 
 
 def diamond():
