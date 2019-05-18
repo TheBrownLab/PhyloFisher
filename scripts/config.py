@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import os
 import configparser
 import argparse
 from pathlib import Path
@@ -10,7 +9,6 @@ parser = argparse.ArgumentParser(description='Script for parsing fun.',
 parser.add_argument('-d', '--dataset_folder', required=True)
 parser.add_argument('-i', '--input_file', required=True)
 parser.add_argument('-o', '--orthomcl', help='path to orthomcl if not in dataset_folder')
-# parser.add_argument('-s', '--stable_dataset', help='Dataset for long-term usage.')
 args = parser.parse_args()
 
 if not args.orthomcl:
