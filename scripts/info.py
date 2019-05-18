@@ -1,9 +1,13 @@
+#!/usr/bin/env python
 import glob
 from collections import defaultdict
 import pandas as pd
 from Bio import SeqIO
 import numpy as np
 import argparse
+from pathlib import Path
+import configparser
+import os
 
 
 def taxonomy_dict(metadata, multi_input):
@@ -68,6 +72,7 @@ def make_table(folder):
 
 
 def table_with_paths(df, paths):
+    full_names = []
     tax_list = []
     for org in df.index:
         try:
@@ -75,22 +80,26 @@ def table_with_paths(df, paths):
         except KeyError:
             org_tax = "Unknown"
         tax_list.append(org_tax)
+        full_names.append(fnames[org])
+
     tax_col = pd.Series(tax_list, df.index)
     df.insert(loc=0, column='Taxonomy', value=tax_col)
+
+    fname_col = pd.Series(full_names, df.index)
+    df.insert(loc=0, column='full_name', value=fname_col)
+
     for gene in df.columns:
         df[gene] = df[gene].apply(str)
         for org in df[gene].index:
             if org in paths[gene]:
                 df.at[org, gene] = f'{df[gene][org]}_{paths[gene][org]}'
-    print(df)
     return df
 
 
-# TODO org taxonomy genes genes_missing genes_with_SBH genes_with_BBH gene_with_hmm
 def stats_orgs(table):
     rows = []
     for org in table.index:
-        genes_tot = len(table.columns) - 1
+        genes_tot = len(table.columns) - 2
         try:
             genes = genes_tot - table.loc[org].value_counts()['0']
         except KeyError:
@@ -101,7 +110,7 @@ def stats_orgs(table):
         sbh['SBH'] = 0
         sbh['BBH'] = 0
         sbh['HMM'] = 0
-        for val in res.loc[org].values[1:]:
+        for val in res.loc[org].values[2:]:
             if '_' in val:
                 path = val.split('_')[1]
                 sbh[path] += 1
@@ -122,7 +131,7 @@ def stats_orgs(table):
 
 
 def stats_gene(table):
-    columns = table.iloc[:, 1:]
+    columns = table.iloc[:, 2:]
     tab_len = len(table)
     with open("gene_stats", 'w') as res:
         for i in columns:
@@ -131,10 +140,19 @@ def stats_gene(table):
             res.write(f"{i},{orgs},{orgs_perc}\n")
 
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher [OPTIONS]")
+    parser.add_argument('-i', '--input_folder')
+    args = parser.parse_args()
 
-t_dict, fnames = taxonomy_dict('/home/david/MsPhylo/data/metadata.tsv', '/home/david/MsPhylo/test/test_input2')
-tab, paths = make_table("/home/david/MsPhylo/test/Apr28/fasta")
-res = table_with_paths(tab, paths)
-res.to_csv('presence_path.csv')
-stats_orgs(res)
-stats_gene(res)
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    multi_input = os.path.abspath(config['PATHS']['input_file'])
+
+    t_dict, fnames = taxonomy_dict(str(Path(dfo, 'metadata.tsv')), multi_input)
+    tab, paths = make_table(args.input_folder)
+    res = table_with_paths(tab, paths)
+    res.to_csv('presence_path.csv')
+    stats_orgs(res)
+    stats_gene(res)
