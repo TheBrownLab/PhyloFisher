@@ -260,13 +260,21 @@ def check_input():
 
 
 def diamond():
-    for_blast = 'tmp/for_diamond.fasta'
+    for_diamond = 'tmp/for_diamond.fasta'
+
     db = str(Path(dfo, 'orthomcl/orthomcl.diamonddb'))
     out = 'tmp/diamond.res'
     cmd = (
-        f'diamond blastp -e 1e-10 -q {for_blast} --more-sensitive '
+        f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
         f'--db {db} -o {out} -p {args.threads} --outfmt 6 qseqid stitle evalue')
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    datasetdb = str(Path(dfo, 'datasetdb/datasetdb.dmnd'))
+    out2 = 'tmp/dataset_diamond.res'
+    cmd2 = (
+        f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
+        f'--db {datasetdb} -o {out2} -p {args.threads} --outfmt 6 qseqid stitle evalue')
+    subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def correct_phylo_group(parent, sample_taxomomy):
@@ -355,7 +363,13 @@ def new_best_hits(candidate_hits):
         for cand in top_candidates:
             n += 1
             with open(dataset, 'a') as d:
-                d.write(f'>{cand.name.split("@")[0]}_q{n}\n{cand.seq}\n')
+                seq_name = cand.name.split("@")[0]
+                gene = cand.name.split("@")[1]
+                if gene == reciprocal_hits[seq_name[:-4]]:
+                    d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
+                else:
+                    d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
+                    print(f'Nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
 
 
 def main_func(gene_hits):
@@ -372,6 +386,22 @@ def prepare_good_hits():
             org_gene = f'{org}_{gene}'
             gene_hits[org_gene].append(record)
     main_func(list(gene_hits.values()))
+
+
+def get_reciprocal_hits():
+    reciprocal = {}
+    proccesed = set()
+    for line in open('tmp/dataset_diamond.res'):
+        sline = line.split("\t")
+        full_name = sline[0]
+        sequence, gene = full_name.split('@')
+        sequence = sequence[:-4]
+        if sequence not in proccesed:
+            proccesed.add(sequence)
+            hit_gene = sline[1].split('@')[0]
+            reciprocal[sequence] = hit_gene
+    return reciprocal
+
 
 
 
@@ -420,5 +450,6 @@ if __name__ == '__main__':
                         args.max_hits, specific_queries)
     diamond()
     correct_hits = parse_diamond_output()
+    reciprocal_hits = get_reciprocal_hits()
     prepare_good_hits()
     os.remove("tmp/for_diamond.fasta")
