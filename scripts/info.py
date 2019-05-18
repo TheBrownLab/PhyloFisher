@@ -67,7 +67,6 @@ def make_table(folder):
     df = pd.DataFrame(columns)
     df = df.transpose()
     df = df.reindex(sorted(df.columns), axis=1)
-    df.to_csv("alvert_test.csv")
     return df, paths
 
 
@@ -87,6 +86,8 @@ def table_with_paths(df, paths):
 
     fname_col = pd.Series(full_names, df.index)
     df.insert(loc=0, column='full_name', value=fname_col)
+
+    df.to_csv("alvert_test.csv")
 
     for gene in df.columns:
         df[gene] = df[gene].apply(str)
