@@ -8,6 +8,7 @@ import argparse
 from pathlib import Path
 import configparser
 import os
+import sys
 
 
 def taxonomy_dict(metadata, multi_input):
@@ -37,9 +38,12 @@ def collect_names(files):
     for file in files:
         gene_name = file.split('/')[-1].split('.')[0]
         for record in SeqIO.parse(file, 'fasta'):
-            if record.name.count('_') == 3:
-                name, _, path, _ = record.name.split('_')
+            if record.name.count('_') >= 3:
+                name = record.name.split('_')[0]
+                path = record.name.split('_')[2]
                 paths[gene_name][name] = path
+            elif '_' in record.name:
+                name = record.name.split('_')[0]
             else:
                 name = record.name
             names.add(name)
@@ -50,16 +54,15 @@ def get_gene_column(gene, names):
     gene_name = gene.split('/')[-1].split('.')[0]
     column = pd.Series(np.zeros(len(names)), index=names, name=gene_name)
     for record in SeqIO.parse(gene, "fasta"):
-        if record.name.count('_') == 3:
+        if "_" in record.name:
             org = record.name.split('_')[0]
         else:
             org = record.name
         column[org] += 1
     return column.astype(int)
 
-
 def make_table(folder):
-    genes = glob.glob(f'{folder}/*.fas')
+    genes = glob.glob(f'{folder}/*')
     names, paths = collect_names(genes)
     columns = []
     for gene in genes:
@@ -87,7 +90,7 @@ def table_with_paths(df, paths):
     fname_col = pd.Series(full_names, df.index)
     df.insert(loc=0, column='full_name', value=fname_col)
 
-    df.to_csv("alvert_test.csv")
+    df.to_csv(f'{output_fold}/occupancy.csv')
 
     for gene in df.columns:
         df[gene] = df[gene].apply(str)
@@ -97,7 +100,7 @@ def table_with_paths(df, paths):
     return df
 
 
-def stats_orgs(table):
+def stats_orgs_path(table):
     rows = []
     for org in table.index:
         genes_tot = len(table.columns) - 2
@@ -127,33 +130,67 @@ def stats_orgs(table):
     df["#SBH"] = df["#SBH"].astype(int)
     df["#BBH"] = df["#BBH"].astype(int)
     df["#HMM"] = df["#HMM"].astype(int)
-    df.to_csv("alvert2_test.csv")
+    df.to_csv(f'{output_fold}/orgs_stats.csv')
     return df
 
+
+def stats_orgs(table):
+    rows = []
+    for org in table.index:
+        genes_tot = len(table.columns) - 2
+        try:
+            genes = genes_tot - table.loc[org].value_counts()['0']
+        except KeyError:
+            genes = genes_tot
+        missing = genes_tot - genes
+        missing_perc = (missing / genes_tot) * 100
+        rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc],
+                              index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing'],
+                              name=org))
+    df = pd.DataFrame(rows)
+    df["#Genes"] = df['#Genes'].astype(int)
+    df["#Missing"] = df['#Missing'].astype(int)
+    df["%Missing"] = df['%Missing'].round(2)
+    df.to_csv(f'{output_fold}/orgs_stats.csv')
+    return df
 
 def stats_gene(table):
     columns = table.iloc[:, 2:]
     tab_len = len(table)
-    with open("gene_stats", 'w') as res:
+    with open(f'{output_fold}/gene_stats.csv', 'w') as res:
+        res.write(f'gene,total,total[%]\n')
         for i in columns:
             orgs = tab_len - table[i].value_counts()['0']
             orgs_perc = (orgs/tab_len) * 100
-            res.write(f"{i},{orgs},{orgs_perc}\n")
+            res.write(f"{i},{orgs},{orgs_perc.round(2)}\n")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher [OPTIONS]")
-    parser.add_argument('-i', '--input_folder')
+    parser.add_argument('-i', '--input_folder', required=True)
+    parser.add_argument('--paralog_selection', action='store_true')
+    parser.add_argument('--occupancy_with_paths', action='store_true')
     args = parser.parse_args()
 
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     multi_input = os.path.abspath(config['PATHS']['input_file'])
+    output_fold =str(Path(args.input_folder)) + '_stats'
+
+    if os.path.isdir(output_fold):
+        sys.exit(f'Error: {output_fold} folder already exists.')
+    else:
+        os.mkdir(output_fold)
 
     t_dict, fnames = taxonomy_dict(str(Path(dfo, 'metadata.tsv')), multi_input)
     tab, paths = make_table(args.input_folder)
     res = table_with_paths(tab, paths)
-    res.to_csv('presence_path.csv')
-    stats_orgs(res)
+
+    if args.occupancy_with_paths:
+        res.to_csv(f'{output_fold}/occupancy_with_paths.csv')
+    if args.paralog_selection:
+        stats_orgs_path(res)
+    else:
+        stats_orgs(res)
     stats_gene(res)
