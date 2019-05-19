@@ -8,7 +8,7 @@ from functools import partial
 from pathlib import Path
 import configparser
 import warnings
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from Bio import SeqIO
 from ete3 import Tree
 from Bio import BiopythonExperimentalWarning
@@ -415,7 +415,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--max_hits', type=int,
                         help='Max number of hits to check. Default = 1.', default=5)
     parser.add_argument('-v', '--version', action='version', version='0.1')
-    parser.add_argument('-p', '--prequal', action='store_true')
+    parser.add_argument('--keep_tmp', action='store_true')
     args = parser.parse_args()
 
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
@@ -452,4 +452,5 @@ if __name__ == '__main__':
     correct_hits = parse_diamond_output()
     reciprocal_hits = get_reciprocal_hits()
     prepare_good_hits()
-    os.remove("tmp/for_diamond.fasta")
+    if not args.keep_tmp:
+        rmtree("tmp/")
