@@ -127,7 +127,6 @@ def hmmer(query):
 def get_gene_dict(threads, infile_proteins, spec_queries=None):
     gene_dict = {}
     with Pool(processes=threads) as pool:
-        print("Processing hmmsearches")
         hmm_pool = list(pool.map(hmmer, profiles))
         for query, hmm_hits in hmm_pool:
             if hmm_hits:
@@ -369,7 +368,9 @@ def new_best_hits(candidate_hits):
                     d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
                 else:
                     d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
-                    print(f'Nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
+                    with open('nonreciprocal_hits.txt', 'a') as nonrep:
+                        nonrep.write(f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
+                        print(f'nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
 
 
 def main_func(gene_hits):
@@ -440,7 +441,7 @@ if __name__ == '__main__':
             taxonomy = metadata_input[3].strip()
             input_taxonomy[sample_name] = taxonomy
             specific_queries = metadata_input[4].strip()
-            print(f'==========================\n{sample_name} has started\n--------------------------')
+            print(f'{sample_name} has started\n--------------------------')
             os.mkdir(f'tmp/{sample_name}')
             infile = cluster_rename_sequences()
             specific_queries = specific_queries.strip()
