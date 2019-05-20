@@ -144,8 +144,8 @@ def stats_orgs(table):
             genes = genes_tot
         missing = genes_tot - genes
         missing_perc = (missing / genes_tot) * 100
-        rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc],
-                              index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing'],
+        rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc, "yes"],
+                              index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing', "SGT"],
                               name=org))
     df = pd.DataFrame(rows)
     df["#Genes"] = df['#Genes'].astype(int)
