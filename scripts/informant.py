@@ -157,16 +157,16 @@ def stats_orgs(table):
 def stats_gene(table):
     columns = table.iloc[:, 2:]
     tab_len = len(table)
-    with open(f'{output_fold}/gene_stats.csv', 'w') as res:
-        res.write(f'gene,total,total[%]\n')
+    with open(f'{output_fold}/genes_stats.csv', 'w') as res:
+        res.write(f'gene,total,total[%],SGT\n')
         for i in columns:
             orgs = tab_len - table[i].value_counts()['0']
             orgs_perc = (orgs/tab_len) * 100
-            res.write(f"{i},{orgs},{orgs_perc.round(2)}\n")
+            res.write(f"{i},{orgs},{orgs_perc.round(2)},yes\n")
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher [OPTIONS]")
+    parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
     parser.add_argument('-i', '--input_folder', required=True)
     parser.add_argument('--paralog_selection', action='store_true')
     parser.add_argument('--occupancy_with_paths', action='store_true')
