@@ -59,7 +59,7 @@ def paralog_name(abbrev, keys):
     if pname not in keys:
         return pname
     else:
-        add_paralog(record, keys)
+        paralog_name(abbrev, keys)
 
 
 def parse_table(table):
