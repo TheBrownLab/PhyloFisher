@@ -111,7 +111,7 @@ def parse_table(table):
             if status == 'o':
                 gene_meta[abbrev] = record
             elif status == 'd':
-                del gene_meta[name]
+                del para_meta[name]
 
     return gene_meta, para_meta
 
