@@ -62,7 +62,7 @@ def get_gene_column(gene, names):
     return column.astype(int)
 
 def make_table(folder):
-    genes = glob.glob(f'{folder}/*')
+    genes = glob.glob(f'{folder}/*.fas')
     names, paths = collect_names(genes)
     columns = []
     for gene in genes:
@@ -101,6 +101,7 @@ def table_with_paths(df, paths):
 
 
 def stats_orgs_path(table):
+    #TODO paralogs no/available
     rows = []
     for org in table.index:
         genes_tot = len(table.columns) - 2
@@ -167,21 +168,28 @@ def stats_gene(table):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
-    parser.add_argument('-i', '--input_folder', required=True)
+    parser.add_argument('-i', '--input_folder')
     parser.add_argument('--paralog_selection', action='store_true')
     parser.add_argument('--occupancy_with_paths', action='store_true')
+    parser.add_argument('--orthologs', action='store_true')
     args = parser.parse_args()
+
 
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     multi_input = os.path.abspath(config['PATHS']['input_file'])
-    output_fold =str(Path(args.input_folder)) + '_stats'
 
+    if args.orthologs:
+        args.input_folder = Path(dfo, 'orthologs')
+
+    output_fold = os.path.basename(Path(args.input_folder)) + '_stats'
     if os.path.isdir(output_fold):
         sys.exit(f'Error: {output_fold} folder already exists.')
     else:
         os.mkdir(output_fold)
+
+
 
     t_dict, fnames = taxonomy_dict(str(Path(dfo, 'metadata.tsv')), multi_input)
     tab, paths = make_table(args.input_folder)
