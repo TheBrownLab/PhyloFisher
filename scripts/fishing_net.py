@@ -52,8 +52,12 @@ def fasta_filtr(file, o_to_ex, paralogs=None):
 
 
 def main():
-    gene_file = str(Path(args.input_directory + '_stats', 'genes_stats.csv'))
-    orgs_file = str(Path(args.input_directory + '_stats', 'orgs_stats.csv'))
+    if args.orthologs:
+        gene_file = 'orthologs_stats/genes_stats.csv'
+        orgs_file = 'orthologs_stats/orgs_stats.csv'
+    else:
+        gene_file = str(Path(args.input_directory + '_stats', 'genes_stats.csv'))
+        orgs_file = str(Path(args.input_directory + '_stats', 'orgs_stats.csv'))
     g_to_ex = parse_genes(gene_file)
     o_to_ex, paralogs = parse_orgs(orgs_file)
     filtered_genes = []
@@ -71,11 +75,14 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for filtering orgs [and|or] genes',
                                      usage="fishing_net.py -i input_directory [OPTIONS]")
-    parser.add_argument('-i', '--input_directory', required=True)
+    parser.add_argument('-i', '--input_directory')
     parser.add_argument('-o', '--output_directory', required=True)
+    parser.add_argument('--orthologs', action='store_true')
     args = parser.parse_args()
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    if args.orthologs:
+        args.input_directory = str(Path(dfo, 'orthologs'))
     os.mkdir(args.output_directory)
     main()
