@@ -10,7 +10,7 @@ from pathlib import Path
 from collections import defaultdict
 
 
-def parse_metadata(metadata_table):
+def parse_metadata():
     orgs = set()
     with open(metadata) as md:
         next(md)
@@ -78,7 +78,7 @@ def parse_table(table):
         tree_name, tax, status = line.split('\t')
         status = status.strip()
         abbrev = tree_name.split('@')[-1]
-        if tree_name.count('_') != 3 and '..' not in tree_name:
+        if tree_name.count('_') != 3 and '..' not in abbrev:
             record = seq_dict[abbrev]
             if status == 'd':
                 del gene_meta[abbrev]
@@ -106,10 +106,11 @@ def parse_table(table):
         status = status.strip()
         name = tree_name.split('@')[-1]
         abbrev = name.split('.')[0]
-        if '..' in tree_name:
+        if '..' in name:
             record = seq_dict[name]
             if status == 'o':
                 gene_meta[abbrev] = record
+                del para_meta[name]
             elif status == 'd':
                 del para_meta[name]
 
@@ -160,6 +161,6 @@ if __name__ == '__main__':
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     multi_input = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
-    meta_orgs = parse_metadata(str(Path(dfo, 'metadata.tsv')))
+    meta_orgs = parse_metadata()
     input_info = parse_input(multi_input)
     main()
