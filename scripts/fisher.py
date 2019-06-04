@@ -60,7 +60,7 @@ class SpecQuery:
 
     def get_specific_query(self):
         gene_dict = {}
-        for record in SeqIO.parse(str(Path(dfo, f'genes/{self.query}.fas')), 'fasta'):
+        for record in SeqIO.parse(str(Path(dfo, f'orthologs/{self.query}.fas')), 'fasta'):
             gene_dict[record.name] = str(record.seq)
         for org in self.organisms:
             if org in gene_dict:
@@ -297,13 +297,12 @@ def fasttree(checked_hits):
     aln = f'tmp/{org}/{gene}.aln'
     trim = f'tmp/{org}/{gene}.bmge'
     tree_file = f'tmp/{org}/{gene}.tree'
-    copyfile(str(Path(dfo, f'genes/{gene}.fas')), f'tmp/{org}/{gene}.for_ftree')
+    copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), f'tmp/{org}/{gene}.for_ftree')
     with open(fas, 'a') as f:
         for hit in checked_hits:
             f.write(f'>{hit.name}\n{hit.seq}\n')
     cmd1 = f'mafft --auto --reorder {fas} > {aln}'
     subprocess.run(cmd1, shell=True, stderr=subprocess.DEVNULL)
-    bmge = str(Path(dfo, 'lib/BMGE-1.12/BMGE.jar'))
     cmd2 = f"java -jar {bmge} -t AA -m BLOSUM30 -b 2 -g 0.6 -i {aln} -of {trim}"
     subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL)
     cmd3 = f"fasttree {trim} > {tree_file}"
@@ -357,7 +356,7 @@ def new_best_hits(candidate_hits):
         gene = top_candidates[0].name.split('@')[1]
         dataset = f'fasta/{gene}.fas'
         if not os.path.isfile(dataset):
-            copyfile(str(Path(dfo, f'genes/{gene}.fas')), dataset)
+            copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), dataset)
         n = 0
         for cand in top_candidates:
             n += 1
@@ -423,6 +422,7 @@ if __name__ == '__main__':
 
     tax_group = taxonomy_dict()
     multi_input = os.path.abspath(config['PATHS']['input_file'])
+    bmge = config['PATHS']['bmge']
     check_input()
 
     bacterial, gene_og = bac_gog_db()
