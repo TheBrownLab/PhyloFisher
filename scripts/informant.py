@@ -190,7 +190,6 @@ if __name__ == '__main__':
         os.mkdir(output_fold)
 
 
-
     t_dict, fnames = taxonomy_dict(str(Path(dfo, 'metadata.tsv')), multi_input)
     tab, paths = make_table(args.input_folder)
     res = table_with_paths(tab, paths)

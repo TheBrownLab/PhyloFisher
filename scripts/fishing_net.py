@@ -44,7 +44,7 @@ def fasta_filtr(file, o_to_ex, paralogs=None):
             if record.name.split('_')[0] not in o_to_ex:
                 res.write(f'>{record.name}\n{record.seq}\n')
         if paralogs:
-            para_file = str(Path(dfo, f'paralogs/{file.split(".")[0]}_paralogs'))
+            para_file = str(Path(dfo, f'paralogs/{file.split(".")[0]}_paralogs.fas'))
             if os.path.isfile(para_file):
                 for record in SeqIO.parse(para_file, 'fasta'):
                     if record.name.split('.')[0] in paralogs:

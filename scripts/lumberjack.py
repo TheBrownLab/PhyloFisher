@@ -63,9 +63,9 @@ def paralog_name(abbrev, keys):
 
 
 def parse_table(table):
-    gene = table.split('/')[-1].split('_')[0]
-    gene_meta_p = str(Path(dfo, f'genes/{gene}.fas'))
-    para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs'))
+    gene = table.split('/')[-1].split('.')[0]
+    gene_meta_p = str(Path(dfo, f'orthologs/{gene}.fas'))
+    para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
     gene_meta = SeqIO.to_dict(SeqIO.parse(gene_meta_p, "fasta"))
     if os.path.isfile(para_meta_p):
         para_meta = SeqIO.to_dict(SeqIO.parse(para_meta_p, "fasta"))
@@ -125,10 +125,10 @@ def add_to_meta(abbrev):
 
 
 def new_database(table):
-    gene = table.split('/')[-1].split('_')[0]
-    print(str(Path(dfo, f'genes/{gene}.fas')))
-    gene_meta_p = str(Path(dfo, f'genes/{gene}.fas'))
-    para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs'))
+    gene = table.split('/')[-1].split('.')[0]
+    print(str(Path(dfo, f'orthologs/{gene}.fas')))
+    gene_meta_p = str(Path(dfo, f'orthologs/{gene}.fas'))
+    para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
 
     gene_meta, para_meta = parse_table(table)
 
