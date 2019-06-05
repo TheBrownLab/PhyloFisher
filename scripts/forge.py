@@ -6,12 +6,13 @@ from collections import defaultdict
 import argparse
 
 
-def parse_names(input_folder, suffix=None):
+def parse_names(input_folder):
     name_set = set()
-    if args.suffix:
-        files = sorted(glob(f'{input_folder}/*.{suffix}'))
+    if args.sufix:
+        files = sorted(glob(f'{input_folder}/*.{args.sufix}'))
     else:
         files = sorted(glob(f'{input_folder}/*'))
+    print(files)
     for file in files:
         with open(file) as f:
             for line in f:
@@ -22,7 +23,8 @@ def parse_names(input_folder, suffix=None):
     return files, sorted(list(name_set))
 
 def main():
-    files, orgs = parse_names(args.input_folder)
+    input_foler = os.path.basename((args.input_folder))
+    files, orgs = parse_names(input_foler)
     total_len = 0
     res_dict = defaultdict(str)
     for file in files:
@@ -50,6 +52,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
     parser.add_argument('-i', '--input_folder', required=True)
     parser.add_argument('-o', '--output', required=True)
-    parser.add_argument('-s', '--suffix')
+    parser.add_argument('-s', '--sufix')
     args = parser.parse_args()
     main()
