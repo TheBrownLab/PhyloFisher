@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+import sys
 import glob
 import os
 import argparse
-from collections import defaultdict, Counter
-import configparser
+from collections import defaultdict
+from collections import Counter
 from multiprocessing import Pool
 from pathlib import Path
-from ete3 import Tree, TreeStyle, NodeStyle, TextFace
+from ete3 import Tree, TreeStyle, NodeStyle, TextFace, PieChartFace
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 plt.style.use('ggplot')
@@ -32,6 +33,7 @@ def parse_metadata():
             group = metadata_input[3].strip()
             full = metadata_input[5].strip()
             metadata[tax] = {'group': group, 'col': "white", 'full': full}
+    print(metadata)
     return metadata, tax_col
 
 def suspicious_clades(tree):
@@ -64,7 +66,7 @@ def get_best_candidates(tree_file):
         if node.is_leaf():
             if node.name.count('_') == 4:
                 org,__, _, rank, _ = node.name.split('_')
-                rank = int(rank[1:-1])
+                rank = int(rank[1:])
                 if org not in top_rank:
                     top_rank[org]['rank'] = rank
                     top_rank[org]['candidate'] = node.name
@@ -87,18 +89,9 @@ def fucking_shit(names):
 
 
 def tree_to_pdf(tree_file):
-    tree_base = str(os.path.basename(tree_file))
-    if args.prefix:
-        tree_base = tree_base.replace(args.prefix, '')
-    if args.sufix:
-        tree_base = tree_base.replace(args.sufix, '')
-
-    output_base = f"{output_folder}/{tree_base}"
-    table = open(f"{output_folder}/{tree_base}.tsv",'w')
-
-
-
     top_ranked = get_best_candidates(tree_file)
+    output_base = f"{output_folder}/{tree_file.split('.')[1]}.pdf"
+    table = open(f"{output_folder}/{tree_file.split('.')[1]}.tsv", 'w')
     t = Tree(tree_file)
     ts = TreeStyle()
     R = t.get_midpoint_outgroup()
@@ -311,6 +304,7 @@ def problematic(nonredundant_clades_):
 
 def plot_problematic(problematic_orgs):
     max_ = 0
+    print(problematic_orgs)
     for org, groups in sorted(problematic_orgs.items()):
         counted_groups = dict(Counter(groups))
         group_total = 0
@@ -318,6 +312,7 @@ def plot_problematic(problematic_orgs):
             group_total += group
         if group_total > max_:
             max_ = group_total
+    print(max_)
     with PdfPages('problematic_orgs.pdf') as pdf:
         for org, groups in sorted(problematic_orgs.items()):
             counted_groups = dict(Counter(groups))
@@ -327,7 +322,7 @@ def plot_problematic(problematic_orgs):
                     colors.append('black')
                 else:
                     colors.append(tax_col.get(group, "white"))
-            plt.bar(counted_groups.keys(), counted_groups.values(), color=colors)
+            barplot = plt.bar(counted_groups.keys(), counted_groups.values(), color=colors)
             plt.tight_layout()
             plt.ylim(0, max_)
             plt.title(f'{org}({metadata[org]["group"]})')
@@ -337,30 +332,21 @@ def plot_problematic(problematic_orgs):
             plt.close()
 
 if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read('config.ini')
     parser = argparse.ArgumentParser(description='some description', usage="blabla")
-    parser.add_argument('-t', '--trees_folder', required=True)
-    parser.add_argument('-o', '--output_folder', required=True)
-    parser.add_argument('--prefix')
-    parser.add_argument('--sufix')
+    parser.add_argument('-tf', '--trees_folder')
+    parser.add_argument('-o', '--output_folder')
+    parser.add_argument('-df', '--dataset_folder')
+    parser.add_argument('-i', '--infile')
     args = parser.parse_args()
     trees_folder = args.trees_folder
     output_folder = args.output_folder
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-    multi_input = os.path.abspath(config['PATHS']['input_file'])
+    dfo = args.dataset_folder
+    multi_input = os.path.abspath(args.infile)
     os.mkdir(output_folder)
-
-    if args.sufix:
-        trees = glob.glob(f"{trees_folder}/*{args.sufix}")
-    elif args.prefix:
-        trees = glob.glob(f"{trees_folder}/{args.prefix}*")
-    else:
-        trees = glob.glob(f"{trees_folder}/*")
-
+    trees = glob.glob(f"{trees_folder}/*tre*")
     number_of_genes = len(trees)
     metadata, tax_col = parse_metadata()
-    threads = 1 #TODO pararell run
+    threads = 1
     suspicious = trees_plus_table(trees)
     suspicious = sorted(suspicious)
 
