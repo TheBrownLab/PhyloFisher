@@ -23,8 +23,8 @@ def parse_names(input_folder):
     return files, sorted(list(name_set))
 
 def main():
-    input_foler = os.path.basename((args.input_folder))
-    files, orgs = parse_names(input_foler)
+    input_folder = os.path.basename((args.input_folder.strip('/')))
+    files, orgs = parse_names(input_folder)
     total_len = 0
     res_dict = defaultdict(str)
     for file in files:
