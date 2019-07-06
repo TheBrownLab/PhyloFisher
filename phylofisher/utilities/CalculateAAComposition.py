@@ -22,7 +22,7 @@ for line in lines[1:]:
 	length=len(sentence)
 	gaps=sentence.count('-')
 	sites = length-gaps
-	print sites
+	print(sites)
 	out.write(taxon)
 	out.write("\t")
 	out.write(str(float(Decimal(sentence.count('A'))/Decimal(sites))))

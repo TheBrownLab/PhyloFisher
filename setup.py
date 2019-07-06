@@ -1,16 +1,18 @@
-import setuptools
+from setuptools import setup
 
-setuptools.setup(
-    name="msphylo",
-    version="0.0.1",
-    author="Matt, Alex, Tom, David",
-    author_email="matt@example.com",
-    description = "blabla",
-    packages=['msphylo', 'msphylo_data'],
-    package_dir={'msphylo': 'msphylo', 'msphylo_data': 'msphylo/msphylo_data'},
-    scripts = ['msphylo/msphylo.py'],
+setup(
+    name='PhyloFisher',
+    version='0.1dev',
+    packages=['phylofisher'],
+    url='',
+    license='MIT',
+    author='david',
+    author_email='zihaladavid@gmail.com',
+    description='',
     install_requires=[
-          'markdown',
-    include_package_data=True
-
-)
+        'numpy==1.16.2',
+        'matplotlib==3.0.2',
+        'ete3==3.1.1',
+        'pandas==0.23.4',
+        'Bio==0.1.0']
+    )
