@@ -16,8 +16,8 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 ## 2. Usage
 
 - make directory for your analysis and go there:<br/>
-`mkdir test`<br/>
-`cd test`<br/>
+`mkdir <analysis_dir>`<br/>
+`cd <analysis_dir>`<br/>
 - prepare config file in your folder:<br/>
 `config.py -d <dataset_folder> -i <input_file.tsv> [OPTIONS]`<br/>
 Use config.py --help for more options.<br/>
