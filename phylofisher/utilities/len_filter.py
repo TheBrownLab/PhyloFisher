@@ -9,10 +9,10 @@ def good_length(trimmed_aln):
             if coverage > 0.3:
                 res.write(f'>{record.description}_{round(coverage, 2)}\n{record.seq}\n')
             else:
-            	print(record.name, trimmed_aln)
+                print(record.name, trimmed_aln)
 
 
 files = glob.glob('*.fas')
 
 for file in files:
-	good_length(file)
+    good_length(file)
