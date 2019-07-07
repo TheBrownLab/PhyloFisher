@@ -3,4 +3,4 @@ matplotlib==3.0.2
 setuptools==40.6.2
 ete3==3.1.1
 pandas==0.23.4
-Bio==0.1.0
+biopython==1.70
