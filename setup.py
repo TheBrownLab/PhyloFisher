@@ -22,5 +22,5 @@ setup(
         'PyQt5==5.12.1',
         'ete3==3.1.1',
         'pandas==0.23.4',
-        'biopython==1.70']
+        'biopython==1.70',]
     )
