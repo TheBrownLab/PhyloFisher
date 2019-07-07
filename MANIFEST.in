@@ -1,2 +1,0 @@
-# Include the data files
-recursive-include msphylo/msphylo_data/ *
