@@ -408,14 +408,14 @@ def get_reciprocal_hits():
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
-    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher [OPTIONS]")
-    parser.add_argument('--add', action='store_true')
+    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher.py [OPTIONS]")
     parser.add_argument('-t', '--threads', type=int,
                         help='Number of threads, default:1', default=1)
     parser.add_argument('-n', '--max_hits', type=int,
                         help='Max number of hits to check. Default = 1.', default=5)
     parser.add_argument('-v', '--version', action='version', version='0.1')
     parser.add_argument('--keep_tmp', action='store_true')
+    parser.add_argument('--add', action='store_true', help='Not available yet.')
     args = parser.parse_args()
 
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())

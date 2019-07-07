@@ -1,1 +1,4 @@
 .idea/
+PhyloFisher.egg-info/
+build/
+dist/
