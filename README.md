@@ -23,10 +23,9 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 Use config.py --help for more options.<br/>
 - run fisher.py for ortholog fishing:<br/>
 `fisher.py [OPTIONS]`<br/>
-- select organisms, genes and paralogs:<br/>
+- prepare *_stats folder for organism and gene selection:<br/>
 `informant.py -i fasta/ --paralog_selection`<br/>
 - apply your selection:<br/>
 `fishing_net.py -i fasta/ -o <folder_with_selected_seqs>`<br/>
 - trimming and trees computing<br/>
 `NOTHING HERE SO FAR`
-- 
