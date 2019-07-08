@@ -12,7 +12,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 plt.style.use('ggplot')
 
 
-
 def parse_metadata():
     metadata = {}
     tax_col = {}
@@ -23,8 +22,11 @@ def parse_metadata():
             group = sline[2].strip()
             col = sline[3].strip()
             full = sline[1].strip()
-            metadata[tax] = {'group': group, 'col': col, 'full': full}
-            tax_col[group] = col
+            if group not in tax_col:
+                if col.lower() == 'x':
+                    col = 'black'
+                tax_col[group] = col
+            metadata[tax] = {'group': group, 'col': tax_col[group], 'full': full}
     for line in open(multi_input):
         if "FILE_NAME" not in line:
             metadata_input = line.split('\t')
@@ -32,7 +34,9 @@ def parse_metadata():
             group = metadata_input[3].strip()
             full = metadata_input[5].strip()
             metadata[tax] = {'group': group, 'col': "white", 'full': full}
+    print(tax_col)
     return metadata, tax_col
+
 
 def suspicious_clades(tree):
     t = Tree(tree)
@@ -64,7 +68,8 @@ def get_best_candidates(tree_file):
         if node.is_leaf():
             if node.name.count('_') == 4:
                 org,__, _, rank, _ = node.name.split('_')
-                rank = int(rank[1:-1])
+                # rank = int(rank[1:-1])
+                rank = int(rank[1:])
                 if org not in top_rank:
                     top_rank[org]['rank'] = rank
                     top_rank[org]['candidate'] = node.name
@@ -78,14 +83,6 @@ def get_best_candidates(tree_file):
     return top_seqs
 
 
-def fucking_shit(names):
-    for name in names:
-        if "GEN" in name:
-            if str(names).count(name.replace('GEN', '')) == 2:
-                return True
-    return False
-
-
 def tree_to_pdf(tree_file):
     tree_base = str(os.path.basename(tree_file))
     if args.prefix:
@@ -96,25 +93,12 @@ def tree_to_pdf(tree_file):
     output_base = f"{output_folder}/{tree_base}"
     table = open(f"{output_folder}/{tree_base}.tsv",'w')
 
-
-
     top_ranked = get_best_candidates(tree_file)
     t = Tree(tree_file)
     ts = TreeStyle()
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
     sus_clades = 0
-
-    to_delete = ["PhysTSA", "Acancast","Thalpseu","Tricvagi","Emilhuxl",
-                   "Dictdisc","Plasbras","Sacccere","Ectosili",
-                   "Chlarein","Planfung","Monoexil","Plasfalc",
-                   "Bigenata","Paratetr","Porppurp","Spirsalm",
-                   "Phytpara","Batrdend","Tetrther","Cracchor",
-                   "Kipfbial","Naeggrub","Thectrah","Vitrbras",
-                   "Charbrau","Entahist","Monobrev",
-                   "Symbmicr","Goniavon","Homosapi","Nemavect",
-                   "Ichtmult","Trypbruc","Guilthet","Capsowcz",
-                   "Oxyrmari", 'Oxyttrif', 'CracchorGEN', 'Colpangu2', 'Pyroyezo']
 
     for node in t.traverse('preorder'):
         node_style = NodeStyle()
@@ -157,50 +141,29 @@ def tree_to_pdf(tree_file):
                     quality = f'{org.split("_")[-3]}_{org.split("_")[-2]}_{org.split("_")[-1]}'
                     org = org.split('_')[0]
                     group = metadata[org]['group']
-                    color = metadata[org]['col']
-                    node_style["bgcolor"] = color
                     node.name = f'{node.name}'
                     if group in tax_col:
                         tax_name = TextFace(f'[{group}]', fgcolor=tax_col[group], bold=True)
                     else:
                         tax_name = TextFace(f'[{group}]', bold=True)
-                    node.add_face(tax_name, column=1, position = "aligned") #TODO FUUUUCK ME
-                    if org in to_delete:
-                        table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\td*\n')
-                        deletef = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', fgcolor='red')
-                        node.name = ''
-                        node.add_face(deletef, column=0)
-                    elif node.name in contaminations:
-                        table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\td*\n')
-                        deletef = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', fgcolor='red')
-                        node.name = ''
-                        node.add_face(deletef, column=0)
-                    elif node.name in top_ranked:
+                    node.add_face(tax_name, column=1, position = "aligned")
+                    if node.name in top_ranked:
                         tname = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', bold=True)
-                        table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\to*\n')
+                        table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\to\n')
                         node.name = ''
                         node.add_face(tname, column=0, position='branch-right')
                     else:
-                        table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\tp*\n')
+                        table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\tp\n')
                         node.name = f'{metadata[org]["full"]}_{quality}@{org}'
                 else:
                     org, length = org.split('_')
                     group = f"[{metadata[org]['group']}]"
                     gface = TextFace(f'{group}') #TODO do not touch me pleeeease
-                    if org in to_delete:
-                        gface = TextFace(f'{group}', fgcolor=tax_col[group[1:-1]], bold=True)
-                        table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group[1:-1]}\td*\n')
-                        deletef = TextFace(f'{metadata[org]["full"]}_{length}@{org}', fgcolor='red')
-                        node.name = ''
-                        node.add_face(deletef, column=0)
-                        node.add_face(gface, column=1, position="aligned")
-                    else:
-                        color = metadata[org]['col']
-                        node_style["bgcolor"] = color
-                        table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group[1:-1]}\to\n')
-                        node.name = f'{metadata[org]["full"]}_{length}@{org}'
-                        node.add_face(gface, column=1, position="aligned")
-
+                    color = metadata[org]['col']
+                    node_style["bgcolor"] = color
+                    table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group[1:-1]}\to\n')
+                    node.name = f'{metadata[org]["full"]}_{length}@{org}'
+                    node.add_face(gface, column=1, position="aligned")
             node.set_style(node_style)
 
     title_face = TextFace(f'<{output_base.split("/")[-1]}, {sus_clades} suspicious clades>',  bold=True)
@@ -210,8 +173,8 @@ def tree_to_pdf(tree_file):
 
 
 def trees_plus_table(trees):
-    # with Pool(processes=threads) as pool:
-    #     pool.map(tree_to_pdf, trees)
+    with Pool(processes=threads) as pool:
+        pool.map(tree_to_pdf, trees)
     with Pool(processes=threads) as pool:
         suspicious = list(pool.map(suspicious_clades, trees))
         return suspicious
@@ -236,7 +199,6 @@ def nonredundant(result_clades):
 
 def problematic(nonredundant_clades_):
     problematic_orgs_ = defaultdict(list)
-    contaminations = set()
     for clade in nonredundant_clades_:
         taxons = []
         for org in clade:
@@ -248,65 +210,11 @@ def problematic(nonredundant_clades_):
         max_perc = max(group_perc, key=group_perc.get)
         for seq in clade:
             org = seq.split('_')[0]
-
             if group_perc[metadata[org]["group"]] == 50:
                 problematic_orgs_[org].append('unspecified')
             else:
-                if org == 'AcanthFB' and max_perc == 'Discoba':
-                    contaminations.add(seq)
-
-                elif org == 'Aurisoli' and max_perc == 'Obazoa':
-                    contaminations.add(seq)
-
-                elif org == 'ChoanoFB' and max_perc in ['Obazoa', 'Discoba']:
-                    contaminations.add(seq)
-
-                elif org == 'Colpangu1' and max_perc in ['Stramenopiles', 'Discoba']:
-                    contaminations.add(seq)
-
-                elif org == 'Lapoguse' and max_perc in ['Discoba']:
-                    contaminations.add(seq)
-
-                elif org == 'Leptvora' and max_perc in ['Chloroplastida', 'Obazoa']:
-                    contaminations.add(seq)
-
-                elif org == 'Mincchit' and max_perc in ['Stramenopiles', 'Chloroplastida']:
-                    contaminations.add(seq)
-
-                elif org == 'Oxyrmar2' and max_perc in ['Stramenopiles']:
-                    contaminations.add(seq)
-
-                elif org == 'Platmacr' and max_perc == 'Discoba':
-                    contaminations.add(seq)
-
-                elif org == 'Pyroyezo' and max_perc in ['Alveolata']:
-                        contaminations.add(seq)
-
-                elif org == 'Sori0191' and max_perc in ['Alveolata', 'Obazoa']:
-                        contaminations.add(seq)
-
-                elif org == 'Stichzan' and max_perc in ['CRuMs']:
-                        contaminations.add(seq)
-
-                elif org == 'SymbmicrGEN' and max_perc in ['Obazoa', 'Rhizaria']:
-                        contaminations.add(seq)
-
-                elif org == 'Syssmult' and max_perc in ['Stramenopiles']:
-                        contaminations.add(seq)
-
-                elif org == 'TeloneP1' and max_perc in ['Discoba']:
-                        contaminations.add(seq)
-
-                elif org == 'TeloneP2' and max_perc in ['Discoba']:
-                        contaminations.add(seq)
-
-                elif org == 'Telosubt' and max_perc in ['Discoba']:
-                        contaminations.add(seq)
-
                 problematic_orgs_[org].append(max_perc)
-
-
-    return problematic_orgs_, contaminations
+    return problematic_orgs_
 
 
 def plot_problematic(problematic_orgs):
@@ -373,12 +281,8 @@ if __name__ == '__main__':
                 res.write(f'\n\n\n')
     result_clades = [clades[1] for clades in suspicious]
     nonredundant_clades = nonredundant(result_clades)
-    problematic_orgs, contaminations = problematic(nonredundant_clades)
+    problematic_orgs = problematic(nonredundant_clades)
     plot_problematic(problematic_orgs)
     for tree in trees:
         print(tree)
         tree_to_pdf(tree)
-
-
-# number of genes
-# gene lengths
