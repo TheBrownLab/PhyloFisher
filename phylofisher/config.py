@@ -16,7 +16,7 @@ if not args.orthomcl:
     args.orthomcl = str(Path(args.dataset_folder, 'orthomcl'))
 
 if not args.bmge:
-    args.bmge = str(Path(args.dataset_folder, 'lib/BMGE-1.12'))
+    args.bmge = str(Path(args.dataset_folder, 'lib/BMGE-1.12/BMGE.jar'))
 
 with open('config.ini', 'w') as configfile:
     config['PATHS'] = {'dataset_folder': args.dataset_folder,
