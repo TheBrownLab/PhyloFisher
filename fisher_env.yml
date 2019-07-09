@@ -15,3 +15,4 @@ dependencies:
   - fasttree=2.1.10=h470a237_2
   - blast=2.7.1=h4422958_6
   - cd-hit=4.8.1=hdbcaa40_0
+  - mafft=7.407=0
