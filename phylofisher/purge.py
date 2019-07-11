@@ -39,7 +39,7 @@ def delete_group_org(orgs_=None, groups=None):
         group_set = set()
 
     if orgs_:
-        orgs = set(orgs.split(','))
+        orgs = set(orgs_.split(','))
     else:
         orgs = set()
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     multi_input = os.path.abspath(config['PATHS']['input_file'])
 
     parser = argparse.ArgumentParser(description='Script for deleting orgs/taxonomic'
-                                                 'groups from the dataset', usage="blabla")
+                                                 'groups from the dataset', usage="purge.py [OPTIONS]")
     parser.add_argument('-o', '--orgs', help='Short names of organisms for deletion: Org1,Org2,Org3')
     parser.add_argument('-g', '--tax_groups', help='Names of taxonomic groups for deletion: Group1,Group2,Group3')
     args = parser.parse_args()
