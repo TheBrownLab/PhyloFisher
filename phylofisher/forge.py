@@ -4,15 +4,15 @@ from glob import glob
 from Bio import SeqIO
 from collections import defaultdict
 import argparse
+import csv
 
 
 def parse_names(input_folder):
     name_set = set()
     if args.sufix:
-        files = sorted(glob(f'{input_folder}/*.{args.sufix}'))
+        files = sorted(glob(f'{input_folder}/*{args.sufix}'))
     else:
         files = sorted(glob(f'{input_folder}/*'))
-    print(files)
     for file in files:
         with open(file) as f:
             for line in f:
@@ -21,6 +21,17 @@ def parse_names(input_folder):
                     name = fname.split('_')[0]
                     name_set.add(name)
     return files, sorted(list(name_set))
+
+
+def stats(total_len):
+    with open('forge_stats.tsv', 'w') as out_file:
+        tsv_writer = csv.writer(out_file, delimiter='\t')
+        tsv_writer.writerow(['org', 'missing[%]'])
+        missing = []
+        for record in SeqIO.parse(args.output, 'fasta'):
+            missing.append((record.name, (record.seq.count('-')/total_len)*100))
+        for org_missing in sorted(missing, key=lambda x: x[1], reverse=True):
+            tsv_writer.writerow(list(org_missing))
 
 def main():
     input_folder = os.path.basename((args.input_folder.strip('/')))
@@ -45,8 +56,8 @@ def main():
     with open(args.output, "w") as res:
         for org, seq in res_dict.items():
             res.write(f'>{org}\n{seq}\n')
-    
-    print(total_len)
+    stats(total_len)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
