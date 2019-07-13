@@ -1,5 +1,5 @@
-# PhyloFisher
-
+# Phylofisher
+        
 ## 1. Installation
 ### 1.1 Installation with conda
 
