@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+import os
 import subprocess
 import argparse
 from Bio import SeqIO
@@ -36,7 +38,7 @@ def fake_phylip(matrix):
     return pseudonames, pseudonames_rev
 
 def fake_tree(treefile, pseudonames):
-    with open('TEMP.tree', 'w') as res:
+    with open('TEMP.tre', 'w') as res:
         original = open(treefile).readline()
         for key, value in pseudonames.items():
             original = original.replace(key, value)
@@ -55,40 +57,46 @@ ub = 10.0              * upper bound for rates"""
     with open('dist_est_test.ctl', 'w') as res:
         res.write(ctl)
 
-# def iqtree(matrix, tree, threads):
-    # cmd = f"iqtree -s {matrix} -te {tree} -wsr -nt {threads} -m LG+F+R"
-    # print(cmd)
-    # subprocess.run(cmd, shell=True)
 
 def run_dist():
     cmd = './dist_est dist_est.ctl'
     subprocess.run(cmd, shell=True)
 
 
-def parse_rates(rate_file):
+def parse_rates():
     positions = []
-    for line in open(rate_file):
-        if "#" not in line and "Site" not in line:
-            site, rate, _, _ = line.split('\t')
-            positions.append((int(site)-1, float(rate)))
+    site = 0
+    for line in open('rate_est.dat'):
+        _, rate, _, _ = line.split()
+        positions.append((site, float(rate)))
+        site += 1
     sorted_positions = sorted(positions, key=lambda x: x[1], reverse=True)
     result = [i[0] for i in sorted_positions]
     return result
 
+
 def main():
-    # iqtree(args.matrix, args.tree, args.threads)
+    pseudo_, pseudo_rev_ = fake_phylip(args.matrix)
+    fake_tree(args.tree, pseudo_)
+    control_file()
+    run_dist()
     matrix_dict = {}
-    for record in SeqIO.parse(args.matrix, 'phylip'):
+    for record in SeqIO.parse('TEMP.phy', 'phylip'):
         matrix_dict[record.name] = pd.Series(list(record.seq))
 
-    sorted_rates = parse_rates(args.matrix + ".rate")
+    sorted_rates = parse_rates()
+    print(sorted_rates[:10])
     iter = 0
+    os.mkdir(f'chunks_{args.chunk}')
+    os.chdir(f'chunks_{args.chunk}')
     for chunk in range(args.chunk, len(sorted_rates), args.chunk):
         with open(f'chunk{iter}', 'w') as res:
             res.write(f' {len(matrix_dict)} {len(sorted_rates) - chunk}\n')
             for name, seq in matrix_dict.items():
                 res.write(f'{name} {"".join(seq[chunk:].values)}\n')
         iter += 1
+    os.remove('../TEMP.phy')
+    os.remove('../TEMP.tre')
 
 
 if __name__ == "__main__":
@@ -97,11 +105,8 @@ if __name__ == "__main__":
     parser.add_argument('-tr', '--tree')
     parser.add_argument('-c', '--chunk', type=int, default=3000)
     args = parser.parse_args()
-    # main()
-    pseudo_, pseudo_rev_ = fake_phylip(args.matrix)
-    fake_tree(args.tree, pseudo_)
-    control_file()
-    run_dist()
+    main()
+
 
 
 
