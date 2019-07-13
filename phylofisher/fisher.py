@@ -403,6 +403,12 @@ def get_reciprocal_hits():
     return reciprocal
 
 
+def additions_to_input():
+    original_input = config['PATHS']['input_file']
+    with open(original_input, 'a') as ori:
+        for line in open(args.add):
+            if "FILE_NAME" not in line:
+                ori.write(line)
 
 
 if __name__ == '__main__':
@@ -415,13 +421,17 @@ if __name__ == '__main__':
                         help='Max number of hits to check. Default = 1.', default=5)
     parser.add_argument('-v', '--version', action='version', version='0.1')
     parser.add_argument('--keep_tmp', action='store_true')
-    parser.add_argument('--add', action='store_true', help='Not available yet.')
+    parser.add_argument('--add', help='Input file (different from original one in config.ini'
+                                      ' only with new organisms. ')
     args = parser.parse_args()
 
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
     tax_group = taxonomy_dict()
-    multi_input = os.path.abspath(config['PATHS']['input_file'])
+    if args.add:
+        multi_input = os.path.abspath(args.add)
+    else:
+        multi_input = os.path.abspath(config['PATHS']['input_file'])
     bmge = config['PATHS']['bmge']
     check_input()
 
@@ -430,8 +440,16 @@ if __name__ == '__main__':
 
     input_taxonomy = {}
 
-    if args.add is not True:
+    if not args.add:
         makedirs()
+    else:
+        if os.path.exists('tmp/'):
+            try:
+                os.remove('tmp/dataset_diamond.res')
+                os.remove('tmp/diamond.res')
+                os.remove('tmp/for_diamond.fasta')
+            except OSError:
+                pass
     for line in open(multi_input):
         total_profiles = len(profiles)
         if "FILE_NAME" not in line:
@@ -453,5 +471,7 @@ if __name__ == '__main__':
     correct_hits = parse_diamond_output()
     reciprocal_hits = get_reciprocal_hits()
     prepare_good_hits()
+    if args.add:
+        additions_to_input()
     if not args.keep_tmp:
         rmtree("tmp/")
