@@ -54,7 +54,7 @@ aaRatefile = lg.dat * JTT substitution model
 
 nrate = 101            * number of rates
 ub = 10.0              * upper bound for rates"""
-    with open('dist_est_test.ctl', 'w') as res:
+    with open('dist_est.ctl', 'w') as res:
         res.write(ctl)
 
 
