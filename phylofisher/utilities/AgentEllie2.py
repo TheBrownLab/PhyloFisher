@@ -1,9 +1,10 @@
 from glob import glob
+import argparse
 from ete3 import Tree
 from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
+# plt.style.use('ggplot')
 plt.rcParams["figure.figsize"] = (10,5)
 
 def bipartitions(tree):
@@ -41,12 +42,12 @@ def get_support(group, supp_dict):
     else:
         return 0
 
-def parse_input(input_file):
+def parse_groups(input_file):
     query_dict = {}
     for line in open(input_file):
         group, orgs = line.split(':')
         query_dict[group] = [org.strip() for org in orgs.split(',')]
-    return query_dict
+    return query_dict.items()
 
 def file_to_series(file):
     sup_dict = support(file)
@@ -54,22 +55,37 @@ def file_to_series(file):
     for group, orgs in queries:
         group_sup[group] = get_support(orgs, sup_dict)
     s = pd.Series(group_sup)
-    s.name = int(file.split('.')[0].split('_')[1])
     return s
 
-def main():
+def parse_bss():
     columns = []
-    for file in glob("*.ufboot"):
-       columns.append(file_to_series(file))
+    n = 0
+    for line in open(args.bs_files):
+        column = file_to_series(line.strip())
+        if n == 0:
+            column.name = 'Full dataset'
+        else:
+            column.name = f'Step {n}'
+        columns.append(column)
+        n += 1
+    return columns
+
+def main():
+    columns = parse_bss()
     df = pd.DataFrame(columns)
-    df.sort_index(inplace=True)
+    # df.sort_index(inplace=True)
     df.plot()
     plt.legend(loc=0, prop={'size': 6})
-    plt.xticks(df.index)
+    plt.xticks(range(len(df.index)), list(df.index))
     plt.tight_layout()
     plt.savefig("test_out.pdf")
     df.to_csv("test_out.csv")
+    return df
 
 if __name__ == "__main__":
-    queries = parse_input("input_example.txt").items()
+    parser = argparse.ArgumentParser(description='some description', usage="blabla")
+    parser.add_argument('-b', '--bs_files')
+    parser.add_argument('-g', '--groups')
+    args = parser.parse_args()
+    queries = parse_groups(args.groups)
     main()

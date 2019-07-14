@@ -13,6 +13,7 @@ setup(
              'phylofisher/lumberjack.py',
              'phylofisher/purge.py',
              'phylofisher/utilities/AgentEllie.py',
+             'phylofisher/utilities/AgentEllie2.py',
              'phylofisher/utilities/len_filter.py'],
     url='',
     license='MIT',
