@@ -1,10 +1,9 @@
-from glob import glob
+#!/usr/bin/env python
 import argparse
 from ete3 import Tree
 from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
-# plt.style.use('ggplot')
 plt.rcParams["figure.figsize"] = (10,5)
 
 def bipartitions(tree):
