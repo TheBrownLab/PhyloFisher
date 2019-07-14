@@ -16,7 +16,7 @@ def unique_name(keys):
     if id_ not in keys:
         return id_
     else:
-        paralog_name(keys)
+        unique_name(keys)
 
 def fake_phylip(matrix):
     seqs = 0
@@ -81,11 +81,10 @@ def main():
     control_file()
     run_dist()
     matrix_dict = {}
-    for record in SeqIO.parse('TEMP.phy', 'phylip'):
+    for record in SeqIO.parse(args.matrix, 'fasta'):
         matrix_dict[record.name] = pd.Series(list(record.seq))
 
     sorted_rates = parse_rates()
-    print(sorted_rates[:10])
     iter = 0
     os.mkdir(f'chunks_{args.chunk}')
     os.chdir(f'chunks_{args.chunk}')
