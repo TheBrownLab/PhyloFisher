@@ -68,9 +68,9 @@ def main():
 
     for file in filtered_genes:
         if paralogs:
-            fasta_filtr(file, o_to_ex, paralogs)
+            fasta_filtr(os.path.basename(file), o_to_ex, paralogs)
         else:
-            fasta_filtr(file, o_to_ex)
+            fasta_filtr(os.path.basename(file), o_to_ex)
 
 
 if __name__ == '__main__':
