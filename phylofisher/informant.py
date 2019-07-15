@@ -11,7 +11,7 @@ import os
 import sys
 
 
-def taxonomy_dict(metadata, multi_input):
+def taxonomy_dict(metadata, multi_input=None):
     tax_g = {}
     full_names = {}
     for line_ in open(metadata):
@@ -22,13 +22,14 @@ def taxonomy_dict(metadata, multi_input):
             full_name = sline[1].strip()
             tax_g[tax] = group
             full_names[tax] = full_name
-    for line in open(multi_input):
-        metadata_input = line.split('\t')
-        tax = metadata_input[2].strip()
-        group = metadata_input[3].strip()
-        full_name = metadata_input[5].strip()
-        tax_g[tax] = group
-        full_names[tax] = full_name
+    if multi_input:
+        for line in open(multi_input):
+            metadata_input = line.split('\t')
+            tax = metadata_input[2].strip()
+            group = metadata_input[3].strip()
+            full_name = metadata_input[5].strip()
+            tax_g[tax] = group
+            full_names[tax] = full_name
     return tax_g, full_names
 
 
@@ -62,7 +63,10 @@ def get_gene_column(gene, names):
     return column.astype(int)
 
 def make_table(folder):
-    genes = glob.glob(f'{folder}/*.fas')
+    if args.sufix:
+        genes = glob.glob(f'{folder}/*{args.sufix}')
+    else:
+        genes = glob.glob(f'{folder}/*')
     names, paths = collect_names(genes)
     columns = []
     for gene in genes:
@@ -168,20 +172,23 @@ def stats_gene(table):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
-    parser.add_argument('-i', '--input_folder')
+    parser.add_argument('-i', '--input_folder', required=True)
+    parser.add_argument('-m', '--metadata', required=True)
+    parser.add_argument('-n', '--input_metadata')
+    parser.add_argument('-s', '--sufix')
     parser.add_argument('--paralog_selection', action='store_true')
     parser.add_argument('--occupancy_with_paths', action='store_true')
-    parser.add_argument('--orthologs', action='store_true')
+    # parser.add_argument('--orthologs', action='store_true')
     args = parser.parse_args()
 
 
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-    multi_input = os.path.abspath(config['PATHS']['input_file'])
+    # config = configparser.ConfigParser()
+    # config.read('config.ini')
+    # dfo = str(Path(args.metadata).resolve())
+    # multi_input = os.path.abspath(config['PATHS']['input_file'])
 
-    if args.orthologs:
-        args.input_folder = Path(dfo, 'orthologs')
+    # if args.orthologs:
+    #     args.input_folder = Path(dfo, 'orthologs')
 
     output_fold = os.path.basename(Path(args.input_folder)) + '_stats'
     if os.path.isdir(output_fold):
@@ -190,7 +197,7 @@ if __name__ == '__main__':
         os.mkdir(output_fold)
 
 
-    t_dict, fnames = taxonomy_dict(str(Path(dfo, 'metadata.tsv')), multi_input)
+    t_dict, fnames = taxonomy_dict(args.metadata, args.input_metadata)
     tab, paths = make_table(args.input_folder)
     res = table_with_paths(tab, paths)
 
