@@ -88,11 +88,10 @@ def main():
     iter = 0
     os.mkdir(f'chunks_{args.chunk}')
     os.chdir(f'chunks_{args.chunk}')
-    
     for chunk in range(args.chunk, len(sorted_rates), args.chunk):
         with open(f'chunk{iter}', 'w') as res:
             for name, seq in matrix_dict.items():
-                res.write(f'>{name}\n{"".join(seq[chunk:].values)}\n')
+                res.write(f'>{name}\n{"".join(seq[sorted_rates[chunk:]].values)}\n')
         iter += 1
     os.remove('../TEMP.phy')
     os.remove('../TEMP.tre')
