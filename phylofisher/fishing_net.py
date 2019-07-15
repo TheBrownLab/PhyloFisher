@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import argparse
+from glob import glob
 import configparser
 from pathlib import Path
 from Bio import SeqIO
@@ -61,7 +62,7 @@ def main():
     g_to_ex = parse_genes(gene_file)
     o_to_ex, paralogs = parse_orgs(orgs_file)
     filtered_genes = []
-    for file in os.listdir(args.input_directory):
+    for file in glob(args.input_directory + f'/*{args.sufix}'):
         if file.split('.')[0] not in g_to_ex:
             filtered_genes.append(file)
 
@@ -77,6 +78,7 @@ if __name__ == '__main__':
                                      usage="fishing_net.py -i <input_directory> -o <output_directory> [OPTIONS]")
     parser.add_argument('-i', '--input_directory', required=True)
     parser.add_argument('-o', '--output_directory', required=True)
+    parser.add_argument('-s', '--sufix', required=True, help='sufix of fasta files')
     # parser.add_argument('--orthologs', action='store_true', help='Only for ortholog selection. Without information'
     #                                                              'about used path.')
     args = parser.parse_args()
