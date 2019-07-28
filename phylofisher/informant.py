@@ -5,8 +5,8 @@ import pandas as pd
 from Bio import SeqIO
 import numpy as np
 import argparse
-from pathlib import Path
 import configparser
+from pathlib import Path
 import os
 import sys
 
@@ -107,7 +107,6 @@ def table_with_paths(df, paths):
 def paralog_orgs():
     paralogs = set()
     paralog_fold = os.path.dirname(args.metadata)
-    print(paralog_fold)
     for file in glob.glob(f'{paralog_fold}/paralogs/*.fas'):
         for record in SeqIO.parse(file, 'fasta'):
             paralogs.add(record.name.split('.')[0])
@@ -115,7 +114,6 @@ def paralog_orgs():
 
 
 def stats_orgs_path(table):
-    #TODO paralogs no/available
     paralogs = paralog_orgs()
     rows = []
     for org in table.index:
@@ -186,25 +184,26 @@ def stats_gene(table):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
-    parser.add_argument('-i', '--input_folder', required=True)
-    parser.add_argument('-m', '--metadata', required=True)
+    parser.add_argument('-i', '--input_folder')
+    parser.add_argument('-m', '--metadata')
     parser.add_argument('-n', '--input_metadata')
     parser.add_argument('-s', '--sufix')
     parser.add_argument('--paralog_selection', action='store_true')
     parser.add_argument('--occupancy_with_paths', action='store_true')
-    # parser.add_argument('--orthologs', action='store_true')
+    parser.add_argument('-c', '--use_config', action='store_true')
+    parser.add_argument('--orthologs', action='store_true')
     args = parser.parse_args()
 
+    if args.use_config:
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+        args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
+        args.metadata = os.path.join(dfo, 'metadata.tsv')
+        if args.orthologs:
+            args.input_folder = os.path.join(dfo, 'orthologs')
 
-    # config = configparser.ConfigParser()
-    # config.read('config.ini')
-    # dfo = str(Path(args.metadata).resolve())
-    # multi_input = os.path.abspath(config['PATHS']['input_file'])
-
-    # if args.orthologs:
-    #     args.input_folder = Path(dfo, 'orthologs')
-
-    output_fold = os.path.basename(Path(args.input_folder)) + '_stats'
+    output_fold = os.path.basename(os.path.normpath(args.input_folder)) + '_stats'
     if os.path.isdir(output_fold):
         sys.exit(f'Error: {output_fold} folder already exists.')
     else:
