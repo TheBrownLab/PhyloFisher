@@ -80,16 +80,21 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output_directory', required=True)
     parser.add_argument('-d', '--dataset_folder')
     parser.add_argument('-s', '--sufix', required=True, help='sufix of fasta files')
-    # parser.add_argument('--orthologs', action='store_true', help='Only for ortholog selection. Without information'
-    #                                                              'about used path.')
+    parser.add_argument('--orthologs', action='store_true', help='Only for ortholog selection. Without information'
+                                                                 'about used path.')
+    parser.add_argument('-c', '--use_config', action='store_true')
     args = parser.parse_args()
-    # config = configparser.ConfigParser()
-    # config.read('config.ini')
-    # dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+
+    if args.use_config:
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+        if args.orthologs:
+            args.input_directory = os.path.join(dfo, 'orthologs')
+
     if args.dataset_folder:
         dfo = str(Path(args.dataset_folder).resolve())
-    # if args.orthologs:
-    #     args.input_directory = str(Path(dfo, 'orthologs'))
+
     if args.input_directory[-1] == '/':
         args.input_directory = args.input_directory[:-1]
     os.mkdir(args.output_directory)
