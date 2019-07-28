@@ -12,10 +12,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 plt.style.use('ggplot')
 
 
-def parse_metadata():
-    metadata = {}
+def parse_metadata(metadata, input_metadata=None):
+    metadata_comb = {}
     tax_col = {}
-    for line_ in open(str(Path(dfo, 'metadata.tsv'))):
+    for line_ in open(metadata):
         if 'Full Name' not in line_:
             sline = line_.split('\t')
             tax = sline[0].strip()
@@ -24,21 +24,22 @@ def parse_metadata():
             full = sline[1].strip()
             if group not in tax_col:
                 if col.lower() == 'x':
-                    col = 'black'
+                    col = 'white'
                 tax_col[group] = col
-            metadata[tax] = {'group': group, 'col': tax_col[group], 'full': full}
-    for line in open(multi_input):
-        if "FILE_NAME" not in line:
-            metadata_input = line.split('\t')
-            tax = metadata_input[2].strip().split('_')[0]
-            group = metadata_input[3].strip()
-            full = metadata_input[5].strip()
-            metadata[tax] = {'group': group, 'col': "white", 'full': full}
-    print(tax_col)
-    return metadata, tax_col
+            metadata_comb[tax] = {'group': group, 'col': tax_col[group], 'full': full}
+    if input_metadata:
+        for line in open(input_metadata):
+            if "FILE_NAME" not in line:
+                metadata_input = line.split('\t')
+                tax = metadata_input[2].strip().split('_')[0]
+                group = metadata_input[3].strip()
+                full = metadata_input[5].strip()
+                metadata_comb[tax] = {'group': group, 'col': "white", 'full': full}
+    return metadata_comb, tax_col
 
 
 def suspicious_clades(tree):
+    print(tree)
     t = Tree(tree)
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
@@ -68,8 +69,7 @@ def get_best_candidates(tree_file):
         if node.is_leaf():
             if node.name.count('_') == 4:
                 org,__, _, rank, _ = node.name.split('_')
-                # rank = int(rank[1:-1])
-                rank = int(rank[1:])
+                rank = int(rank[1:-1])
                 if org not in top_rank:
                     top_rank[org]['rank'] = rank
                     top_rank[org]['candidate'] = node.name
@@ -173,8 +173,8 @@ def tree_to_pdf(tree_file):
 
 
 def trees_plus_table(trees):
-    with Pool(processes=threads) as pool:
-        pool.map(tree_to_pdf, trees)
+    # with Pool(processes=threads) as pool:
+    #     pool.map(tree_to_pdf, trees)
     with Pool(processes=threads) as pool:
         suspicious = list(pool.map(suspicious_clades, trees))
         return suspicious
@@ -250,24 +250,25 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='some description', usage="blabla")
     parser.add_argument('-t', '--trees_folder', required=True)
     parser.add_argument('-o', '--output_folder', required=True)
+    parser.add_argument('-m', '--metadata', required=True)
+    parser.add_argument('-n', '--input_metadata')
     parser.add_argument('--prefix')
     parser.add_argument('--sufix')
     args = parser.parse_args()
     trees_folder = args.trees_folder
     output_folder = args.output_folder
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-    multi_input = os.path.abspath(config['PATHS']['input_file'])
+
     os.mkdir(output_folder)
 
-    if args.sufix:
-        trees = glob.glob(f"{trees_folder}/*{args.sufix}")
-    elif args.prefix:
+    if args.prefix:
         trees = glob.glob(f"{trees_folder}/{args.prefix}*")
+    elif args.sufix:
+        trees = glob.glob(f"{trees_folder}/*{args.sufix}")
     else:
         trees = glob.glob(f"{trees_folder}/*")
 
     number_of_genes = len(trees)
-    metadata, tax_col = parse_metadata()
+    metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)
     threads = 1 #TODO pararell run
     suspicious = trees_plus_table(trees)
     suspicious = sorted(suspicious)

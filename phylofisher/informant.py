@@ -104,8 +104,19 @@ def table_with_paths(df, paths):
     return df
 
 
+def paralog_orgs():
+    paralogs = set()
+    paralog_fold = os.path.dirname(args.metadata)
+    print(paralog_fold)
+    for file in glob.glob(f'{paralog_fold}/paralogs/*.fas'):
+        for record in SeqIO.parse(file, 'fasta'):
+            paralogs.add(record.name.split('.')[0])
+    return paralogs
+
+
 def stats_orgs_path(table):
     #TODO paralogs no/available
+    paralogs = paralog_orgs()
     rows = []
     for org in table.index:
         genes_tot = len(table.columns) - 2
@@ -123,8 +134,11 @@ def stats_orgs_path(table):
             if '_' in val:
                 path = val.split('_')[1]
                 sbh[path] += 1
+        para_ava = 'no'
+        if org in paralogs:
+            para_ava = 'available'
         rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc, sbh['SBH'], sbh['BBH'],
-                               sbh['HMM'], 'yes', 'no'],
+                               sbh['HMM'], 'yes', para_ava],
                               index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing', "#SBH",
                                      "#BBH", "#HMM", "SGT", "paralogs"],
                               name=org))
