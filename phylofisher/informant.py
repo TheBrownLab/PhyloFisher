@@ -132,9 +132,9 @@ def stats_orgs_path(table):
             if '_' in val:
                 path = val.split('_')[1]
                 sbh[path] += 1
-        para_ava = 'no'
+        para_ava = 'none'
         if org in paralogs:
-            para_ava = 'available'
+            para_ava = 'yes'
         rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc, sbh['SBH'], sbh['BBH'],
                                sbh['HMM'], 'yes', para_ava],
                               index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing', "#SBH",
