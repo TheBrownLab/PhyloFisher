@@ -450,6 +450,8 @@ if __name__ == '__main__':
                 os.remove('tmp/for_diamond.fasta')
             except OSError:
                 pass
+        else:
+            os.mkdir('tmp')
     for line in open(multi_input):
         total_profiles = len(profiles)
         if "FILE_NAME" not in line:
