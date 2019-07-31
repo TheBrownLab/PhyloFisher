@@ -3,6 +3,7 @@ import os
 from ete3 import Tree
 from statistics import mean
 from Bio import SeqIO
+import argparse
 
 class Leaves:
 
@@ -51,26 +52,36 @@ class Matrix:
         chunks = []
         for i in range(0, len(self.ranked_orgs), chunk_size):
             chunks.append(self.ranked_orgs[0:i+chunk_size])
-        print(chunks)
         return chunks
 
 
-    def generate_subset(self, output_name, iterations, chunk_size=1):
+    def generate_subset(self, output_folder, iterations, chunk_size):
         chunks = self.fast_evol_taxa(chunk_size)
+        os.mkdir(output_folder)
         for i in range(0, iterations):
             exclude = chunks[i]
-            with open(f'{output_name}_chunk{i}', 'w') as res:
+            output_name = os.path.join(output_folder, f'chunk{i}')
+            with open(output_name, 'w') as res:
                 for record in SeqIO.parse(self.matrix, self.format):
                     if record.name not in exclude:
                         res.write(f'>{record.name}\n{record.seq}\n')
 
 
+def main():
+    parser = argparse.ArgumentParser(description='Fast taxon removal', usage="fast_tax_removal.py [OPTIONS]")
+    parser.add_argument('-t', '--tree', required=True)
+    parser.add_argument('-m', '--matrix', required=True)
+    parser.add_argument('-f', '--format', default='fasta', help='format of your matrix [default: fasta]')
+    parser.add_argument('-o', '--output_folder')
+    parser.add_argument('-i', '--iterations', required=True, type=int)
+    parser.add_argument('-c', '--chunk_size', default=1, type=int)
+    args = parser.parse_args()
 
-data_folder = '/home/david/MsPhylo/test/new/ForDavid_new/ForDavid/FastSiteRemoval'
-tree_file = os.path.join(data_folder, 'Bordor.351.64.3-7-2016.dat.treefile')
-matrix = os.path.join(data_folder, 'Bordor.351.64.3-7-2016.dat')
+    tree = Tree(args.tree)
+    x = Leaves(tree)
+    m = Matrix(args.matrix, args.format, x.org_speed())
+    m.generate_subset(args.output_folder, args.iterations, args.chunk_size)
 
-tree = Tree(tree_file)
-x = Leaves(tree)
-m = Matrix(matrix, 'phylip', x.org_speed())
-m.generate_subset('jahody', 3)
+
+if __name__ == '__main__':
+    main()
