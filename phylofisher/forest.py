@@ -172,7 +172,7 @@ def tree_to_pdf(tree_file):
                     deletef = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='red')
                     node.name = ''
                     node.add_face(deletef, column=0)
-                    table.write(f'{metadata[org]["full"]}_{length}@{para}\t{group[1:-1]}\tp\n')
+                    table.write(f'{metadata[org]["full"]}_{length}@{para}\t{group}\tp\n')
                     gface = TextFace(f'[{group} {metadata[org]["subtax"]}]')
                     node.add_face(gface, column=1, position="aligned")
 
@@ -182,7 +182,7 @@ def tree_to_pdf(tree_file):
                     gface = TextFace(f'[{group} {metadata[org]["subtax"]}]') #TODO do not touch me pleeeease
                     color = metadata[org]['col']
                     node_style["bgcolor"] = color
-                    table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group[1:-1]}\to\n')
+                    table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group}\to\n')
                     node.name = f'{metadata[org]["full"]}_{length}@{org}'
                     node.add_face(gface, column=1, position="aligned")
             node.set_style(node_style)
