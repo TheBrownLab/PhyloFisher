@@ -20,13 +20,15 @@ def parse_metadata(metadata, input_metadata=None):
             sline = line_.split('\t')
             tax = sline[0].strip()
             group = sline[2].strip()
-            col = sline[3].strip()
+            # col = sline[3].strip()
+            col = sline[4].strip()
+            sub_tax = sline[3]
             full = sline[1].strip()
             if group not in tax_col:
                 if col.lower() == 'x':
                     col = 'white'
                 tax_col[group] = col
-            metadata_comb[tax] = {'group': group, 'col': tax_col[group], 'full': full}
+            metadata_comb[tax] = {'group': group, 'col': tax_col[group], 'full': full, 'subtax': sub_tax}
     if input_metadata:
         for line in open(input_metadata):
             if "FILE_NAME" not in line:
@@ -34,7 +36,8 @@ def parse_metadata(metadata, input_metadata=None):
                 tax = metadata_input[2].strip().split('_')[0]
                 group = metadata_input[3].strip()
                 full = metadata_input[5].strip()
-                metadata_comb[tax] = {'group': group, 'col': "white", 'full': full}
+                sub_tax = sline[4]
+                metadata_comb[tax] = {'group': group, 'col': "white", 'full': full, 'subtax': sub_tax}
     return metadata_comb, tax_col
 
 
@@ -55,7 +58,10 @@ def suspicious_clades(tree):
     for clade in supported_clades:
         groups = set()
         for org in clade:
-            org = org.split('_')[0]
+            if '..' in org:
+                org = org.split('..')[0]
+            else:
+                org = org.split('_')[0]
             groups.add(metadata[org]['group'])
         if len(groups) > 1:
             suspicious.append(clade)
@@ -121,7 +127,10 @@ def tree_to_pdf(tree_file):
                     orgs = node.get_leaf_names()
                     if len(orgs) > 1:
                         for org in orgs:
-                            org = org.split('_')[0]
+                            if '..' in org:
+                                org = org.split('..')[0]
+                            else:
+                                org = org.split('_')[0]
                             taxons.add(metadata[org]['group'])
                             taxons_list.append(metadata[org]['group'])
                     if len(taxons) > 1 and (len(node) < (len(t)-len(node))):
@@ -143,7 +152,7 @@ def tree_to_pdf(tree_file):
                     group = metadata[org]['group']
                     node.name = f'{node.name}'
                     if group in tax_col:
-                        tax_name = TextFace(f'[{group}]', fgcolor=tax_col[group], bold=True)
+                        tax_name = TextFace(f'[{group} {metadata[org]["subtax"]}]', fgcolor=tax_col[group], bold=True)
                     else:
                         tax_name = TextFace(f'[{group}]', bold=True)
                     node.add_face(tax_name, column=1, position = "aligned")
@@ -155,10 +164,22 @@ def tree_to_pdf(tree_file):
                     else:
                         table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\tp\n')
                         node.name = f'{metadata[org]["full"]}_{quality}@{org}'
+                elif '..' in org:
+                    org, length = org.split('_')
+                    para = org
+                    org = org.split('..')[0]
+                    group = f"{metadata[org]['group']}"
+                    deletef = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='red')
+                    node.name = ''
+                    node.add_face(deletef, column=0)
+                    table.write(f'{metadata[org]["full"]}_{length}@{para}\t{group[1:-1]}\tp\n')
+                    gface = TextFace(f'[{group} {metadata[org]["subtax"]}]')
+                    node.add_face(gface, column=1, position="aligned")
+
                 else:
                     org, length = org.split('_')
-                    group = f"[{metadata[org]['group']}]"
-                    gface = TextFace(f'{group}') #TODO do not touch me pleeeease
+                    group = f"{metadata[org]['group']}"
+                    gface = TextFace(f'[{group} {metadata[org]["subtax"]}]') #TODO do not touch me pleeeease
                     color = metadata[org]['col']
                     node_style["bgcolor"] = color
                     table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group[1:-1]}\to\n')
@@ -202,14 +223,20 @@ def problematic(nonredundant_clades_):
     for clade in nonredundant_clades_:
         taxons = []
         for org in clade:
-            org = org.split('_')[0]
+            if '..' in org:
+                org = org.split('..')[0]
+            else:
+                org = org.split('_')[0]
             taxons.append(metadata[org]["group"])
         group_perc = {}
         for tax in set(taxons):
             group_perc[tax] = (taxons.count(tax)/len(taxons)) * 100
         max_perc = max(group_perc, key=group_perc.get)
         for seq in clade:
-            org = seq.split('_')[0]
+            if '..' in seq:
+                org = seq.split('..')[0]
+            else:
+                org = seq.split('_')[0]
             if group_perc[metadata[org]["group"]] == 50:
                 problematic_orgs_[org].append('unspecified')
             else:
