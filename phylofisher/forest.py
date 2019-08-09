@@ -35,8 +35,8 @@ def parse_metadata(metadata, input_metadata=None):
                 metadata_input = line.split('\t')
                 tax = metadata_input[2].strip().split('_')[0]
                 group = metadata_input[3].strip()
-                full = metadata_input[5].strip()
-                sub_tax = sline[4]
+                full = metadata_input[6].strip()
+                sub_tax = metadata_input[4]
                 metadata_comb[tax] = {'group': group, 'col': "white", 'full': full, 'subtax': sub_tax}
     return metadata_comb, tax_col
 
@@ -154,7 +154,7 @@ def tree_to_pdf(tree_file):
                     if group in tax_col:
                         tax_name = TextFace(f'[{group} {metadata[org]["subtax"]}]', fgcolor=tax_col[group], bold=True)
                     else:
-                        tax_name = TextFace(f'[{group}]', bold=True)
+                        tax_name = TextFace(f'[{group} {metadata[org]["subtax"]}]', bold=True)
                     node.add_face(tax_name, column=1, position = "aligned")
                     if node.name in top_ranked:
                         tname = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', bold=True)
