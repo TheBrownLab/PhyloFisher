@@ -18,6 +18,6 @@ if __name__ == '__main__':
                                                  'information about lenght to all other seqs.',
                                      usage="len_filter -i <input_alignment> -t <len threshold>")
     parser.add_argument('-i', '--input', required=True, help='  trimmed alignment input')
-    parser.add_argument('-t', '--threshold', required=True, type=float, help='len threshold e.g. 0.3 for 30%')
+    parser.add_argument('-t', '--threshold', default=0.3, type=float, help='len threshold e.g. 0.3 for 30%')
     args = parser.parse_args()
     good_length(args.input, args.threshold)
