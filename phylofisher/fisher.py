@@ -363,13 +363,16 @@ def new_best_hits(candidate_hits):
             with open(dataset, 'a') as d:
                 seq_name = cand.name.split("@")[0]
                 gene = cand.name.split("@")[1]
-                if gene == reciprocal_hits[seq_name[:-4]]:
-                    d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
-                else:
-                    d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
-                    with open('nonreciprocal_hits.txt', 'a') as nonrep:
-                        nonrep.write(f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
-                        print(f'nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
+                try:
+                    if gene == reciprocal_hits[seq_name[:-4]]:
+                        d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
+                    else:
+                        d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
+                        with open('nonreciprocal_hits.txt', 'a') as nonrep:
+                            nonrep.write(f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
+                            print(f'nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
+                except KeyError:
+                    n -= 1
 
 
 def main_func(gene_hits):
