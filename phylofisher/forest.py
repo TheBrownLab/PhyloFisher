@@ -169,7 +169,7 @@ def tree_to_pdf(tree_file):
                     para = org
                     org = org.split('..')[0]
                     group = f"{metadata[org]['group']}"
-                    deletef = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='red')
+                    deletef = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='blue')
                     node.name = ''
                     node.add_face(deletef, column=0)
                     table.write(f'{metadata[org]["full"]}_{length}@{para}\t{group}\tp\n')
