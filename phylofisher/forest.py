@@ -112,10 +112,6 @@ def tree_to_pdf(tree_file):
         node_style['hz_line_width'] = 3
         node_style['vt_line_type'] = 0
         node_style['hz_line_type'] = 0
-        if node.support >= 70:
-            node_style['shape'] = 'circle'
-            node_style['size'] = 12
-            node_style['fgcolor'] = 'black'
 
         if node.is_root() is False:
             if node.is_leaf() is False:
@@ -135,6 +131,7 @@ def tree_to_pdf(tree_file):
                             taxons_list.append(metadata[org]['group'])
                     if len(taxons) > 1 and (len(node) < (len(t)-len(node))):
                         node_style['shape'] = 'sphere'
+                        node_style['size'] = 12
                         node_style['fgcolor'] = 'red'
                         node_style['bgcolor'] = 'Silver'
                         sus_clades += 1
