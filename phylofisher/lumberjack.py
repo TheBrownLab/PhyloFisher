@@ -27,7 +27,7 @@ def parse_input(multi_input):
         sline = line.split('\t')
         abbrev = sline[2].strip()
         group = sline[3].strip()
-        full_name = sline[5].strip()
+        full_name = sline[6].strip()
         input_info[abbrev]['tax'] = group
         input_info[abbrev]['full_name'] = full_name
     return input_info
@@ -74,11 +74,13 @@ def parse_table(table):
 
     seq_dict = parse_fasta(gene)
 
+    current_orthologs = set()
     for line in open(table):
         tree_name, tax, status = line.split('\t')
         status = status.strip()
         abbrev = tree_name.split('@')[-1]
         if tree_name.count('_') != 3 and '..' not in abbrev:
+            current_orthologs.add(abbrev)
             record = seq_dict[abbrev]
             if status == 'd':
                 del gene_meta[abbrev]
@@ -86,6 +88,11 @@ def parse_table(table):
                 pname = paralog_name(abbrev, para_meta.keys())
                 para_meta[pname] = record
                 del gene_meta[abbrev]
+
+    ortholog_trimmed_out = dict()
+    for name, record in gene_meta.items():
+        if name not in current_orthologs:
+            ortholog_trimmed_out[name] = record
 
     for line in open(table):
         tree_name, tax, status = line.split('\t')
@@ -107,10 +114,13 @@ def parse_table(table):
         name = tree_name.split('@')[-1]
         abbrev = name.split('.')[0]
         if '..' in name:
-            record = seq_dict[name]
+            record = para_meta[name]
             if status == 'o':
                 gene_meta[abbrev] = record
                 del para_meta[name]
+                if abbrev in ortholog_trimmed_out:
+                    pname = paralog_name(abbrev, para_meta.keys())
+                    para_meta[pname] = ortholog_trimmed_out[abbrev]
             elif status == 'd':
                 del para_meta[name]
 
