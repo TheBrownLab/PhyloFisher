@@ -35,7 +35,8 @@ def parse_orgs(org_file):
                 to_exlude.add(org)
             if header.count(',') == 10:
                 if line.split(',')[sgt_idx + 1].strip().lower() == "yes":
-                    paralogs.add(org)
+                    if org not in to_exlude:
+                        paralogs.add(org)
     return to_exlude, paralogs
 
 
