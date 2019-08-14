@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 from collections import defaultdict
 import subprocess
 import argparse
@@ -241,21 +242,32 @@ def cluster_rename_sequences():
 
 
 def check_input():
+    #TODO check is file is aa not nucl
+    errors = ''
     taxonomic_groups = tax_group.values()
+    n = 1
     for line in open(multi_input):
         if "FILE_NAME" not in line:
+            n += 1
             metadata_input = line.split('\t')
             f_file = str(Path(metadata_input[0], metadata_input[1]))
-            assert os.path.isfile(f_file.strip()), f"{f_file} doesn't exist"
+            if os.path.isfile(f_file.strip()) is False:
+                errors += f"line {n}: file {f_file} doesn't exist\n"
             s_name = metadata_input[2].strip()
-            assert s_name not in tax_group, f'{s_name} already in metadata'
+            if s_name  in tax_group:
+                errors += f'line {n}: {s_name} already in metadata\n'
             s_queries = metadata_input[4]
             if s_queries.lower().strip() != 'none':
                 for q in s_queries.split(','):
-                    assert q.strip() in tax_group, f'{q} not in metadata'
+                    if q.strip() not in tax_group:
+                        errors += f'line {n}: {q} not in metadata\n'
                 tax = metadata_input[3].strip()
                 if '*' not in tax:
-                    assert tax in taxonomic_groups, f'{tax} not in metadata'
+                    if tax not in taxonomic_groups:
+                        errors += f'line {n}: {tax} not in metadata\n'
+    if errors:
+        sys.exit(f'Please check your input file:\n{errors[:-1]}')
+
 
 
 def diamond():

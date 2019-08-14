@@ -20,7 +20,6 @@ def parse_metadata(metadata, input_metadata=None):
             sline = line_.split('\t')
             tax = sline[0].strip()
             group = sline[2].strip()
-            # col = sline[3].strip()
             col = sline[4].strip()
             sub_tax = sline[3]
             full = sline[1].strip()
