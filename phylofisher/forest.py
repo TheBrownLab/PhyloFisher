@@ -88,6 +88,7 @@ def get_best_candidates(tree_file):
 
 
 def parse_contaminations(file):
+    #TODO check contamination file
     cont_dict = {}
     for line in open(file):
         org, tax, rank = line.split('\t')
