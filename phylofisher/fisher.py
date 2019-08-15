@@ -256,7 +256,7 @@ def check_input():
             s_name = metadata_input[2].strip()
             if s_name  in tax_group:
                 errors += f'line {n}: {s_name} already in metadata\n'
-            s_queries = metadata_input[4]
+            s_queries = metadata_input[5]
             if s_queries.lower().strip() != 'none':
                 for q in s_queries.split(','):
                     if q.strip() not in tax_group:
@@ -475,7 +475,7 @@ if __name__ == '__main__':
             sample_name = metadata_input[2].strip()
             taxonomy = metadata_input[3].strip()
             input_taxonomy[sample_name] = taxonomy
-            specific_queries = metadata_input[4].strip()
+            specific_queries = metadata_input[5].strip()
             print(f'{sample_name} has started\n--------------------------')
             os.mkdir(f'tmp/{sample_name}')
             infile = cluster_rename_sequences()
