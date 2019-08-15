@@ -28,8 +28,10 @@ def parse_input(multi_input):
         abbrev = sline[2].strip()
         group = sline[3].strip()
         full_name = sline[6].strip()
+        subtax = sline[4]
         input_info[abbrev]['tax'] = group
         input_info[abbrev]['full_name'] = full_name
+        input_info[abbrev]['subtax'] = subtax
     return input_info
 
 
@@ -131,7 +133,8 @@ def add_to_meta(abbrev):
     with open(metadata, 'a') as res:
         full = input_info[abbrev]['full_name']
         tax = input_info[abbrev]['tax']
-        res.write(f'{abbrev}\t{full}\t{tax}\tx\tx\tx\n')
+        subtax = input_info[abbrev]['subtax']
+        res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}x\tx\tx\n')
 
 
 def new_database(table):
