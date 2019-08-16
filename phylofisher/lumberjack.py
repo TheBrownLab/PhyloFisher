@@ -29,9 +29,16 @@ def parse_input(multi_input):
         group = sline[3].strip()
         full_name = sline[6].strip()
         subtax = sline[4]
+        col = sline[7]
+        data_type = sline[8]
+        notes = sline[9].strip()
         input_info[abbrev]['tax'] = group
         input_info[abbrev]['full_name'] = full_name
         input_info[abbrev]['subtax'] = subtax
+        input_info[abbrev]['col'] = col
+        input_info[abbrev]['data_type'] = data_type
+        input_info[abbrev]['notes'] = notes
+
     return input_info
 
 
@@ -65,7 +72,7 @@ def paralog_name(abbrev, keys):
 
 
 def parse_table(table):
-    gene = table.split('/')[-1].split('.')[0]
+    gene = table.split('/')[-1].split('_')[0]
     gene_meta_p = str(Path(dfo, f'orthologs/{gene}.fas'))
     para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
     gene_meta = SeqIO.to_dict(SeqIO.parse(gene_meta_p, "fasta"))
@@ -134,11 +141,14 @@ def add_to_meta(abbrev):
         full = input_info[abbrev]['full_name']
         tax = input_info[abbrev]['tax']
         subtax = input_info[abbrev]['subtax']
-        res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}x\tx\tx\n')
+        col = input_info[abbrev]['col']
+        data_type = input_info[abbrev]['data_type']
+        notes = input_info[abbrev]['notes']
+        res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}\t{col}\t{data_type}\t{notes}\n')
 
 
 def new_database(table):
-    gene = table.split('/')[-1].split('.')[0]
+    gene = table.split('/')[-1].split('_')[0]
     print(str(Path(dfo, f'orthologs/{gene}.fas')))
     gene_meta_p = str(Path(dfo, f'orthologs/{gene}.fas'))
     para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
@@ -166,7 +176,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='lumberjack', usage="bla bla")
-    parser.add_argument('-i', '--input_folder', required=True)
+    parser.add_argument('-i', '--input_folder', required=True, help='folder with tsv files')
     args = parser.parse_args()
 
     config = configparser.ConfigParser()

@@ -57,6 +57,7 @@ def delete_group_org(orgs_=None, groups=None):
     delete_homologs(orgs_to_del)
 
 
+#TODO input as a file
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
