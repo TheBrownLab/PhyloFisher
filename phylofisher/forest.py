@@ -154,7 +154,9 @@ def collect_contaminations(tree_file, cont_dict):
     return contaminations, cont_table_name
 
 
-def tree_to_pdf(tree_file, contaminations=[], backpropagion=None):
+def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
+    if contaminations is None:
+        contaminations = []
     tree_base = str(os.path.basename(tree_file))
     if args.prefix:
         tree_base = tree_base.replace(args.prefix, '')
