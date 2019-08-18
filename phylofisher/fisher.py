@@ -433,7 +433,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--threads', type=int,
                         help='Number of threads, default:1', default=1)
     parser.add_argument('-n', '--max_hits', type=int,
-                        help='Max number of hits to check. Default = 1.', default=5)
+                        help='Max number of hits to check. Default = 5.', default=5)
     parser.add_argument('-v', '--version', action='version', version='0.1')
     parser.add_argument('--keep_tmp', action='store_true')
     parser.add_argument('--add', help='Input file (different from original one in config.ini'
@@ -469,7 +469,7 @@ if __name__ == '__main__':
             os.mkdir('tmp')
     for line in open(multi_input):
         total_profiles = len(profiles)
-        if "FILE_NAME" not in line:
+        if "FILE_NAME" not in line: #TODO fix me motherfucker
             metadata_input = line.split('\t')
             fasta_file = str(Path(metadata_input[0].strip(), metadata_input[1].strip()))
             sample_name = metadata_input[2].strip()
@@ -492,3 +492,4 @@ if __name__ == '__main__':
         additions_to_input()
     if not args.keep_tmp:
         rmtree("tmp/")
+    print('Fisher completed without any errors.')
