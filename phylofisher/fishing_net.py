@@ -80,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input_directory', required=True)
     parser.add_argument('-o', '--output_directory', required=True)
     parser.add_argument('-d', '--dataset_folder')
-    parser.add_argument('-s', '--sufix', required=True, help='sufix of fasta files')
+    parser.add_argument('-s', '--sufix', default='fas', help='sufix of fasta files')
     parser.add_argument('--orthologs', action='store_true', help='Only for ortholog selection. Without information'
                                                                  'about used path.')
     parser.add_argument('-c', '--use_config', action='store_true')

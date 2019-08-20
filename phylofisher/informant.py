@@ -27,7 +27,7 @@ def taxonomy_dict(metadata, multi_input=None):
             metadata_input = line.split('\t')
             tax = metadata_input[2].strip()
             group = metadata_input[3].strip()
-            full_name = metadata_input[5].strip()
+            full_name = metadata_input[6].strip()
             tax_g[tax] = group
             full_names[tax] = full_name
     return tax_g, full_names
