@@ -12,13 +12,27 @@ def prepare_analyses(dataset, threads):
 
     command += f'no_gap_stops.py {dataset} && '
 
-    command += f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
-        f' --threads {threads} {dataset}.aa > {root}.aln && '
+    command += f' mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
+        f' --thread {threads} {root}.aa > {root}.aln && '
 
     divvier = str(Path(dfo, 'lib/Divvier/divvier'))
     command += f'{divvier} -mincol 4 -divvygap {root}.aln && '
 
-    command += f'trimal -in {root}.aln.divvy.fas -gt 0.2 -out {root}.trimal\n'
+    command += f'trimal -in {root}.aln.divvy.fas -gt 0.2 -out {root}.trimal && '
+
+    command += f'len_filter2.py -i {root}.trimal -t 0.5 && '
+
+    command += f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
+        f' --thread {threads} {root}.len > {root}.aln2 && '
+
+    command += f'{divvier} -mincol 4 -divvygap {root}.aln2 &&'
+
+    command += f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final && '
+
+    command += f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final' \
+        f' -n  {root}.tre -x 123 -N 100 -p 12345 && '
+
+    command += f'add_aln_length.py {root}\n'
 
     return command
 
@@ -37,7 +51,7 @@ if __name__ == '__main__':
         config.read('config.ini')
         dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     else:
-        dfo = args.dataset_folder
+        dfo = str(Path(args.dataset_folder).resolve())
 
     os.chdir(args.input_folder)
     with open('commands.txt', 'w') as res:
