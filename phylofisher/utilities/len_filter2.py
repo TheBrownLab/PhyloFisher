@@ -25,7 +25,7 @@ def good_length(trimmed_aln, threshold):
             else:
                 print('deleted:', record.name, coverage)
     with open(f'{core}.length', 'w') as f:
-        f.write(length)
+        f.write(str(length))
 
 
 if __name__ == '__main__':
