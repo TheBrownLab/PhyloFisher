@@ -3,8 +3,9 @@ import os
 import argparse
 from glob import glob
 from pathlib import Path
+import configparser
 
-
+#TODO fucking cleaning
 
 def prepare_analyses(dataset, threads):
     root = dataset.split('/')[-1].split('.')[0]
@@ -12,8 +13,12 @@ def prepare_analyses(dataset, threads):
 
     command += f'no_gap_stops.py {dataset} && '
 
+    preq = += str(Path(dfo, 'lib/prequal/prequal'))
+
+    command += f'{preq} {root}.aa'
+
     command += f' mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
-        f' --thread {threads} {root}.aa > {root}.aln && '
+        f' --thread {threads} {root}.aa.filtered > {root}.aln && '
 
     divvier = str(Path(dfo, 'lib/Divvier/divvier'))
     command += f'{divvier} -mincol 4 -divvygap {root}.aln && '
@@ -44,6 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input_folder', help='Short names of organisms for deletion: Org1,Org2,Org3')
     parser.add_argument('-s', '--suffix', default='.fas')
     parser.add_argument('-c', '--use_config', action='store_true')
+    parser.add_argument('-t', '--threads', type=int, default=1)
     args = parser.parse_args()
 
     if args.use_config:
@@ -56,5 +62,5 @@ if __name__ == '__main__':
     os.chdir(args.input_folder)
     with open('commands.txt', 'w') as res:
         for file in glob(f'*{args.suffix}'):
-            line = prepare_analyses(file, 5)
+            line = prepare_analyses(file, args.threads)
             res.write(line)

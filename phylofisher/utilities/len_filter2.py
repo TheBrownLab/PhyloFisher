@@ -5,7 +5,7 @@ import argparse
 
 def read_full_proteins(core):
     full_prots = {}
-    for record in SeqIO.parse(f'{core}.aa', 'fasta'):
+    for record in SeqIO.parse(f'{core}.aa.filtered', 'fasta'):
         full_prots[record.name] = record.seq
     return full_prots
 
