@@ -25,7 +25,7 @@ def prepare_analyses(dataset, threads):
     command += f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
         f' --thread {threads} {root}.len > {root}.aln2 && '
 
-    command += f'{divvier} -mincol 4 -divvygap {root}.aln2 &&'
+    command += f'{divvier} -mincol 4 -divvygap {root}.aln2 && '
 
     command += f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final && '
 
