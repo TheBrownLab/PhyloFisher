@@ -5,7 +5,6 @@ import argparse
 from collections import defaultdict, Counter
 import configparser
 from multiprocessing import Pool
-from pathlib import Path
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
