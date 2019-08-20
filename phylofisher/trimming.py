@@ -30,7 +30,7 @@ def prepare_analyses(dataset, threads):
     command += f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final && '
 
     command += f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final' \
-        f' -n  {root}.tre -x 123 -N 100 -p 12345 && '
+        f' -n {root}.tre -x 123 -N 100 -p 12345 && '
 
     command += f'add_aln_length.py {root}\n'
 
