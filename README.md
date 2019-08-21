@@ -28,4 +28,4 @@ Use config.py --help for more options.<br/>
 - apply your selection:<br/>
 `fishing_net.py -i fasta/ -o <folder_with_selected_seqs>`<br/>
 - trimming and trees computing<br/>
-`NOTHING HERE SO FAR`
+`trimming.py -d <dataset_folder> -i <folder_with_fasta_files> -s <sufix>`
