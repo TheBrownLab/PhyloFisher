@@ -13,9 +13,9 @@ def prepare_analyses(dataset, threads):
 
     command += f'no_gap_stops.py {dataset} && '
 
-    preq = += str(Path(dfo, 'lib/prequal/prequal'))
+    preq = str(Path(dfo, 'lib/prequal/prequal'))
 
-    command += f'{preq} {root}.aa'
+    command += f'{preq} {root}.aa && '
 
     command += f' mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
         f' --thread {threads} {root}.aa.filtered > {root}.aln && '

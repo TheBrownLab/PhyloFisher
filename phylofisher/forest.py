@@ -23,7 +23,7 @@ def parse_metadata(metadata, input_metadata=None):
             sub_tax = sline[3]
             full = sline[1].strip()
             if group not in tax_col:
-                if col.lower() == 'x':
+                if col.lower() in ['x', 'xx']:
                     col = 'white'
                 tax_col[group] = col
             metadata_comb[tax] = {'group': group, 'col': tax_col[group], 'full': full, 'subtax': sub_tax}
@@ -266,7 +266,8 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
                     node.add_face(gface, column=1, position="aligned")
             node.set_style(node_style)
 
-    title_face = TextFace(f'<{output_base.split("/")[-1]}, {sus_clades} suspicious clades>',  bold=True)
+    name_ , trim_len = tree_base.split('_')
+    title_face = TextFace(f'<{name_}  trim_aln_len: {trim_len}, {sus_clades} suspicious clades>',  bold=True)
     ts.title.add_face(title_face, column=1)
     t.render(output_base + '_tree.svg', tree_style=ts)
     if not backpropagion:
