@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import argparse
 import glob
 from collections import defaultdict
@@ -8,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+from shutil import copyfile
 
 
 
@@ -26,6 +28,10 @@ def collect_names(infile):
     for line in open(infile):
         names.append(line.strip())
     return names
+
+
+def prepare_alignments():
+    pass
 
 
 def parse_alignments(aln_file):
@@ -58,21 +64,19 @@ def missing_data(target_names, alignments_file, tax_groups):
 
 
 
-def main(taxa, metadata, suffix, output):
-    target_names = collect_names(taxa)
-    tax_groups = parse_metadata(metadata)
-    genes = {}
-    for file in glob.glob(f'*{suffix}'):
-        core = file.split('.')[0]
-        genes[core] = missing_data(target_names, file, tax_groups)
+def extract_genes(s, dataset, gene_n, out_fold):
+    genes = list(s.index[:gene_n])
+    os.mkdir(out_fold)
+    ortho_fold = os.path.join(dataset, 'orthologs')
+    for gene in genes:
+        g_name = f'{gene}.fas'
+        copyfile(f'{os.path.join(ortho_fold, g_name)}', f'{os.path.join(out_fold, g_name)}')
 
-    s = pd.Series(genes).sort_values()
-
+def make_plot(s, plot_name, bin_size):
     means = []
     missing = []
     lengths = []
     for i, values in enumerate(s):
-        print(i, values)
         if not means:
             missing.append(values[0])
             means.append(values[0])
@@ -82,29 +86,52 @@ def main(taxa, metadata, suffix, output):
             means.append((sum(missing)/len(missing)))
             lengths.append((lengths[i-1] + values[1]))
 
-    labels_ = np.arange(0,len(lengths),5)
+    labels_ = np.arange(0,len(lengths),bin_size)
     plt.plot(lengths, means)
-    plt.xticks(lengths[::5], labels=labels_)
+    plt.xticks(lengths[::bin_size], labels=labels_)
     plt.ylabel('missing data [%]', labelpad=15)
     plt.xlabel('gene number', labelpad=15)
     plt.tight_layout()
-    plt.savefig(f'{output}.pdf')
+    plt.savefig(f'{plot_name}.pdf')
+
+
+def main(taxa, dataset, suffix, plot_name, bin_size, gene_n, out_fold):
+    target_names = collect_names(taxa)
+    metadata = os.path.join(dataset, 'metadata.tsv')
+    tax_groups = parse_metadata(metadata)
+    genes = {}
+    for file in glob.glob(f'*{suffix}'):
+        core = file.split('.')[0]
+        genes[core] = missing_data(target_names, file, tax_groups)
+
+    s = pd.Series(genes).sort_values()
+
+    if plot_name:
+        make_plot(s, plot_name, bin_size)
+
+    if gene_n:
+        extract_genes(s, dataset, gene_n, out_fold)
+
+
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher.py [OPTIONS]")
     parser.add_argument('-t', '--taxa', required=True)
-    parser.add_argument('-m', '--metadata')
+    parser.add_argument('-d', '--dataset')
     parser.add_argument('-s', '--suffix', type=str)
-    parser.add_argument('-o', '--output')
+    parser.add_argument('-p', '--plot')
+    parser.add_argument('-n', '--gene_number', type=int, help='number of genes for analysis')
+    parser.add_argument('-f', '--output_folder')
+    parser.add_argument('-b', '--bin_size', type=int, help='bin size for plot', default=5)
     parser.add_argument('-c', '--use_config', action='store_true', help='use config file for metadata')
     args = parser.parse_args()
 
     if args.use_config is True:
         config = configparser.ConfigParser()
         config.read('config.ini')
-        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-        args.metadata = os.path.join(dfo, 'metadata.tsv')
+        args.dataset = str(Path(config['PATHS']['dataset_folder']).resolve())
 
 
-    main(args.taxa, args.metadata, args.suffix, args.output)
+    main(args.taxa, args.dataset, args.suffix,
+         args.plot, args.bin_size, args.gene_number, args.output_folder)
