@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+from pathlib import Path
 plt.style.use('ggplot')
 
 
@@ -373,20 +374,27 @@ def backpropagate_contamination(tree_file, cont_names):
 
 
 if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read('config.ini')
     parser = argparse.ArgumentParser(description='some description', usage="blabla")
     parser.add_argument('-t', '--trees_folder', required=True)
     parser.add_argument('-o', '--output_folder', required=True)
-    parser.add_argument('-m', '--metadata', required=True)
+    parser.add_argument('-m', '--metadata')
     parser.add_argument('-n', '--input_metadata')
-    parser.add_argument('-c', '--contaminations')
+    parser.add_argument('-a', '--contaminations')
+    parser.add_argument('-c', '--use_config', action='store_true')
     parser.add_argument('-b', '--backpropagate', action='store_true', help='backpropagate contaminations')
     parser.add_argument('--prefix')
     parser.add_argument('--suffix')
     args = parser.parse_args()
     trees_folder = args.trees_folder
     output_folder = args.output_folder
+
+
+    if args.use_config:
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+        args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
+        args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
 
     if not args.backpropagate:
         os.mkdir(output_folder)
