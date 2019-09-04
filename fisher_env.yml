@@ -1,7 +1,7 @@
 name: phylo_fisher
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 dependencies:
   - python=3.6

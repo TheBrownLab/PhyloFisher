@@ -12,6 +12,7 @@ setup(
              'phylofisher/informant.py',
              'phylofisher/lumberjack.py',
              'phylofisher/purge.py',
+             'phylofisher/build_dataset.py',
              'phylofisher/utilities/AgentEllie.py',
              'phylofisher/utilities/AgentEllie2.py',
              'phylofisher/utilities/len_filter.py',
