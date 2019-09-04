@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from shutil import copyfile
-
+import configparser
 
 
 def parse_metadata(metadata):
@@ -23,6 +23,7 @@ def parse_metadata(metadata):
                 groups[subtax].add(org)
     return groups
 
+
 def collect_names(infile):
     names = []
     for line in open(infile):
@@ -30,6 +31,7 @@ def collect_names(infile):
     return names
 
 
+# Do we want to prepare trimmed alignments?
 def prepare_alignments():
     pass
 
@@ -42,7 +44,6 @@ def parse_alignments(aln_file):
         if not length:
             length = len(str(record.seq))
     return res_dict, length
-
 
 
 def missing_data(target_names, alignments_file, tax_groups):
@@ -63,7 +64,6 @@ def missing_data(target_names, alignments_file, tax_groups):
     return (statistics.mean(missing), length)
 
 
-
 def extract_genes(s, dataset, gene_n, out_fold):
     genes = list(s.index[:gene_n])
     os.mkdir(out_fold)
@@ -71,6 +71,7 @@ def extract_genes(s, dataset, gene_n, out_fold):
     for gene in genes:
         g_name = f'{gene}.fas'
         copyfile(f'{os.path.join(ortho_fold, g_name)}', f'{os.path.join(out_fold, g_name)}')
+
 
 def make_plot(s, plot_name, bin_size):
     means = []
