@@ -12,6 +12,10 @@ from pathlib import Path
 from shutil import copyfile
 import configparser
 
+"""
+How are we going to get trimmed alignments?
+"""
+
 
 def parse_metadata(metadata):
     groups = defaultdict(set)
