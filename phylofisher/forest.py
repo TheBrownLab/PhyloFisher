@@ -163,9 +163,9 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
     if args.suffix:
         tree_base = tree_base.replace(args.suffix, '')
 
-    output_base = f"{output_folder}/{tree_base}"
+    output_base = f"{output_folder}/{tree_base.split('_')[0]}"
     if not backpropagion:
-        table = open(f"{output_folder}/{tree_base}.tsv",'w')
+        table = open(f"{output_folder}/{tree_base.split('_')[0]}.tsv",'w')
 
     top_ranked = get_best_candidates(tree_file)
     t = Tree(tree_file)
@@ -358,7 +358,7 @@ def backpropagate_contamination(tree_file, cont_names):
         tree_base = tree_base.replace(args.prefix, '')
     if args.suffix:
         tree_base = tree_base.replace(args.suffix, '')
-
+    tree_base =tree_base.split("_")[0]
     original_table = open(f"{output_folder}/{tree_base}.tsv", 'r').readlines()
     with open(f"{output_folder}/{tree_base}.tsv", 'w') as res_:
         n = 0
