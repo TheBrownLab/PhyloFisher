@@ -307,7 +307,7 @@ def fasttree(checked_hits):
     gene = full_name.split('@')[1]
     fas = f'tmp/{org}/{gene}.for_ftree'
     aln = f'tmp/{org}/{gene}.aln'
-    trim = f'tmp/{org}/{gene}.bmge'
+    trim = f'tmp/{org}/{gene}.trimal'
     tree_file = f'tmp/{org}/{gene}.tree'
     copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), f'tmp/{org}/{gene}.for_ftree')
     with open(fas, 'a') as f:
@@ -315,7 +315,7 @@ def fasttree(checked_hits):
             f.write(f'>{hit.name}\n{hit.seq}\n')
     cmd1 = f'mafft --auto --reorder {fas} > {aln}'
     subprocess.run(cmd1, shell=True, stderr=subprocess.DEVNULL)
-    cmd2 = f"java -jar {bmge} -t AA -m BLOSUM30 -b 2 -g 0.6 -i {aln} -of {trim}"
+    cmd2 = f"trimal -in {aln} -gt 0.2 -out {trim}"
     subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL)
     cmd3 = f"fasttree {trim} > {tree_file}"
     subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
@@ -447,7 +447,6 @@ if __name__ == '__main__':
         multi_input = os.path.abspath(args.add)
     else:
         multi_input = os.path.abspath(config['PATHS']['input_file'])
-    bmge = config['PATHS']['bmge']
     check_input()
 
     bacterial, gene_og = bac_gog_db()
