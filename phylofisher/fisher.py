@@ -190,6 +190,10 @@ def get_gene_dict(threads, infile_proteins, spec_queries=None):
 
 
 def best_hits(max_hits, gene):
+    """Selects candidates(hits) up to max_hits.
+    Candidates have to be in hmm_hits
+
+    returns: tuple with gene name and list with candidates names"""
     candidates = []
     hits = gene.hits()
     counter = 0
@@ -204,6 +208,9 @@ def best_hits(max_hits, gene):
 
 
 def bac_gog_db():
+    """Parses bacterial names and gene: orthogroup/s from orthomcl.
+
+    returns tuple with ls of [bacterial names] and {gene: orthogtoup/s} dir"""
     bac = set()
     for line_ in open(str(Path(dfo, 'orthomcl/bacterial'))):
         bac.add(line_[:-1])
@@ -215,6 +222,7 @@ def bac_gog_db():
 
 
 def get_infile_proteins():
+    # parses infile proteins
     infile_proteins = {}
     for record in SeqIO.parse(infile, 'fasta'):
         infile_proteins[record.id] = str(record.seq)
@@ -222,6 +230,8 @@ def get_infile_proteins():
 
 
 def get_candidates(threads, max_hits, queries):
+    """pararellized best_hits function
+    return list of tuples (gene:[candidate names],..)"""
     with Pool(processes=threads) as pool:
         func = partial(best_hits, max_hits)
         candidates = list(pool.map(func, queries))
@@ -229,6 +239,9 @@ def get_candidates(threads, max_hits, queries):
 
 
 def get_hmm_profiles():
+    """Parses gene names.
+
+    Returns: list with gene names"""
     hmm_profiles = []
     for file in os.listdir(str(Path(dfo, 'profiles/'))):
         hmm_profiles.append(file.split('.')[0])
@@ -236,6 +249,7 @@ def get_hmm_profiles():
 
 
 def makedirs():
+    """Creates output dictionaries tmp and fasta"""
     directories = ['tmp', 'fasta']
     for directory in directories:
         if not os.path.isdir(directory):
@@ -243,15 +257,19 @@ def makedirs():
 
 
 def phylofisher(threads, max_hits, spec_queries=None):
+
     infile_proteins = get_infile_proteins()
     if spec_queries:
+        #makes blastdb from input proteins
         makeblastdb()
         gene_dict = get_gene_dict(threads, infile_proteins, spec_queries)
     else:
         gene_dict = get_gene_dict(threads, infile_proteins)
 
+    #return list of tuples (gene:[candidate names],..)
     candidates = get_candidates(threads, max_hits, gene_dict.values())
 
+    #writes all candidates to for_diamond.fasta"
     with open('tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
             if candi_list:
@@ -260,6 +278,7 @@ def phylofisher(threads, max_hits, spec_queries=None):
 
 
 def taxonomy_dict():
+    """Parse taxonomical group for all organisms from metadata."""
     tax_g = {}
     for line_ in open(str(Path(dfo, 'metadata.tsv'))):
         if 'Full Name' not in line_:
@@ -271,11 +290,17 @@ def taxonomy_dict():
 
 
 def cluster_rename_sequences():
+    """Clusters sequences in input fasta file for given organism
+    and rename every sequence with short name_number
+
+    returns: abs path to the file with clustered and renamed sequences"""
     clustered = f'tmp/{sample_name}/clustered.fasta'
     cmd = f'cd-hit -i {fasta_file} -o {clustered} -c 0.98'
+    #performs cd-hit
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     original_names = {}
     n = 1
+    #prepares files with clustered and renamed sequences
     with open(f'tmp/{sample_name}/clustered_renamed.fasta', 'w') as res:
         for record in SeqIO.parse(clustered, 'fasta'):
             new_name = f"{sample_name}_{n}"
@@ -283,6 +308,8 @@ def cluster_rename_sequences():
             res.write(f'>{new_name}\n{record.seq}\n')
             n += 1
     abs_path = os.path.abspath(f'tmp/{sample_name}/clustered_renamed.fasta')
+
+    #prepares file tsv files which keep information about old name: new name
     with open('original_names.tsv', 'a') as f:
         for new_name, or_name in original_names.items():
             f.write(f'{or_name}\t{new_name}\n')
@@ -290,27 +317,34 @@ def cluster_rename_sequences():
 
 
 def check_input():
+    """Checks input metadata file for possible mistakes."""
     #TODO check is file is aa not nucl
     errors = ''
     taxonomic_groups = tax_group.values()
     n = 1
-    for line in open(multi_input):
+    for line in open(input_metadata):
         if "FILE_NAME" not in line:
             n += 1
             metadata_input = line.split('\t')
             f_file = str(Path(metadata_input[0], metadata_input[1]))
+            #checks if file for given organism exists
             if os.path.isfile(f_file.strip()) is False:
                 errors += f"line {n}: file {f_file} doesn't exist\n"
             s_name = metadata_input[2].strip()
             if s_name  in tax_group:
+                #checks if short name is not already included in metadata
+                # from the database
                 errors += f'line {n}: {s_name} already in metadata\n'
             s_queries = metadata_input[5]
             if s_queries.lower().strip() != 'none':
                 for q in s_queries.split(','):
                     if q.strip() not in tax_group:
+                        #checks if specific query exists in metadata
                         errors += f'line {n}: {q} not in metadata\n'
                 tax = metadata_input[3].strip()
                 if '*' not in tax:
+                    #checks if taxonomic group is already in metadata.
+                    # If you want to use new tax group: use * in its name
                     if tax not in taxonomic_groups:
                         errors += f'line {n}: {tax} not in metadata\n'
     if errors:
@@ -319,6 +353,7 @@ def check_input():
 
 
 def diamond():
+    """executes diamond against orthomcl and datasetdb database"""
     for_diamond = 'tmp/for_diamond.fasta'
 
     db = str(Path(dfo, 'orthomcl/orthomcl.diamonddb'))
@@ -337,7 +372,6 @@ def diamond():
 
 
 def correct_phylo_group(parent, sample_taxomomy):
-    # TODO add paralog filter
     groups = set()
     for org in parent.get_leaf_names():
         if org in tax_group:
@@ -388,6 +422,10 @@ def fasttree(checked_hits):
 
 
 def parse_diamond_output():
+    """checks if best hit from database is not bacterial or
+    from wrong orthogroups
+
+    returns: names of filtered hits with info about gene"""
     correct_hits = set()
     proccesed = set()
     for line in open('tmp/diamond.res'):
@@ -398,13 +436,17 @@ def parse_diamond_output():
             proccesed.add(full_name)
             org = sline[1].split('|')[0]
             og = sline[1].split('|')[2].strip()
-            #TODO are we sure that we want to control only best hit?
             if org not in bacterial and og in gene_og[gene]:
                 correct_hits.add(full_name)
     return correct_hits
 
 
 def new_best_hits(candidate_hits):
+    """Final function. Prepares fasta files with result sequences.
+    In case of _SBH path also checks phylogenetic posisiton of hits
+    by fasttree function"""
+
+    # if _SBH path: check for phylogenetically best candidates
     top_candidates = []
     if candidate_hits:
         if '_SBH' in candidate_hits[0].name:
@@ -412,6 +454,7 @@ def new_best_hits(candidate_hits):
         else:
             top_candidates = candidate_hits
 
+    # prepares final files with orthologs from dataset and new candidates
     if top_candidates:
         gene = top_candidates[0].name.split('@')[1]
         dataset = f'fasta/{gene}.fas'
@@ -423,7 +466,9 @@ def new_best_hits(candidate_hits):
             with open(dataset, 'a') as d:
                 seq_name = cand.name.split("@")[0]
                 gene = cand.name.split("@")[1]
+                #TODO: is this exception handling just for debugging?
                 try:
+                    # if hit is reciprocal hit to a corresponding gene
                     if gene == reciprocal_hits[seq_name[:-4]]:
                         d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
                     else:
@@ -435,12 +480,16 @@ def new_best_hits(candidate_hits):
                     n -= 1
 
 
-def main_func(gene_hits):
+def parallel_new_best_hits(gene_hits):
+    """Just pararallel run of new_best_candidates """
     with Pool(processes=int(args.threads)) as pool:
         pool.map(new_best_hits, gene_hits)
 
 
 def prepare_good_hits():
+    """Prepares all hits for filtration. It filters everything which is
+    not in correct hits (wrongs orthogroups or bacterial best diamond
+    hit from orthomcl database)"""
     gene_hits = defaultdict(list)
     for record in SeqIO.parse('tmp/for_diamond.fasta', 'fasta'):
         if record.name in correct_hits:
@@ -448,10 +497,13 @@ def prepare_good_hits():
             org = record.name.split('_')[0]
             org_gene = f'{org}_{gene}'
             gene_hits[org_gene].append(record)
-    main_func(list(gene_hits.values()))
+    parallel_new_best_hits(list(gene_hits.values()))
 
 
 def get_reciprocal_hits():
+    """Checks if candidate is reciprocal best blast hit with gene
+
+    returns: list with reciprocal hits"""
     reciprocal = {}
     proccesed = set()
     for line in open('tmp/dataset_diamond.res'):
@@ -467,6 +519,7 @@ def get_reciprocal_hits():
 
 
 def additions_to_input():
+    """appends additional input to original input metadata"""
     original_input = config['PATHS']['input_file']
     with open(original_input, 'a') as ori:
         for line in open(args.add):
@@ -488,25 +541,41 @@ if __name__ == '__main__':
                                       ' only with new organisms. ')
     args = parser.parse_args()
 
+    #dataset folder
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
+    #taxon: group for all orgs in metadata
     tax_group = taxonomy_dict()
+
     if args.add:
-        multi_input = os.path.abspath(args.add)
+        #uses additional input metadata file
+        input_metadata = os.path.abspath(args.add)
     else:
-        multi_input = os.path.abspath(config['PATHS']['input_file'])
+        #reads input metadata file from config
+        input_metadata = os.path.abspath(config['PATHS']['input_file'])
+
+    #checks input for potentional mistakes
     check_input()
 
+    #reads bacterial names from orthocml database and also
+    #information  abour gene: orthogroup for all genes
     bacterial, gene_og = bac_gog_db()
+
+    #returns list with gene names
     profiles = get_hmm_profiles()
 
+    #stores information about org:taonomy for input samples
     input_taxonomy = {}
 
     if not args.add:
+        #creates output dictionaries tmp and fasta
         makedirs()
     else:
+        #if --add option
         if os.path.exists('tmp/'):
             try:
+                #in a case that user used --keep-tmp option before:
+                #it cleans problematic tmp files
                 os.remove('tmp/dataset_diamond.res')
                 os.remove('tmp/diamond.res')
                 os.remove('tmp/for_diamond.fasta')
@@ -514,9 +583,11 @@ if __name__ == '__main__':
                 pass
         else:
             os.mkdir('tmp')
-    for line in open(multi_input):
-        total_profiles = len(profiles)
+
+
+    for line in open(input_metadata):
         if "FILE_NAME" not in line: #TODO fix me motherfucker
+            #input metadata file parsing
             metadata_input = line.split('\t')
             fasta_file = str(Path(metadata_input[0].strip(), metadata_input[1].strip()))
             sample_name = metadata_input[2].strip()
@@ -525,18 +596,36 @@ if __name__ == '__main__':
             specific_queries = metadata_input[5].strip()
             print(f'{sample_name} has started\n--------------------------')
             os.mkdir(f'tmp/{sample_name}')
+
+            #performs cd-hit and rename sequences to common format
+            # shortName_number
             infile = cluster_rename_sequences()
+
+            #parses specifiq queries
             specific_queries = specific_queries.strip()
             if specific_queries.lower() == 'none':
                 specific_queries = None
+
+            #prepares candidates for all genes (according to blast and/or hmmsearch)
+            #and stores them in for_diamond.fasta
             phylofisher(args.threads,
                         args.max_hits, specific_queries)
+
+    # performs diamond search against orthomcl database
     diamond()
+    # parses diamond output and returns filtered hits
+    # with information about gene in the header
+    # (no bacterial, or wrong orthogroups)
     correct_hits = parse_diamond_output()
+    # returns hits which are reciprocal with gene from datasetdb
     reciprocal_hits = get_reciprocal_hits()
+    # final function
     prepare_good_hits()
+
     if args.add:
+        # adds additional input metadata to original input metadata
         additions_to_input()
+    # when user doesn't want to keep tmp/* files
     if not args.keep_tmp:
         rmtree("tmp/")
     print('Fisher completed without any errors.')
