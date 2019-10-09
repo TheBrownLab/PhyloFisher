@@ -15,7 +15,7 @@ Installation guide
 
 .. code-block:: bash
 
-    bash conda activate phylo_fisher
+    conda activate phylo_fisher
 
 - intall phylofisher:
 
