@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+
+
+"""Script for finding candidate orthologous sequences
+input: predicted proteins, input metadata
+output: fasta files with predicted candidate orthologous sequences
+"""
+
 import os
 import sys
 from collections import defaultdict
@@ -20,6 +27,21 @@ with warnings.catch_warnings():
 
 
 class Hit:
+    #TODO: it would be nice to refractor me
+    """ Represents candidate hit.
+
+    attributes:
+    - query: refers to a gene
+    - path_: refers to 'SBH' - specific query best hit
+                    'BBH' - best blast hit (doesnt cluster with
+                            expected taxonomical group)
+                    'HMM' - selected just according to Hmmsearch
+    - quality: q1,q2...qn refers to position in blast/hmmsearch
+                quality also contains 'r' or 'n' after number
+                which mean reciprocal and nonreciprocal best blast hit
+                example: q1r means best blast/hmmer hit (depends on path_)
+                        which is also reciprocal best blast hit to query
+                        gene in our database"""
 
     def __init__(self, name, seq, query, hmm_hits):
         self.name = name
@@ -30,13 +52,18 @@ class Hit:
         self.quality = ""
 
     def in_hmm_hits(self):
+        """Control if hit in also in hmmer hits"""
         if self.name in self.hmm_hits:
             return True
         return False
 
 
 class Query:
+    """Represents phylogeneticaly not specific query (only hmmsearch)
 
+    attributes:
+    - query: refers to a gene
+    - squery: always False, not a sprcific query (fix it)"""
     def __init__(self, query, hmm_hits, infile_proteins):
         self.query = query
         self.hmm_hits = hmm_hits
@@ -44,6 +71,8 @@ class Query:
         self.squery = False
 
     def hits(self):
+        """parse all hmmerhits as Hit objets
+        result is a generator producing one hit at a time"""
         for hit in self.hmm_hits:
             hit = Hit(hit, self.infile_proteins[hit], self.query, self.hmm_hits)
             hit.path_ += "HMM"
@@ -51,6 +80,12 @@ class Query:
 
 
 class SpecQuery:
+    """Represents phylogeneticaly specific query.
+
+    attributes:
+    - query: refers to a gene
+    - organisms: organisms from which blast queries should be selected.
+    """
 
     def __init__(self, query, spec_queries, hmm_hits, infile_proteins):
         self.query = query
@@ -60,6 +95,10 @@ class SpecQuery:
         self.organisms = [org for org in spec_queries.split(',')]
 
     def get_specific_query(self):
+        """This function returns seed blast sequence from selected specific queries(organisms).
+        When target gene is not present in the first organism (first in the list) it
+        will check next one.
+        Returns: - seed sequence for blast if gene is present in self.organisms or None"""
         gene_dict = {}
         for record in SeqIO.parse(str(Path(dfo, f'orthologs/{self.query}.fas')), 'fasta'):
             gene_dict[record.name] = str(record.seq)
@@ -69,6 +108,8 @@ class SpecQuery:
                 return org
 
     def spec_query_blast(self):
+        """Blast against sample with sequence selected according to spec queries.
+        Returns: list with ordered best blast hits."""
         db = f"tmp/{sample_name}/{os.path.basename(infile)}.blastdb"
         qfile = f'tmp/{sample_name}/{self.query}.fas'
         bout = f'tmp/{sample_name}/{self.query}.blastout'
@@ -84,6 +125,8 @@ class SpecQuery:
         return blast_hits
 
     def hits(self):
+        """Generator function which return Hit objects prioritized by blast search
+        when some specific query is present or prioritized by hmmsearch"""
         spec_query = self.get_specific_query()
         if spec_query:
             blast_hits = self.spec_query_blast()
@@ -101,6 +144,8 @@ class SpecQuery:
 
 
 def length_check(trimmed_aln):
+    """Returns set of names of sequenes which have meaningful part
+    (without X or -) longer than 30% of trimmed alignment."""
     correct_length = {}
     for record in SeqIO.parse(trimmed_aln, 'fasta'):
         if '@' in record.name:
@@ -126,6 +171,9 @@ def hmmer(query):
 
 
 def get_gene_dict(threads, infile_proteins, spec_queries=None):
+    """This function prepare SpeqQeury or Query for all genes.
+	Query type depends if spec_queries are specified in input metadata
+	for a given organism."""
     gene_dict = {}
     with Pool(processes=threads) as pool:
         hmm_pool = list(pool.map(hmmer, profiles))
