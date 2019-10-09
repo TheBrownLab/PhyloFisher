@@ -587,7 +587,7 @@ if __name__ == '__main__':
 
     for line in open(input_metadata):
         if "FILE_NAME" not in line: #TODO fix me motherfucker
-            #input metadata file parsing
+            # input metadata file parsing
             metadata_input = line.split('\t')
             fasta_file = str(Path(metadata_input[0].strip(), metadata_input[1].strip()))
             sample_name = metadata_input[2].strip()
@@ -597,17 +597,17 @@ if __name__ == '__main__':
             print(f'{sample_name} has started\n--------------------------')
             os.mkdir(f'tmp/{sample_name}')
 
-            #performs cd-hit and rename sequences to common format
+            # performs cd-hit and rename sequences to common format
             # shortName_number
             infile = cluster_rename_sequences()
 
-            #parses specifiq queries
+            # parses specifiq queries
             specific_queries = specific_queries.strip()
             if specific_queries.lower() == 'none':
                 specific_queries = None
 
-            #prepares candidates for all genes (according to blast and/or hmmsearch)
-            #and stores them in for_diamond.fasta
+            # prepares candidates for all genes (according to blast and/or hmmsearch)
+            # and stores them in for_diamond.fasta
             phylofisher(args.threads,
                         args.max_hits, specific_queries)
 
