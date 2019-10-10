@@ -100,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--make_og_file', action='store_true',
                         help='Make file with information about gene: ogs')
     parser.add_argument('-o', '--og_threshold', type=float,
-                        help='Threshold 0-1 for OG. Use only with --make_og_file option',
+                        help='Threshold 0-1 for OG. Use only with --make_og_file option.',
                         default=0.1)
     args = parser.parse_args()
 
