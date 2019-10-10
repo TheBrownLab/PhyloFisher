@@ -10,10 +10,20 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 - activate phylo_fisher environment:<br/>
 `conda activate phylo_fisher`
 - intall phylofisher:<br/>
+`cd PhyloFisher`
 `pip install .`
 - after you finish using PhyloFisher use `conda deactivate` to deactivate phylo_fisher env
 
-## 2. Usage
+## Custom dataset preparation
+- create a directory with subdirectory _orthologs_ (gene_name.fas) with one sequence per organism (named by some short name)
+- ff you already have paralogs, they should be named like this:
+ParatetrGEN..p88706 (short name or your organism, two dots, 'p' and 5 digits) and stored in 'paralogs' folder like genename_paralogs.fas
+- copy orthomcl folder from our dataset to your folder
+- run _build_dataset.py_
+` build_dataset.py [options]`
+
+
+## 3. Usage
 
 - make directory for your analysis and go there:<br/>
 `mkdir <analysis_dir>`<br/>
