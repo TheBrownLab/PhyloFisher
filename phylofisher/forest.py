@@ -154,7 +154,7 @@ def collect_contaminations(tree_file, cont_dict):
     return contaminations, cont_table_name
 
 
-def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
+def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
     if contaminations is None:
         contaminations = []
     tree_base = str(os.path.basename(tree_file))
@@ -164,7 +164,7 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
         tree_base = tree_base.replace(args.suffix, '')
 
     output_base = f"{output_folder}/{tree_base.split('_')[0]}"
-    if not backpropagion:
+    if not backpropagation:
         table = open(f"{output_folder}/{tree_base.split('_')[0]}.tsv",'w')
 
     top_ranked = get_best_candidates(tree_file)
@@ -225,19 +225,19 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
                     node.add_face(tax_name, column=1, position = "aligned")
 
                     if original_name in contaminations:
-                        if not backpropagion:
+                        if not backpropagation:
                             table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\td\n')
                         paraf = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', fgcolor='red')
                         node.name = ''
                         node.add_face(paraf, column=0)
                     elif node.name in top_ranked:
                         tname = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', bold=True)
-                        if not backpropagion:
+                        if not backpropagation:
                             table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\to\n')
                         node.name = ''
                         node.add_face(tname, column=0, position='branch-right')
                     else:
-                        if not backpropagion:
+                        if not backpropagation:
                             table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\tp\n')
                         node.name = f'{metadata[org]["full"]}_{quality}@{org}'
 
@@ -250,7 +250,7 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
                     paraf = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='blue')
                     node.name = ''
                     node.add_face(paraf, column=0)
-                    if not backpropagion:
+                    if not backpropagation:
                         table.write(f'{metadata[org]["full"]}_{length}@{para}\t{group}\tp\n')
                     gface = TextFace(f'[{group} {metadata[org]["subtax"]}]')
                     node.add_face(gface, column=1, position="aligned")
@@ -261,7 +261,7 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
                     gface = TextFace(f'[{group} {metadata[org]["subtax"]}]') #TODO do not touch me pleeeease
                     color = metadata[org]['col']
                     node_style["bgcolor"] = color
-                    if not backpropagion:
+                    if not backpropagation:
                         table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group}\to\n')
                     node.name = f'{metadata[org]["full"]}_{length}@{org}'
                     node.add_face(gface, column=1, position="aligned")
@@ -271,7 +271,7 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagion=None):
     title_face = TextFace(f'<{name_}  trim_aln_len: {trim_len}, {sus_clades} suspicious clades>',  bold=True)
     ts.title.add_face(title_face, column=1)
     t.render(output_base + '_tree.svg', tree_style=ts)
-    if not backpropagion:
+    if not backpropagation:
         table.close()
 
 
@@ -432,7 +432,7 @@ if __name__ == '__main__':
             contaminations, contaminated_table = collect_contaminations(tree, cont_dict)
             if args.backpropagate:
                backpropagate_contamination(tree, contaminated_table)
-               tree_to_pdf(tree, contaminations, backpropagion=True)
+               tree_to_pdf(tree, contaminations, backpropagation=True)
             else:
                 tree_to_pdf(tree, contaminations)
     else:

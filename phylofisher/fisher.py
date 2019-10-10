@@ -52,7 +52,7 @@ class Hit:
         self.quality = ""
 
     def in_hmm_hits(self):
-        """Control if hit in also in hmmer hits"""
+        """Controls if hit in also in hmmer hits"""
         if self.name in self.hmm_hits:
             return True
         return False
@@ -75,7 +75,7 @@ class Query:
         result is a generator producing one hit at a time"""
         for hit in self.hmm_hits:
             hit = Hit(hit, self.infile_proteins[hit], self.query, self.hmm_hits)
-            hit.path_ += "HMM"
+            hit.path_ = "HMM"
             yield hit
 
 
@@ -98,7 +98,8 @@ class SpecQuery:
         """This function returns seed blast sequence from selected specific queries(organisms).
         When target gene is not present in the first organism (first in the list) it
         will check next one.
-        Returns: - seed sequence for blast if gene is present in self.organisms or None"""
+        Returns: - org name and set seed sequence for blast as self.seq
+        if gene is present in self.organisms or None"""
         gene_dict = {}
         for record in SeqIO.parse(str(Path(dfo, f'orthologs/{self.query}.fas')), 'fasta'):
             gene_dict[record.name] = str(record.seq)
@@ -115,6 +116,7 @@ class SpecQuery:
         bout = f'tmp/{sample_name}/{self.query}.blastout'
         with open(qfile, 'w') as f:
             f.write(f'>{self.query}\n{self.seq.replace("-", "")}')
+
         cmd = f'blastp -evalue 1e-10 -query {qfile} -db {db} -out {bout} -outfmt "6 qseqid sseqid evalue"'
         subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         blast_hits = []
@@ -156,11 +158,15 @@ def length_check(trimmed_aln):
 
 
 def makeblastdb():
+    """Prepares blast database from sample input file"""
     cmd = f"makeblastdb -in {infile} -out tmp/{sample_name}/{os.path.basename(infile)}.blastdb -dbtype prot"
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
 
 
 def hmmer(query):
+    """Performs hmmsearch with a given gene.
+
+    returns: tuple with (gene_name, list of hmm hits [hmm1, hmm2 ... hmmn]"""
     hmm_prof = str(Path(dfo, f'profiles/{query}.hmm'))
     cmd = f"hmmsearch -E 1e-10 {hmm_prof} {infile} > tmp/{sample_name}/{query}.hmmout"
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
@@ -172,11 +178,12 @@ def hmmer(query):
 
 def get_gene_dict(threads, infile_proteins, spec_queries=None):
     """This function prepare SpeqQeury or Query for all genes.
-	Query type depends if spec_queries are specified in input metadata
-	for a given organism."""
+    Query type depends if spec_queries are specified in input metadata
+    for a given organism."""
     gene_dict = {}
     with Pool(processes=threads) as pool:
         hmm_pool = list(pool.map(hmmer, profiles))
+
         for query, hmm_hits in hmm_pool:
             if hmm_hits:
                 if spec_queries:
@@ -222,7 +229,9 @@ def bac_gog_db():
 
 
 def get_infile_proteins():
-    # parses infile proteins
+    """Parses infile proteins.
+
+    returns: dict {prot_name:seq}"""
     infile_proteins = {}
     for record in SeqIO.parse(infile, 'fasta'):
         infile_proteins[record.id] = str(record.seq)
@@ -278,7 +287,7 @@ def phylofisher(threads, max_hits, spec_queries=None):
 
 
 def taxonomy_dict():
-    """Parse taxonomical group for all organisms from metadata."""
+    """Parses taxonomical group for all organisms from metadata."""
     tax_g = {}
     for line_ in open(str(Path(dfo, 'metadata.tsv'))):
         if 'Full Name' not in line_:
@@ -291,7 +300,7 @@ def taxonomy_dict():
 
 def cluster_rename_sequences():
     """Clusters sequences in input fasta file for given organism
-    and rename every sequence with short name_number
+    and rename every sequence with shortname_number
 
     returns: abs path to the file with clustered and renamed sequences"""
     clustered = f'tmp/{sample_name}/clustered.fasta'
@@ -320,7 +329,7 @@ def check_input():
     """Checks input metadata file for possible mistakes."""
     #TODO check is file is aa not nucl
     errors = ''
-    taxonomic_groups = tax_group.values()
+    taxonomic_groups = set(tax_group.values())
     n = 1
     for line in open(input_metadata):
         if "FILE_NAME" not in line:
@@ -331,8 +340,8 @@ def check_input():
             if os.path.isfile(f_file.strip()) is False:
                 errors += f"line {n}: file {f_file} doesn't exist\n"
             s_name = metadata_input[2].strip()
-            if s_name  in tax_group:
-                #checks if short name is not already included in metadata
+            if s_name in tax_group:
+                # checks if short name is already included in metadata
                 # from the database
                 errors += f'line {n}: {s_name} already in metadata\n'
             s_queries = metadata_input[5]
@@ -530,6 +539,7 @@ def additions_to_input():
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
+
     parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher.py [OPTIONS]")
     parser.add_argument('-t', '--threads', type=int,
                         help='Number of threads, default:1', default=1)
@@ -564,8 +574,6 @@ if __name__ == '__main__':
     #returns list with gene names
     profiles = get_hmm_profiles()
 
-    #stores information about org:taonomy for input samples
-    input_taxonomy = {}
 
     if not args.add:
         #creates output dictionaries tmp and fasta
@@ -584,6 +592,8 @@ if __name__ == '__main__':
         else:
             os.mkdir('tmp')
 
+    # stores information about org:taxonomy for input samples
+    input_taxonomy = {}
 
     for line in open(input_metadata):
         if "FILE_NAME" not in line: #TODO fix me motherfucker
