@@ -269,16 +269,16 @@ def phylofisher(threads, max_hits, spec_queries=None):
 
     infile_proteins = get_infile_proteins()
     if spec_queries:
-        #makes blastdb from input proteins
+        # makes blastdb from input proteins
         makeblastdb()
         gene_dict = get_gene_dict(threads, infile_proteins, spec_queries)
     else:
         gene_dict = get_gene_dict(threads, infile_proteins)
 
-    #return list of tuples (gene:[candidate names],..)
+    # return list of tuples (gene:[candidate names],..)
     candidates = get_candidates(threads, max_hits, gene_dict.values())
 
-    #writes all candidates to for_diamond.fasta"
+    # writes all candidates to for_diamond.fasta"
     with open('tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
             if candi_list:
@@ -305,11 +305,11 @@ def cluster_rename_sequences():
     returns: abs path to the file with clustered and renamed sequences"""
     clustered = f'tmp/{sample_name}/clustered.fasta'
     cmd = f'cd-hit -i {fasta_file} -o {clustered} -c 0.98'
-    #performs cd-hit
+    # performs cd-hit
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     original_names = {}
     n = 1
-    #prepares files with clustered and renamed sequences
+    # prepares files with clustered and renamed sequences
     with open(f'tmp/{sample_name}/clustered_renamed.fasta', 'w') as res:
         for record in SeqIO.parse(clustered, 'fasta'):
             new_name = f"{sample_name}_{n}"
