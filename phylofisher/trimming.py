@@ -21,11 +21,13 @@ def prepare_analyses(dataset, threads):
         f' --thread {threads} {root}.aa.filtered > {root}.aln && '
 
     divvier = str(Path(dfo, 'lib/Divvier/divvier'))
-    command += f'{divvier} -mincol 4 -divvygap {root}.pre_aln && '
+    command += f'{divvier} -mincol 4 -divvygap {root}.aln && '
 
-    command += f'pre_trimal.py {root}.pre_aln && '
+    command += f'pre_trimal.py {root}.aln.divvy.fas && '
 
-    command += f'trimal -in {root}.aln.divvy.fas -gt 0.2 -out {root}.trimal && '
+    # command += f'trimal -in {root}.aln.divvy.fas -gt 0.2 -out {root}.trimal && '
+
+    command += f'trimal -in {root}.pre_trimal -gt 0.2 -out {root}.trimal && '
 
     command += f'len_filter2.py -i {root}.trimal -t 0.5 && '
 
