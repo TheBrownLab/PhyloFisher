@@ -23,7 +23,7 @@ setup(
              'phylofisher/utilities/no_gap_stops.py',
              'phylofisher/utilities/add_aln_length.py',
              'phylofisher/utilities/sub.py',
-             'phylofisher/utilities/pre_trimal.py']
+             'phylofisher/utilities/pre_trimal.py'],
     url='',
     license='MIT',
     author='david',
