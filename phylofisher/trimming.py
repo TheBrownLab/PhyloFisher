@@ -3,8 +3,6 @@ import os
 import argparse
 from glob import glob
 from pathlib import Path
-import configparser
-
 #TODO fucking cleaning
 
 def prepare_analyses(dataset, threads):
@@ -13,23 +11,23 @@ def prepare_analyses(dataset, threads):
 
     command += f'no_gap_stops.py {dataset} && '
 
-    preq = str(Path(dfo, 'lib/prequal/prequal'))
+    preq = str(Path(lib, 'prequal/prequal'))
 
     command += f'{preq} {root}.aa && '
 
     command += f' mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
         f' --thread {threads} {root}.aa.filtered > {root}.aln && '
 
-    divvier = str(Path(dfo, 'lib/Divvier/divvier'))
+    divvier = str(Path(lib, 'Divvier/divvier'))
     command += f'{divvier} -mincol 4 -divvygap {root}.aln && '
 
     command += f'pre_trimal.py {root}.aln.divvy.fas && '
 
-    # command += f'trimal -in {root}.aln.divvy.fas -gt 0.2 -out {root}.trimal && '
+    bmge = str(Path(lib, 'BMGE-1.12/BMGE.jar'))
 
-    command += f'trimal -in {root}.pre_trimal -gt 0.2 -out {root}.trimal && '
+    command += f'java -jar {bmge} -t AA -g 0.3 -i {root}.pre_trimal -of {root}.bmge && '
 
-    command += f'len_filter2.py -i {root}.trimal -t 0.5 && '
+    command += f'len_filter2.py -i {root}.bmge -t 0.5 && '
 
     command += f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6' \
         f' --thread {threads} {root}.len > {root}.aln2 && '
@@ -56,12 +54,9 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--threads', type=int, default=1)
     args = parser.parse_args()
 
-    if args.use_config:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-    else:
-        dfo = str(Path(args.dataset_folder).resolve())
+    print(f'{os.path.realpath(__file__).split("phylofisher")[0]}lib')
+
+    lib = f'{os.path.realpath(__file__).split("phylofisher")[0]}lib'
 
     os.chdir(args.input_folder)
     with open('commands.txt', 'w') as res:
