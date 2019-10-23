@@ -1,0 +1,4 @@
+A brief summary of changes to PREQUAL
+
+v1.00 (18 Dec '17) Original submitted version and first released version
+v1.01 (12 Apr '18) Minor updates with improved threshold, manual and option handling
