@@ -11,7 +11,7 @@ import os
 import sys
 
 
-def taxonomy_dict(metadata, multi_input=None):
+def taxonomy_dict(metadata, input_metadata=None):
     tax_g = {}
     full_names = {}
     for line_ in open(metadata):
@@ -22,8 +22,8 @@ def taxonomy_dict(metadata, multi_input=None):
             full_name = sline[1].strip()
             tax_g[tax] = group
             full_names[tax] = full_name
-    if multi_input:
-        for line in open(multi_input):
+    if input_metadata:
+        for line in open(input_metadata):
             metadata_input = line.split('\t')
             tax = metadata_input[2].strip()
             group = metadata_input[3].strip()
@@ -73,18 +73,19 @@ def make_table(folder):
         columns.append(get_gene_column(gene, names))
     df = pd.DataFrame(columns)
     df = df.transpose()
-    df = df.reindex(sorted(df.columns), axis=1)
+    df = df.reindex(sorted(df.columns), axis=1) # comment me mf
     return df, paths
 
 
 def table_with_paths(df, paths):
+    """Creates occupancy.csv and return df with paths"""
     full_names = []
     tax_list = []
     for org in df.index:
         try:
             org_tax = t_dict[org]
         except KeyError:
-            org_tax = "Unknown"
+            org_tax = "Unknown" # why mf?
         tax_list.append(org_tax)
         full_names.append(fnames[org])
 
@@ -96,6 +97,7 @@ def table_with_paths(df, paths):
 
     df.to_csv(f'{output_fold}/occupancy.csv')
 
+    # Adds paths to df
     for gene in df.columns:
         df[gene] = df[gene].apply(str)
         for org in df[gene].index:
@@ -117,10 +119,12 @@ def stats_orgs_path(table):
     paralogs = paralog_orgs()
     rows = []
     for org in table.index:
-        genes_tot = len(table.columns) - 2
+        genes_tot = len(table.columns) - 2 # because org name is the index
         try:
+            # subtracting genes with value == 0
             genes = genes_tot - table.loc[org].value_counts()['0']
         except KeyError:
+            # why mf? Probably no '0'
             genes = genes_tot
         missing = genes_tot - genes
         missing_perc = (missing / genes_tot) * 100
@@ -148,7 +152,7 @@ def stats_orgs_path(table):
     df["#BBH"] = df["#BBH"].astype(int)
     df["#HMM"] = df["#HMM"].astype(int)
     df.to_csv(f'{output_fold}/orgs_stats.csv')
-    return df
+    return df # I don't think I am useful motherfucker
 
 
 def stats_orgs(table):
@@ -169,7 +173,8 @@ def stats_orgs(table):
     df["#Missing"] = df['#Missing'].astype(int)
     df["%Missing"] = df['%Missing'].round(2)
     df.to_csv(f'{output_fold}/orgs_stats.csv')
-    return df
+    return df # I don't think I am useful motherfucker
+
 
 def stats_gene(table):
     columns = table.iloc[:, 2:]
@@ -187,7 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input_folder')
     parser.add_argument('-m', '--metadata')
     parser.add_argument('-n', '--input_metadata')
-    parser.add_argument('-s', '--sufix')
+    parser.add_argument('-s', '--sufix', help='collects only files with given suffix')
     parser.add_argument('--paralog_selection', action='store_true')
     parser.add_argument('--occupancy_with_paths', action='store_true')
     parser.add_argument('-c', '--use_config', action='store_true')
