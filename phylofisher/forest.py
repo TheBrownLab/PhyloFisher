@@ -135,18 +135,11 @@ def expected_neighborhood(parent, cont_key_rank):
     return expected_neighborhood(parent.up, cont_key_rank)
 
 
-def check_contamination(node, cont_dict):
-    org = node.name.split('_')[0]
-    if expected_neighborhood(node.up, cont_dict[org]):
-        return True
-    return False
-
-
 def collect_contaminations(tree_file, cont_dict):
     t = Tree(tree_file)
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
-    cont_table_name = set()
+    cont_table_names = set()
 
     contaminations = set()
     n = 0
@@ -158,14 +151,15 @@ def collect_contaminations(tree_file, cont_dict):
                 quality = f'{node.name.split("_")[-3]}_{node.name.split("_")[-2]}_{node.name.split("_")[-1]}'
                 table_name = f'{metadata[org]["full"]}_{quality}@{org}'
                 if org in cont_dict:
-                    if check_contamination(node, cont_dict) is True:
+                    exp_hood = expected_neighborhood(node.up, cont_dict[org])
+                    if exp_hood is True:
                         contaminations.add(name)
-                        cont_table_name.add(table_name)
+                        cont_table_names.add(table_name)
         n += 1
-    return contaminations, cont_table_name
+    return contaminations, cont_table_names
 
 
-def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
+def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
     if contaminations is None:
         contaminations = set()
     tree_base = str(os.path.basename(tree_file))
@@ -221,11 +215,10 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
                 empty_face = TextFace("\t"*20) # just because of Sefs script
                 node.add_face(empty_face, column=2, position = "aligned")
                 node.add_face(empty_face, column=3, position="aligned")
-                original_name = node.name
                 org = node.name
                 if org.count('_') == 4: # if org in additions
                     quality = f'{org.split("_")[-3]}_{org.split("_")[-2]}_{org.split("_")[-1]}'
-                    org = original_name.split('_')[0]
+                    org = node.name.split('_')[0]
                     group = metadata[org]['group']
 
 
@@ -235,13 +228,15 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
                         tax_name = TextFace(f'[{group} {metadata[org]["subtax"]}]', bold=True)
                     node.add_face(tax_name, column=1, position = "aligned")
 
-                    if original_name in contaminations:
+                    if node.name in contaminations:
+                        # Seqs to delete
                         if not backpropagation:
                             table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\td\n')
-                        paraf = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', fgcolor='red')
+                        delf = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', fgcolor='red')
                         node.name = ''
-                        node.add_face(paraf, column=0)
+                        node.add_face(delf, column=0)
                     elif node.name in top_ranked:
+                        # top ranked guys
                         tname = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', bold=True)
                         if not backpropagation:
                             table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\to\n')
@@ -254,9 +249,9 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
 
 
                 elif '..' in org:
-                    org, length = org.split('_')
-                    para = org
-                    org = org.split('..')[0]
+                    # for paralogs from metadata
+                    para, length = org.split('_')
+                    org = para.split('..')[0]
                     group = f"{metadata[org]['group']}"
                     paraf = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='blue')
                     node.name = ''
@@ -267,6 +262,7 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
                     node.add_face(gface, column=1, position="aligned")
 
                 else:
+                    # for orthologs from dataset
                     org, length = org.split('_')
                     group = f"{metadata[org]['group']}"
                     gface = TextFace(f'[{group} {metadata[org]["subtax"]}]') #TODO do not touch me pleeeease
@@ -369,10 +365,9 @@ def backpropagate_contamination(tree_file, cont_names):
         tree_base = tree_base.replace(args.prefix, '')
     if args.suffix:
         tree_base = tree_base.replace(args.suffix, '')
-    tree_base =tree_base.split("_")[0]
+    tree_base = tree_base.split("_")[0]
     original_table = open(f"{output_folder}/{tree_base}.tsv", 'r').readlines()
     with open(f"{output_folder}/{tree_base}.tsv", 'w') as res_:
-        n = 0
         for line in original_table:
             sline = line.split('\t')
             name = sline[0]
@@ -380,7 +375,6 @@ def backpropagate_contamination(tree_file, cont_names):
             status = sline[2].strip()
             if name in cont_names:
                 status = 'd'
-            n += 1
             res_.write(f'{name}\t{tax}\t{status}\n')
 
 
@@ -449,9 +443,9 @@ if __name__ == '__main__':
             contaminations, contaminated_table = collect_contaminations(tree, cont_dict)
             if args.backpropagate:
                backpropagate_contamination(tree, contaminated_table)
-               tree_to_pdf(tree, contaminations, backpropagation=True)
+               tree_to_tsvg(tree, contaminations, backpropagation=True)
             else:
-                tree_to_pdf(tree, contaminations)
+                tree_to_tsvg(tree, contaminations)
     else:
         for tree in trees:
-            tree_to_pdf(tree)
+            tree_to_tsvg(tree)
