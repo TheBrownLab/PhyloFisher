@@ -41,21 +41,28 @@ def parse_metadata(metadata, input_metadata=None):
 
 
 def suspicious_clades(tree):
+    """
+    input: phylogenetic tree
+    output: tree object, suspicious clades (those with more than 70 bs
+    and more than 2 tax groups)
+    """
     t = Tree(tree)
+    # midpoint rooted tree
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
 
     supported_clades = []
     for node in t.traverse('preorder'):
         if (node.is_root() is False) and (node.is_leaf() is False):
-            if node.support >= 70 and (len(node) < (len(t)-len(node))):
+            if node.support >= 70 and (len(node) < (len(t)-len(node))): #describe me better
                 clade = node.get_leaf_names()
-                if len(clade) > 1:
+                if len(clade) > 1: # more than one org. I don't know why now.
                     supported_clades.append(clade)
     suspicious = []
     for clade in supported_clades:
         groups = set()
         for org in clade:
+            # get org name
             if '..' in org:
                 org = org.split('..')[0]
             else:
@@ -67,6 +74,10 @@ def suspicious_clades(tree):
 
 
 def get_best_candidates(tree_file):
+    """
+    check best candidates after trimming.
+    example: if q1 doesn't survived -> q2 is ranked as best candidate == ortholog
+    """
     t = Tree(tree_file)
     top_rank = defaultdict(dict)
     for node in t.traverse('preorder'):
@@ -156,7 +167,7 @@ def collect_contaminations(tree_file, cont_dict):
 
 def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
     if contaminations is None:
-        contaminations = []
+        contaminations = set()
     tree_base = str(os.path.basename(tree_file))
     if args.prefix:
         tree_base = tree_base.replace(args.prefix, '')
@@ -183,20 +194,19 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
 
         if node.is_root() is False:
             if node.is_leaf() is False:
+                # This part is about nodes
                 supp = TextFace(f'{int(node.support)}', fsize=8)
                 if node.support >= 70:
                     supp.bold = True
                     taxons = set()
-                    taxons_list = []
                     orgs = node.get_leaf_names()
                     if len(orgs) > 1:
                         for org in orgs:
-                            if '..' in org:
+                            if '..' in org: # for paralogs
                                 org = org.split('..')[0]
                             else:
-                                org = org.split('_')[0]
+                                org = org.split('_')[0] # for potential orthologs
                             taxons.add(metadata[org]['group'])
-                            taxons_list.append(metadata[org]['group'])
                     if len(taxons) > 1 and (len(node) < (len(t)-len(node))):
                         node_style['shape'] = 'sphere'
                         node_style['size'] = 12
@@ -207,12 +217,13 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
                     supp.fsize = 7
                 node.add_face(supp, column=0, position="branch-bottom")
             else:
-                empty_face = TextFace("\t"*20)
+                # This parts is about leaves
+                empty_face = TextFace("\t"*20) # just because of Sefs script
                 node.add_face(empty_face, column=2, position = "aligned")
                 node.add_face(empty_face, column=3, position="aligned")
                 original_name = node.name
                 org = node.name
-                if org.count('_') == 4:
+                if org.count('_') == 4: # if org in additions
                     quality = f'{org.split("_")[-3]}_{org.split("_")[-2]}_{org.split("_")[-1]}'
                     org = original_name.split('_')[0]
                     group = metadata[org]['group']
@@ -275,7 +286,7 @@ def tree_to_pdf(tree_file, contaminations=None, backpropagation=None):
         table.close()
 
 
-def trees_plus_table(trees):
+def trees_plus_table(trees): #rename me. no tables are created
     with Pool(processes=threads) as pool:
         suspicious = list(pool.map(suspicious_clades, trees))
         return suspicious
