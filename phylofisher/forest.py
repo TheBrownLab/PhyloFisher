@@ -386,15 +386,21 @@ def backpropagate_contamination(tree_file, cont_names):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='some description', usage="blabla")
-    parser.add_argument('-t', '--trees_folder', required=True)
-    parser.add_argument('-o', '--output_folder', required=True)
-    parser.add_argument('-m', '--metadata')
-    parser.add_argument('-n', '--input_metadata')
-    parser.add_argument('-a', '--contaminations')
-    parser.add_argument('-c', '--use_config', action='store_true')
-    parser.add_argument('-b', '--backpropagate', action='store_true', help='backpropagate contaminations')
-    parser.add_argument('--prefix')
-    parser.add_argument('--suffix')
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    # Required Arguments
+    required.add_argument('-t', '--trees_folder', required=True)
+    required.add_argument('-o', '--output_folder', required=True)
+    # Optional Arguments
+    optional.add_argument('-m', '--metadata')
+    optional.add_argument('-n', '--input_metadata')
+    optional.add_argument('-a', '--contaminations')
+    optional.add_argument('-c', '--use_config', action='store_true')
+    optional.add_argument('-b', '--backpropagate', action='store_true', help='backpropagate contaminations')
+    optional.add_argument('--prefix')
+    optional.add_argument('--suffix')
+    parser._action_groups.append(optional)
+
     args = parser.parse_args()
     trees_folder = args.trees_folder
     output_folder = args.output_folder
