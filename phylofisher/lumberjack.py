@@ -38,15 +38,12 @@ def parse_input(multi_input):
         input_info[abbrev]['col'] = col
         input_info[abbrev]['data_type'] = data_type
         input_info[abbrev]['notes'] = notes
-
     return input_info
 
 
-def check_mistakes():
-    pass
-
 
 def parse_fasta(gene):
+    #all seqs from fisher.py
     res = {}
     for record in SeqIO.parse(f'fasta/{gene}.fas', 'fasta'):
         if record.name.count('_') == 3:
@@ -73,37 +70,32 @@ def paralog_name(abbrev, keys):
 
 def parse_table(table):
     gene = table.split('/')[-1].split('_')[0]
-    gene_meta_p = str(Path(dfo, f'orthologs/{gene}.fas'))
-    para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
-    gene_meta = SeqIO.to_dict(SeqIO.parse(gene_meta_p, "fasta"))
-    if os.path.isfile(para_meta_p):
-        para_meta = SeqIO.to_dict(SeqIO.parse(para_meta_p, "fasta"))
+    orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
+    paralogs_path = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
+    orthologs = SeqIO.to_dict(SeqIO.parse(orthologs_path, "fasta"))
+    if os.path.isfile(paralogs_path):
+        paralogs = SeqIO.to_dict(SeqIO.parse(paralogs_path, "fasta"))
     else:
-        para_meta = {}
+        paralogs = {}
 
     seq_dict = parse_fasta(gene)
 
-    current_orthologs = set()
     for line in open(table):
+        # for orthologs from dataset
         tree_name, tax, status = line.split('\t')
         status = status.strip()
         abbrev = tree_name.split('@')[-1]
         if tree_name.count('_') != 3 and '..' not in abbrev:
-            current_orthologs.add(abbrev)
             record = seq_dict[abbrev]
             if status == 'd':
-                del gene_meta[abbrev]
+                del orthologs[abbrev]
             elif status == 'p':
-                pname = paralog_name(abbrev, para_meta.keys())
-                para_meta[pname] = record
-                del gene_meta[abbrev]
-
-    ortholog_trimmed_out = dict()
-    for name, record in gene_meta.items():
-        if name not in current_orthologs:
-            ortholog_trimmed_out[name] = record
+                pname = paralog_name(abbrev, paralogs.keys())
+                paralogs[pname] = record
+                del orthologs[abbrev]
 
     for line in open(table):
+        #for new sequences
         tree_name, tax, status = line.split('\t')
         status = status.strip()
         abbrev = tree_name.split('@')[-1]
@@ -112,28 +104,26 @@ def parse_table(table):
             qname = f'{abbrev}_{quality}'
             record = seq_dict[qname]
             if status == 'o':
-                gene_meta[abbrev] = record
+                orthologs[abbrev] = record
             elif status == 'p':
-                pname = paralog_name(abbrev, para_meta.keys())
-                para_meta[pname] = record
+                pname = paralog_name(abbrev, paralogs.keys())
+                paralogs[pname] = record
 
     for line in open(table):
+        # for paralogs from dataset
         tree_name, tax, status = line.split('\t')
         status = status.strip()
         name = tree_name.split('@')[-1]
         abbrev = name.split('.')[0]
         if '..' in name:
-            record = para_meta[name]
+            record = paralogs[name]
             if status == 'o':
-                gene_meta[abbrev] = record
-                del para_meta[name]
-                if abbrev in ortholog_trimmed_out:
-                    pname = paralog_name(abbrev, para_meta.keys())
-                    para_meta[pname] = ortholog_trimmed_out[abbrev]
+                orthologs[abbrev] = record
+                del paralogs[name]
             elif status == 'd':
-                del para_meta[name]
+                del paralogs[name]
 
-    return gene_meta, para_meta
+    return orthologs, paralogs
 
 
 def add_to_meta(abbrev):
@@ -150,20 +140,20 @@ def add_to_meta(abbrev):
 def new_database(table):
     gene = table.split('/')[-1].split('_')[0]
     print(str(Path(dfo, f'orthologs/{gene}.fas')))
-    gene_meta_p = str(Path(dfo, f'orthologs/{gene}.fas'))
-    para_meta_p = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
+    orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas')) #Orthologs for a given gene
+    paralogs_path = str(Path(dfo, f'paralogs/{gene}_paralogs.fas')) #Paralogs for a given gene
 
-    gene_meta, para_meta = parse_table(table)
+    orthologs, paralogs = parse_table(table)
 
-    with open(gene_meta_p, 'w') as res:
-        for name, record in gene_meta.items():
+    with open(orthologs_path, 'w') as res:
+        for name, record in orthologs.items():
             if name not in meta_orgs:
                 meta_orgs.add(name)
                 add_to_meta(name)
             res.write(f'>{name}\n{record.seq}\n')
 
-    with open(para_meta_p, 'w') as res:
-        for name, record in para_meta.items():
+    with open(paralogs_path, 'w') as res:
+        for name, record in paralogs.items():
             if name.split('.')[0] not in meta_orgs:
                 meta_orgs.add(name.split('.')[0])
                 add_to_meta(name.split('.')[0])

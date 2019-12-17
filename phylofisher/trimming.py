@@ -36,10 +36,10 @@ def prepare_analyses(dataset, threads):
 
     command += f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final\n'
 
-    # command += f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final' \
-    #     f' -n {root}.tre -x 123 -N 100 -p 12345 && '
-    #
-    # command += f'add_aln_length.py {root}\n'
+    command += f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final' \
+        f' -n {root}.tre -x 123 -N 100 -p 12345 && '
+
+    command += f'add_aln_length.py {root}\n'
 
     return command
 
@@ -47,10 +47,8 @@ def prepare_analyses(dataset, threads):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for deleting orgs/taxonomic'
                                                  'groups from the dataset', usage="purge.py [OPTIONS]")
-    parser.add_argument('-d', '--dataset_folder')
     parser.add_argument('-i', '--input_folder'  )
     parser.add_argument('-s', '--suffix', default='.fas')
-    parser.add_argument('-c', '--use_config', action='store_true')
     parser.add_argument('-t', '--threads', type=int, default=1)
     args = parser.parse_args()
 
