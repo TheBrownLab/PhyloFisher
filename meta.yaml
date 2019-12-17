@@ -1,0 +1,28 @@
+package:
+  name: phylofisher
+  version: 0.1
+
+build:
+  number: 3
+
+requirements:
+  run:
+    - python=3.6
+    - trimal==1.4.1
+    - raxml==8.2.12
+    - biopython=1.70=np112py36_1
+    - hmmer=3.2.1=hfc679d8_0
+    - pyqt=5.6.0=py36h13b7fb3_1008
+    - ete3=3.1.1=py36_0
+    - diamond=0.9.21=1
+    - pandas==0.23.4
+    - matplotlib==3.0.2
+    - fasttree=2.1.10=h470a237_2
+    - blast=2.7.1=h4422958_6
+    - cd-hit=4.8.1=hdbcaa40_0
+    - mafft=7.407
+
+
+about:
+  summary: This is a simple meta-package
+  license: MIT
