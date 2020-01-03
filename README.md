@@ -3,18 +3,17 @@
 ## 1. Installation
 ### 1.1 Installation with conda
 
-- install conda via Miniconda or Anaconda:<br/>
+- Install conda via Miniconda or Anaconda:<br/>
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/
-- prepare conda virtual environment:<br/>
- `conda env create -f fisher_env.yml`
-- activate phylo_fisher environment:<br/>
-`conda activate phylo_fisher`
-- intall phylofisher:<br/>
-`cd PhyloFisher`
-`pip install .`
-- after you finish using PhyloFisher use `conda deactivate` to deactivate phylo_fisher env
+- Prepare conda virtual environment:<br/>
+ `conda create -n <your_env_name>`
+- Activate phylo_fisher environment:<br/>
+`conda activate <your_env_name>`
+- Install phylofisher:<br/>
+'conda install -c test_ phylofisher`
+- After you finish using PhyloFisher use `conda deactivate` to deactivate `<your_env_name>`
 
-## Custom dataset preparation
+## 2. Custom dataset preparation
 - create a directory with subdirectory _orthologs_ (gene_name.fas) with one sequence per organism (named by some short name)
 - ff you already have paralogs, they should be named like this:
 ParatetrGEN..p88706 (short name or your organism, two dots, 'p' and 5 digits) and stored in 'paralogs' folder like genename_paralogs.fas
