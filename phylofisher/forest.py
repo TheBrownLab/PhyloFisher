@@ -462,7 +462,7 @@ if __name__ == '__main__':
                           Path to file containing contaminations
                           to be removed
                           """))
-    optional.add_argument('-p', '--threads', default=1, metavar='<N>',
+    optional.add_argument('-p', '--threads', default=1, metavar='#',
                           help=textwrap.dedent("""\
                           Number of threads to be used, where
                           N is an integer. Default: N=1"""))
