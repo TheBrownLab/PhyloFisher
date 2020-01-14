@@ -2,7 +2,9 @@
 
 # copy fisher main_scripts to package
 mkdir -p $PREFIX/PhyloFisher
-cp -r $RECIPE_DIR/* $PREFIX/PhyloFisher
+cp -r $RECIPE_DIR/phylofisher $PREFIX/PhyloFisher/phylofisher
+cp -r $RECIPE_DIR/lib $PREFIX/PhyloFisher/lib
+cp -r $RECIPE_DIR/example $PREFIX/PhyloFisher/example
 
 # Makes MAIN scripts executable and creates hard links in bin/
 main_scripts=("fisher"\
@@ -42,3 +44,4 @@ for script in ${utility_scripts[@]}; do
 
 ln $PREFIX/PhyloFisher/lib/Divvier/divvier $PREFIX/bin/divvier
 ln $PREFIX/PhyloFisher/lib/prequal/prequal $PREFIX/bin/prequal
+ln $PREFIX/PhyloFisher/lib/BMGE-1.12/BMGE $PREFIX/bin/BMGE
