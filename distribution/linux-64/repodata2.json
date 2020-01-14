@@ -1,0 +1,11 @@
+{
+  "info": {
+    "subdir": "linux-64"
+  },
+  "packages": [],
+  "removed": [
+    "phylofisher-0.1-3_1.13.20.tar.bz2"
+  ],
+  "repodata_version": 2,
+  "revoked": []
+}
