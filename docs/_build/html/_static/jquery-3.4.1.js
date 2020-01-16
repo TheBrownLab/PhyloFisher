@@ -907,7 +907,7 @@ function assert( fn ) {
 		if ( el.parentNode ) {
 			el.parentNode.removeChild( el );
 		}
-		// release memory in IE
+		// distrubution memory in IE
 		el = null;
 	}
 }
@@ -1586,7 +1586,7 @@ Sizzle.uniqueSort = function( results ) {
 		}
 	}
 
-	// Clear input after sorting to release objects
+	// Clear input after sorting to distrubution objects
 	// See https://github.com/jquery/sizzle/pull/225
 	sortInput = null;
 
