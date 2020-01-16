@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+i  # !/usr/bin/env python
 import glob
 from collections import defaultdict
 import pandas as pd
@@ -62,6 +62,7 @@ def get_gene_column(gene, names):
         column[org] += 1
     return column.astype(int)
 
+
 def make_table(folder):
     if args.sufix:
         genes = glob.glob(f'{folder}/*{args.sufix}')
@@ -73,7 +74,7 @@ def make_table(folder):
         columns.append(get_gene_column(gene, names))
     df = pd.DataFrame(columns)
     df = df.transpose()
-    df = df.reindex(sorted(df.columns), axis=1) # comment me mf
+    df = df.reindex(sorted(df.columns), axis=1)  # comment me mf
     return df, paths
 
 
@@ -85,7 +86,7 @@ def table_with_paths(df, paths):
         try:
             org_tax = t_dict[org]
         except KeyError:
-            org_tax = "Unknown" # why mf?
+            org_tax = "Unknown"  # why mf?
         tax_list.append(org_tax)
         full_names.append(fnames[org])
 
@@ -119,7 +120,7 @@ def stats_orgs_path(table):
     paralogs = paralog_orgs()
     rows = []
     for org in table.index:
-        genes_tot = len(table.columns) - 2 # because org name is the index
+        genes_tot = len(table.columns) - 2  # because org name is the index
         try:
             # subtracting genes with value == 0
             genes = genes_tot - table.loc[org].value_counts()['0']
@@ -152,7 +153,7 @@ def stats_orgs_path(table):
     df["#BBH"] = df["#BBH"].astype(int)
     df["#HMM"] = df["#HMM"].astype(int)
     df.to_csv(f'{output_fold}/orgs_stats.csv')
-    return df # I don't think I am useful motherfucker
+    return df  # I don't think I am useful motherfucker
 
 
 def stats_orgs(table):
@@ -173,7 +174,7 @@ def stats_orgs(table):
     df["#Missing"] = df['#Missing'].astype(int)
     df["%Missing"] = df['%Missing'].round(2)
     df.to_csv(f'{output_fold}/orgs_stats.csv')
-    return df # I don't think I am useful motherfucker
+    return df  # I don't think I am useful motherfucker
 
 
 def stats_gene(table):
@@ -183,14 +184,14 @@ def stats_gene(table):
         res.write(f'gene,total,total[%],SGT\n')
         for i in columns:
             orgs = tab_len - table[i].value_counts()['0']
-            orgs_perc = (orgs/tab_len) * 100
+            orgs_perc = (orgs / tab_len) * 100
             res.write(f"{i},{orgs},{orgs_perc.round(2)},yes\n")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
-    parser.add_argument('-i', '--input_folder')
-    parser.add_argument('-m', '--metadata')
+    parser.add_argument('-i', '--input_folder', required=True)
+    parser.add_argument('-m', '--metadata', required=True)
     parser.add_argument('-n', '--input_metadata')
     parser.add_argument('-s', '--sufix', help='collects only files with given suffix')
     parser.add_argument('--paralog_selection', action='store_true')
@@ -213,7 +214,6 @@ if __name__ == '__main__':
         sys.exit(f'Error: {output_fold} folder already exists.')
     else:
         os.mkdir(output_fold)
-
 
     t_dict, fnames = taxonomy_dict(args.metadata, args.input_metadata)
     tab, paths = make_table(args.input_folder)

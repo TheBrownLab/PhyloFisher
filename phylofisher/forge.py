@@ -9,6 +9,11 @@ import csv
 
 
 def parse_names(input_folder):
+    """
+
+    :param input_folder:
+    :return:
+    """
     name_set = set()
     if args.suffix:
         files = sorted(glob(f'{input_folder}/*{args.suffix}'))
@@ -25,7 +30,12 @@ def parse_names(input_folder):
 
 
 def stats(total_len):
-    with open('forge_stats.tsv', 'w') as out_file:
+    """
+
+    :param total_len:
+    :return:
+    """
+    with open(f'{args.output}_forge_stats.tsv', 'w') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         tsv_writer.writerow(['org', 'missing[%]'])
         missing = []
@@ -36,11 +46,15 @@ def stats(total_len):
 
 
 def main():
+    """
+
+    :return: NONE
+    """
     input_folder = os.path.basename((args.input.strip('/')))
     files, orgs = parse_names(input_folder)
     total_len = 0
     res_dict = defaultdict(str)
-    with open(f'{args.output}.tsv', 'w') as outfile:
+    with open(f'{args.output}_indices.tsv', 'w') as outfile:
         for file in files:
             gene = os.path.basename(file).split('.')[0]
             length = 0
@@ -58,14 +72,49 @@ def main():
                     res_dict[org] += ('-' * length)
 
         with open(args.output, "w") as res:
-            for org, seq in res_dict.items():
-                res.write(f'>{org}\n{seq}\n')
+            # Writes in different output formats
+
+            # fasta format
+            if args.format.lower() is 'fasta':
+                for org, seq in res_dict.items():
+                    res.write(f'>{org}\n{seq}\n')
+
+            # phylip format TODO: Test PHYLIP formatted ouput
+            elif args.format.lower() is 'phylip':
+                for org, seq in res_dict.items():
+                    # Makes seq id == exactly 10 characters
+                    if len(org) <= 10:
+                        org = org + ((10 - len(org)) * ' ')
+                    else:
+                        org = org[0:9]
+                    res.write(f'{org}{seq}\n')
+
+            # nexus format TODO: Test NEXUS formatted output
+            elif args.format.lower() is 'nexus':
+                entries = ''
+                count = 0
+                for org, seq in res_dict.items():
+                    entries += f'      {org}\t{seq}\n'
+                    count += 1
+                res.write(f'#nexus\n'
+                          f'...\n'
+                          f'begin data;\n'
+                          f'dimensions ntax={count} nchar={total_len};\n'
+                          f'   format datatype=dna missing=? gap=-;\n'
+                          f'   matrix\n'
+                          f'{entries}'
+                          f'   ;\n'
+                          f'end;\n')
+
+            # TODO: Raise an exception for "invalid output type"
+            else:
+                pass
         stats(total_len)
 
 
 if __name__ == '__main__':
     class CustomHelpFormatter(argparse.HelpFormatter):
-        """This class can be used to make chanes in the help"""
+        """This class can be used to make visual changes in the help"""
 
         def _format_action_invocation(self, action):
             # This removes metvar after short option
@@ -89,8 +138,9 @@ if __name__ == '__main__':
     formatter = lambda prog: myHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='forge.py',
                                      description='some description',
-                                     usage='forge.py -i input -o ouput [OPTIONS]',
+                                     usage='forge.py [OPTIONS] -i /path/to/input/',
                                      formatter_class=formatter,
+                                     add_help=False,
                                      epilog=textwrap.dedent("""\
                                      additional information:
                                         stuff
@@ -99,20 +149,36 @@ if __name__ == '__main__':
     required = parser.add_argument_group('required arguments')
 
     # Required Arguments
-    required.add_argument('-i', '--input', required=True, metavar='input/',
+    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
                           help=textwrap.dedent("""\
                           Path to input directory
                           """))
-    required.add_argument('-o', '--output', required=True, metavar='out.fas',
-                          help=textwrap.dedent("""\
-                          Output file in fasta format
-                          """))
+
     # Optional Arguments
-    optional.add_argument('-s', '--suffix', metavar='suffix',
+    optional.add_argument('-o', '--output', default="output", type=str, metavar='',
                           help=textwrap.dedent("""\
-                          Suffix of input fules
+                          Desired basename of output files. 
+                          Default: output
+                          Example: output, output_indices.tsv, & output_forge_stats.tsv
+                          """))
+    optional.add_argument('-f', '--out_format', metavar='"format"', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                          Desired format of the output matrix.
+                          Options: fasta, phylip, or nexus.
+                          Default: fasta
+                          """))
+    optional.add_argument('-s', '--suffix', metavar='"suffix"', type=str,
+                          help=textwrap.dedent("""\
+                          Suffix of input files
+                          Default: NONE
+                          Example: path/to/input/*.suffix
+                          """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          Show this help message and exit.
                           """))
 
     parser._action_groups.append(optional)
     args = parser.parse_args()
+
     main()
