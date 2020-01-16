@@ -91,7 +91,7 @@ def make_plot(s, plot_name, bin_size):
             means.append((sum(missing)/len(missing)))
             lengths.append((lengths[i-1] + values[1]))
 
-    labels_ = np.arange(0,len(lengths),bin_size)
+    labels_ = np.arange(0, len(lengths), bin_size)
     plt.plot(lengths, means)
     plt.xticks(lengths[::bin_size], labels=labels_)
     plt.ylabel('missing data [%]', labelpad=15)
@@ -123,10 +123,10 @@ def main(taxa, dataset, suffix, plot_name, bin_size, gene_n, out_fold):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher.py [OPTIONS]")
     parser.add_argument('-t', '--taxa', required=True)
-    parser.add_argument('-d', '--dataset')
+    parser.add_argument('-d', '--dataset', required=True)
     parser.add_argument('-s', '--suffix', type=str)
     parser.add_argument('-p', '--plot')
-    parser.add_argument('-n', '--gene_number', type=int, help='number of genes for analysis')
+    parser.add_argument('-n', '--gene_number', type=int, required=True, help='number of genes for analysis')
     parser.add_argument('-f', '--output_folder')
     parser.add_argument('-b', '--bin_size', type=int, help='bin size for plot', default=5)
     parser.add_argument('-c', '--use_config', action='store_true', help='use config file for metadata')
