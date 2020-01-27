@@ -1,4 +1,4 @@
-i  # !/usr/bin/env python
+# !/usr/bin/env python
 import glob
 from collections import defaultdict
 import pandas as pd
@@ -9,6 +9,8 @@ import configparser
 from pathlib import Path
 import os
 import sys
+import textwrap
+from phylofisher import fisher
 
 
 def taxonomy_dict(metadata, input_metadata=None):
@@ -189,15 +191,64 @@ def stats_gene(table):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='informant', usage="informant.py -i input_folder [OPTIONS]")
-    parser.add_argument('-i', '--input_folder', required=True)
-    parser.add_argument('-m', '--metadata', required=True)
-    parser.add_argument('-n', '--input_metadata')
-    parser.add_argument('-s', '--sufix', help='collects only files with given suffix')
-    parser.add_argument('--paralog_selection', action='store_true')
-    parser.add_argument('--occupancy_with_paths', action='store_true')
-    parser.add_argument('-c', '--use_config', action='store_true')
-    parser.add_argument('--orthologs', action='store_true')
+    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+
+    parser = argparse.ArgumentParser(prog='informant.py',
+                                     description='some description',
+                                     usage='informant.py -i input_folder [OPTIONS]',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                         additional information:
+                                            stuff
+                                            """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    # Required Arguments
+    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
+                          help=textwrap.dedent("""\
+                          Path to input directory
+                          """))
+    required.add_argument('-m', '--metadata', required=True, type=str, metavar='meta.tsv',
+                          help=textwrap.dedent("""\
+                          Path to metadata.tsv
+                          """))
+
+    # Optional Arguments
+    optional.add_argument('-n', '--input_metadata', type=str, metavar='new',
+                          help=textwrap.dedent("""\
+                          Meta data from newly added data
+                          """))
+    optional.add_argument('--paralog_selection', action='store_true',
+                          help=textwrap.dedent("""\
+                          some description
+                              """))
+    optional.add_argument('--orthologs', action='store_true',
+                          help=textwrap.dedent("""\
+                          some description
+                          """))
+    optional.add_argument('--occupancy_with_paths', action='store_true',
+                          help=textwrap.dedent("""\
+                          some description
+                          """))
+    optional.add_argument('-c', '--use_config', action='store_true',
+                          help=textwrap.dedent("""\
+                          Use config
+                          """))
+
+    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str,
+                          help=textwrap.dedent("""\
+                          Suffix of input files
+                          Default: NONE
+                          Example: path/to/input/*.suffix
+                          """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          Show this help message and exit.
+                          """))
+
+    parser._action_groups.append(optional)
     args = parser.parse_args()
 
     if args.use_config:

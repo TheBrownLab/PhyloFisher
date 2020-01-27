@@ -18,13 +18,13 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 - After you finish using PhyloFisher use `conda deactivate` to deactivate `fisher`
 
 ## 2. Custom dataset preparation
-- Create a directory with subdirectory _orthologs_ (gene_name.fas) with one sequence per organism 
+- Create a directory with subdirectory _orthologs_ (_genename_.fas) with one sequence per organism 
 (named by some short name)
 
 - If you already have paralogs, they should be named like this:
     - ParatetrGEN..p88706 
         - Organism short name, two dots, 'p' and 5 digits
-    - Stored in 'paralogs' folder like genename_paralogs.fas
+    - Stored in 'paralogs' folder like _genename_\_paralogs.fas
     
 - Copy orthomcl folder from our dataset to your folder
 
@@ -66,3 +66,23 @@ Use config.py --help for more options.<br/>
 
 - Trimming and trees computing<br/>
 `trimming.py -d <dataset_folder> -i <folder_with_fasta_files> -s <sufix>`
+
+
+
+## Utilities
+
+- add_aln_length.py
+    - description
+    - 
+- AgentEllie.py
+- AgentEllie2.py
+- CalculateAAComposition.py
+- corrected_translation.py
+- fast_tax_removal.py
+- genetic_code_check.py
+- heteroevoloving_sites.py
+- len_filter.py
+- len_filter2.py
+- no_gap_stops.py
+- pre_trimal.py
+- Recode_Phylip_SR4classes.py

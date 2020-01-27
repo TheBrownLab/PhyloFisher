@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
+
 # copy fisher main_scripts to package
 mkdir -p $PREFIX/PhyloFisher
 cp -r $RECIPE_DIR/phylofisher $PREFIX/PhyloFisher/phylofisher
 cp -r $RECIPE_DIR/lib $PREFIX/PhyloFisher/lib
-cp -r $RECIPE_DIR/example $PREFIX/PhyloFisher/example
+
 
 # Makes MAIN scripts executable and creates hard links in bin/
 main_scripts=("fisher"\

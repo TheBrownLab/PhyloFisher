@@ -2,14 +2,17 @@
 import os
 import subprocess
 import argparse
+import textwrap
 from Bio import SeqIO
 import pandas as pd
 import string
 import random
+from phylofisher import fisher
 
 
 def id_generator(size=10, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
 
 def unique_name(keys):
     id_ = id_generator()
@@ -17,6 +20,7 @@ def unique_name(keys):
         return id_
     else:
         unique_name(keys)
+
 
 def fake_phylip(matrix):
     seqs = 0
@@ -37,12 +41,14 @@ def fake_phylip(matrix):
         res.write(result)
     return pseudonames, pseudonames_rev
 
+
 def fake_tree(treefile, pseudonames):
     with open('TEMP.tre', 'w') as res:
         original = open(treefile).readline()
         for key, value in pseudonames.items():
             original = original.replace(key, value)
         res.write(original)
+
 
 def control_file():
     ctl = """treefile = TEMP.tre * treefile"
@@ -98,18 +104,41 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='some description', usage="blabla")
-    parser.add_argument('-m', '--matrix')
-    parser.add_argument('-tr', '--tree')
-    parser.add_argument('-c', '--chunk', type=int, default=3000)
+    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+
+    parser = argparse.ArgumentParser(prog='AgentEllie.py',
+                                     # TODO: Get description and usage
+                                     description='some description',
+                                     usage='some usage',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                     additional information:
+                                     """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    # TODO: What is optional and required?
+    # Required Arguments
+    required.add_argument('-m', '--matrix', required=True, type=str, metavar='<matrix>',
+                          help=textwrap.dedent("""\
+                          Path to matrix
+                          """))
+
+    # Optional Arguments
+    optional.add_argument('-tr', '--tree', type=str, metavar='',
+                          help=textwrap.dedent("""\
+                          Path to tree
+                          """))
+    optional.add_argument('-c', '--chunk', type=int, default=3000,
+                          help=textwrap.dedent("""\
+                          description of chunk
+                          """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          """))
+
+    parser._action_groups.append(optional)
     args = parser.parse_args()
+
     main()
-
-
-
-
-
-
-
-
-
