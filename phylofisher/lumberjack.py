@@ -4,10 +4,14 @@ import glob
 import string
 import random
 import argparse
+import textwrap
+
 from Bio import SeqIO
 import configparser
 from pathlib import Path
 from collections import defaultdict
+
+from phylofisher import fisher
 
 
 def parse_metadata():
@@ -164,10 +168,35 @@ def main():
     for table in glob.glob(f'{args.input_folder}/*.tsv'):
         new_database(table)
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='lumberjack', usage="bla bla")
-    parser.add_argument('-i', '--input_folder', required=True, help='folder with tsv files')
+    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    parser = argparse.ArgumentParser(description='description',
+                                     usage="lumberjack.py -i <in_dir>",
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                     additional information:
+                                        stuff
+                                     """))
+
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    required.add_argument('-i', '--input_folder', type=int, metavar='<in_dir>',
+                        help=textwrap.dedent("""\
+                        Input directory containing tsv files
+                        """))
+
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          Show this help message and exit.
+                          """))
+
+    parser._action_groups.append(optional)
     args = parser.parse_args()
+
+
 
     config = configparser.ConfigParser()
     config.read('config.ini')

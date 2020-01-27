@@ -2,15 +2,19 @@
 import os
 import argparse
 import glob
+import textwrap
 from collections import defaultdict
 from Bio import SeqIO
 import statistics
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from shutil import copyfile
 import configparser
+
+from phylofisher import fisher
 
 """
 How are we going to get trimmed alignments?
@@ -81,6 +85,7 @@ def make_plot(s, plot_name, bin_size):
     means = []
     missing = []
     lengths = []
+    matplotlib.use('pdf')
     for i, values in enumerate(s):
         if not means:
             missing.append(values[0])
@@ -88,8 +93,8 @@ def make_plot(s, plot_name, bin_size):
             lengths.append(values[1])
         else:
             missing.append(values[0])
-            means.append((sum(missing)/len(missing)))
-            lengths.append((lengths[i-1] + values[1]))
+            means.append((sum(missing) / len(missing)))
+            lengths.append((lengths[i - 1] + values[1]))
 
     labels_ = np.arange(0, len(lengths), bin_size)
     plt.plot(lengths, means)
@@ -118,25 +123,74 @@ def main(taxa, dataset, suffix, plot_name, bin_size, gene_n, out_fold):
         extract_genes(s, dataset, gene_n, out_fold)
 
 
-
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher.py [OPTIONS]")
-    parser.add_argument('-t', '--taxa', required=True)
-    parser.add_argument('-d', '--dataset', required=True)
-    parser.add_argument('-s', '--suffix', type=str)
-    parser.add_argument('-p', '--plot')
-    parser.add_argument('-n', '--gene_number', type=int, required=True, help='number of genes for analysis')
-    parser.add_argument('-f', '--output_folder')
-    parser.add_argument('-b', '--bin_size', type=int, help='bin size for plot', default=5)
-    parser.add_argument('-c', '--use_config', action='store_true', help='use config file for metadata')
+    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+
+    parser = argparse.ArgumentParser(prog='missing_data.py',
+                                     # TODO: Description
+                                     description='some description',
+                                     usage='missing_data.py [OPTIONS] -t <taxa> -d <dataset> -n <gene_number>',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                     additional information:
+                                        stuff
+                                        """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    # Required Arguments
+    required.add_argument('-t', '--taxa', required=True, metavar='<taxa>',
+                          # TODO: Description
+                          help=textwrap.dedent("""\
+                          some description  
+                          """))
+    required.add_argument('-d', '--dataset', required=True, metavar='<dataset>',
+                          help=textwrap.dedent("""\
+                          Path to input directory
+                          """))
+    required.add_argument('-n', '--gene_number', type=int, required=True, metavar='<N>',
+                          help=textwrap.dedent("""\
+                          Number of genes for analysis
+                          """))
+
+    # Optional Arguments
+    optional.add_argument('-f', '--output_folder', type=str, default='output', metavar='<out_dir>',
+                          help=textwrap.dedent("""\
+                          Path to output directory
+                          """))
+    optional.add_argument('-s', '--suffix', type=str, metavar='<suff>',
+                          help=textwrap.dedent("""\
+                          Suffix of input files
+                          Default: NONE
+                          Example: path/to/input/*.suffix
+                          """))
+    optional.add_argument('-c', '--use_config', action='store_true',
+                          help=textwrap.dedent("""\
+                          Use config file for metadata
+                          """))
+    optional.add_argument('-p', '--plot',
+                          help=textwrap.dedent("""\
+                          Plot missing data statistics. 
+                          By default statistics will NOT be plotted.
+                          """))
+    optional.add_argument('-b', '--bin_size', type=int, default=5, metavar='<N>',
+                          help=textwrap.dedent("""\
+                          Bin size for plot
+                          Default: 5
+                          """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          Show this help message and exit.
+                          """))
+
+    parser._action_groups.append(optional)
     args = parser.parse_args()
 
     if args.use_config is True:
         config = configparser.ConfigParser()
         config.read('config.ini')
         args.dataset = str(Path(config['PATHS']['dataset_folder']).resolve())
-
 
     main(args.taxa, args.dataset, args.suffix,
          args.plot, args.bin_size, args.gene_number, args.output_folder)

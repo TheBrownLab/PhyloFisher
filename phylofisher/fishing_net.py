@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import argparse
+import textwrap
 from glob import glob
 import configparser
 from pathlib import Path
@@ -75,15 +76,77 @@ def main():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script for filtering orgs [and|or] genes',
-                                     usage="fishing_net.py -i <input_directory> -o <output_directory> [OPTIONS]")
-    parser.add_argument('-i', '--input_directory', required=True)
-    parser.add_argument('-o', '--output_directory', required=True)
-    parser.add_argument('-d', '--dataset_folder')
-    parser.add_argument('-s', '--sufix', default='fas', help='sufix of fasta files')
-    parser.add_argument('--orthologs', action='store_true', help='Only for ortholog selection. Without information'
-                                                                 'about used path.')
-    parser.add_argument('-c', '--use_config', action='store_true')
+    class CustomHelpFormatter(argparse.HelpFormatter):
+        """This class can be used to make visual changes in the help"""
+
+        def _format_action_invocation(self, action):
+            # This removes metvar after short option
+            if not action.option_strings or action.nargs == 0:
+                return super()._format_action_invocation(action)
+            default = self._get_default_metavar_for_optional(action)
+            args_string = self._format_args(action, default)
+            return ', '.join(action.option_strings) + ' ' + args_string
+
+        def _split_lines(self, text, width):
+            # This adds 3 spaces before lines that wrap
+            lines = text.splitlines()
+            for i in range(0, len(lines)):
+                if i >= 1:
+                    lines[i] = (3 * ' ') + lines[i]
+            return lines
+
+
+    class myHelpFormatter(CustomHelpFormatter, argparse.RawTextHelpFormatter):
+        pass
+
+
+    formatter = lambda prog: myHelpFormatter(prog, max_help_position=100)
+    parser = argparse.ArgumentParser(prog='forge.py',
+                                     description='Script for filtering orgs [and|or] genes',
+                                     usage='fishing_net.py -i <input_directory> -o <output_directory> [OPTIONS]',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                     additional information:
+                                        stuff
+                                        """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    # Required Arguments
+    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
+                          help=textwrap.dedent("""\
+                          Path to input directory
+                          """))
+    required.add_argument('-o', '--output', default="output", type=str, metavar='',
+                          help=textwrap.dedent("""\
+                          Path to desired output directory
+                          """))
+
+    # Optional Arguments
+
+    optional.add_argument('-d', '--dataset_folder', metavar='<dataset>', type=str, default='fasta',  # TODO: get default
+                          help=textwrap.dedent("""\
+                          Path to directory containing the dataset
+                          """))
+    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str,
+                          help=textwrap.dedent("""\
+                          Suffix of input files
+                          """))
+    optional.add_argument('--orthologs', action='store_true',
+                          help=textwrap.dedent("""\
+                          Only for ortholog selection. Without information
+                          about used path."""))
+    optional.add_argument('-c', '--use_config', action='store_true',
+                          help=textwrap.dedent("""\
+                          Use config file
+                          """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          Show this help message and exit.
+                          """))
+
+    parser._action_groups.append(optional)
     args = parser.parse_args()
 
     if args.use_config:
