@@ -2,19 +2,21 @@ package:
   name: phylofisher
   version: 0.1
 
-build:
-  number: 4
+source:
+  path: ../../
 
-  ignore_prefix_files:
-    - example/
-    - docs/
-    - distribution/
-    - .gitignore
-    - README.md
+build:
+  number: 2
+  script:
+    - python -m pip install --no-deps --ignore-installed .
 
 requirements:
+  build:
+    - python
+    - setuptools
+
   run:
-    - python=3
+    - python=3.7
     - trimal
     - raxml
     - biopython
@@ -29,6 +31,9 @@ requirements:
     - cd-hit
     - mafft
     - setuptools
+    - divvier
+    - bmge
+    - prequal
 
 about:
   summary: This is a simple meta-package
