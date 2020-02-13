@@ -92,7 +92,7 @@ def main():
 
     # Writes to output matrix in user specified output
     if args.out_format.lower() in out_dict:
-        with open(f'{args.output.lower()}', "w") as handle:
+        with open(f'{args.output}', "w") as handle:
             SeqIO.write(records, handle, args.out_format.lower())
     else:
         sys.exit('Invalid Output Format')
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                           phylip-relaxed (names are not truncated), or nexus.
                           Default: fasta
                           """))
-    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str,
+    optional.add_argument('-plot_df', '--suffix', metavar='<suffix>', type=str,
                           help=textwrap.dedent("""\
                           Suffix of input files
                           Default: NONE
