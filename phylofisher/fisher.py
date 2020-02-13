@@ -241,9 +241,9 @@ def best_hits(max_hits, gene):
 
 
 def bac_gog_db():
-    """Parses bacterial names and gene: orthogroup/s from orthomcl.
+    """Parses bacterial names and gene: orthogroup/df from orthomcl.
 
-    returns tuple with ls of [bacterial names] and {gene: orthogtoup/s} dir"""
+    returns tuple with ls of [bacterial names] and {gene: orthogtoup/df} dir"""
     bac = set()
     for line_ in open(str(Path(dfo, 'orthomcl/bacterial'))):
         bac.add(line_[:-1])

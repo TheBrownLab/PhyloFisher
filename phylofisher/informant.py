@@ -236,7 +236,6 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Use config
                           """))
-
     optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str,
                           help=textwrap.dedent("""\
                           Suffix of input files
