@@ -1,61 +1,60 @@
-import os
-import sys
-import re  
+import argparse
+import textwrap
 
-### AGPST, C, FWY, HRK, MILV, NDEQ === DAYHOFF classes 0-5
-
-
-"""
-A,G,N,P,S,T = A; 
-C,H,W,Y = C; 
-D,E,K,Q,R = G; 
-F,I,L,M,V = T 
-"""
+from phylofisher import fisher
 
 
+def get_args():
+    global args
+    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    parser = argparse.ArgumentParser(prog='Recode_Phylip_SR4classes.py',
+                                     # TODO: Get description and usage
+                                     description='some description',
+                                     usage='some usage',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                             additional information:
+                                             """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    # TODO: What is optional and required?
+    # Required Arguments
+    required.add_argument('-i', '--input', required=True, type=str, metavar='',
+                          help=textwrap.dedent("""\
+                          Input file
+                          """))
+    required.add_argument('-g', '--output', type=str, required=True, metavar='',
+                          help=textwrap.dedent("""\
+                          groups
+                          """))
+    # Optional Aruments
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                          Show this help message and exit.
+                          """))
+    parser._action_groups.append(optional)
+    return parser.parse_args()
 
-infile = sys.argv[1]
-out = sys.argv[2]
 
+if __name__ == '__main__':
+    args = get_args()
 
-infile = open(infile, "r")
-out = open(out, "w")
+    # AGPST, C, FWY, HRK, MILV, NDEQ === DAYHOFF classes 0-5
+    key = {'A': ['A', 'G', 'N', 'P', 'S', 'T'],
+           'C': ['C', 'H', 'W', 'Y'],
+           'G': ['D', 'E', 'K', 'Q', 'R'],
+           'T': ['F', 'I', 'L', 'M', 'V']
+           }
 
-lines = infile.readlines()
-out.write(lines[0])
-for line in lines[1:]:
-	#print line
-	line = line.strip()
-	name = line.split()[0]
-	seq = line.split()[1]
-	#print seq
-	seq = seq.replace("A","A")
-	seq = seq.replace("G","A")
-	seq = seq.replace("N","A")
-	seq = seq.replace("P","A")
-	seq = seq.replace("S","A")
-	seq = seq.replace("T","A")
-	
-	seq = seq.replace("C","C")
-	seq = seq.replace("H","C")
-	seq = seq.replace("W","C")
-	seq = seq.replace("Y","C")
-	
-	seq = seq.replace("D","G")
-	seq = seq.replace("E","G")
-	seq = seq.replace("K","G")
-	seq = seq.replace("Q","G")
-	seq = seq.replace("R","G")
+    with open(args.input, 'r') as infile, open(args.output, 'w') as outfile:
+        outfile.write(infile.readline())
 
-	seq = seq.replace("F","T")
-	seq = seq.replace("I","T")
-	seq = seq.replace("L","T")
-	seq = seq.replace("M","T")
-	seq = seq.replace("V","T")
-	
-	seq = seq.replace("X","-")
-	out.write(name + " " + seq + "\n")
+        for line in infile:
+            name, seq = line.strip().split()
+            for nuc in key.keys():
+                for x in key[nuc]:
+                    seq = seq.replace(x, nuc)
+                    seq = seq.replace("X", "-")
 
-out.close()
-	
-
+                    outfile.write(name + " " + seq + "\n")
