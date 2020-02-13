@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import os
 import textwrap
 from ete3 import Tree
 from collections import Counter
@@ -30,6 +31,7 @@ def support(trees):
     bootstrap = []
     n_trees = 0
     for line in open(trees):
+        line = line.strip('')
         tree = Tree(line)
         n_trees += 1
         bootstrap = bootstrap + list(bipartitions(tree))
@@ -51,12 +53,15 @@ def get_support(group, supp_dict):
 def parse_groups(input_file):
     query_dict = {}
     for line in open(input_file):
-        group, orgs = line.split(':')
+        line = line.strip()
+        group = line.split(':')[0]
+        orgs = line.split(':')[1]
         query_dict[group] = [org.strip() for org in orgs.split(',')]
     return query_dict.items()
 
 
 def file_to_series(file):
+    print(file)
     sup_dict = support(file)
     group_sup = {}
     for group, orgs in queries:
@@ -73,7 +78,8 @@ def parse_bss():
         if n == 0:
             column.name = 'Full dataset'
         else:
-            column.name = f'Step {n}'
+            column.name = os.path.basename(args.bs_files)
+            # column.name = f'Step {n}'
         columns.append(column)
         n += 1
     return columns
@@ -82,7 +88,7 @@ def parse_bss():
 def main():
     columns = parse_bss()
     df = pd.DataFrame(columns)
-    # df.sort_index(inplace=True)
+    # plot_df.sort_index(inplace=True)
     df.plot()
     plt.legend(loc=0, prop={'size': 6})
     plt.xticks(range(len(df.index)), list(df.index))
@@ -113,15 +119,16 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                               Path bs_files
                               """))
-
-    # Optional Arguments
-    optional.add_argument('-g', '--groups', type=int, default=3000, metavar='',
+    required.add_argument('-g', '--groups', type=str, required=True, metavar='',
                           help=textwrap.dedent("""\
-                              groups
-                              """))
+                                  groups
+                                  """))
+
+    # Optional Aruments
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
-                              """))
+                          Show this help message and exit.
+                          """))
 
     parser._action_groups.append(optional)
     args = parser.parse_args()
