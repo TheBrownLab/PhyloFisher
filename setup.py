@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name='PhyloFisher',
-    version='0.1dev',
+    name='phylofisher',
+    version='0.1',
     packages=['phylofisher'],
     scripts=['phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -13,8 +13,9 @@ setup(
              'phylofisher/lumberjack.py',
              'phylofisher/purge.py',
              'phylofisher/build_dataset.py',
-             'phylofisher/missing_data.py',
+             # 'phylofisher/missing_data.py',
              'phylofisher/trimming.py',
+             'phylofisher/utilities/missing_data2.py',
              'phylofisher/utilities/AgentEllie.py',
              'phylofisher/utilities/AgentEllie2.py',
              'phylofisher/utilities/len_filter.py',
@@ -29,12 +30,5 @@ setup(
     license='MIT',
     author='david',
     author_email='zihaladavid@gmail.com',
-    description='',
-    install_requires=[
-        'numpy==1.16.2',
-        'matplotlib==3.0.2',
-        'PyQt5==5.12.1',
-        'ete3==3.1.1',
-        'pandas==0.23.4',
-        'biopython==1.70', ]
+    description=''
     )
