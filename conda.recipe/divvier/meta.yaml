@@ -1,0 +1,13 @@
+package:
+  name: divvier
+  version: 1.01
+
+source:
+  path: ../../lib/Divvier
+
+build:
+  number: 1
+
+about:
+  summary: This is a simple meta-package
+  license: GPL
