@@ -3,10 +3,12 @@ import configparser
 import argparse
 import textwrap
 from pathlib import Path
+
+import phylofisher.help_formatter
 from phylofisher import fisher
 
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='forest.py',
                                      description='Script for the analysis folder configuration.',
                                      usage="config.py -d <dataset_folder> -i <input_file.tsv> [OPTIONS]",

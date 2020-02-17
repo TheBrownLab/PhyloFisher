@@ -1,12 +1,13 @@
 import argparse
 import textwrap
 
+import phylofisher.help_formatter
 from phylofisher import fisher
 
 
 def get_args():
     global args
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='Recode_Phylip_SR4classes.py',
                                      # TODO: Get description and usage
                                      description='some description',

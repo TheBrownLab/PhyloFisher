@@ -2,6 +2,8 @@
 import argparse
 import os
 import textwrap
+
+import phylofisher.help_formatter
 from ete3 import Tree
 from collections import Counter
 import pandas as pd
@@ -99,7 +101,7 @@ def main():
 
 
 if __name__ == "__main__":
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='AgentEllie2.py',
                                      # TODO: Get description and usage

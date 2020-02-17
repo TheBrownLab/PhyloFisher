@@ -6,6 +6,7 @@ import random
 import argparse
 import textwrap
 
+import phylofisher.help_formatter
 from Bio import SeqIO
 import configparser
 from pathlib import Path
@@ -170,7 +171,7 @@ def main():
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(description='description',
                                      usage="lumberjack.py -i <in_dir>",
                                      formatter_class=formatter,

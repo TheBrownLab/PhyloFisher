@@ -3,6 +3,8 @@ import os
 import subprocess
 import argparse
 import textwrap
+
+import phylofisher.help_formatter
 from Bio import SeqIO
 import pandas as pd
 import string
@@ -104,7 +106,7 @@ def main():
 
 
 if __name__ == "__main__":
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='AgentEllie.py',
                                      # TODO: Get description and usage
