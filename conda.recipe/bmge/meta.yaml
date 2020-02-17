@@ -1,0 +1,13 @@
+package:
+  name: bmge
+  version: 1.12
+
+source:
+  path: ../../lib/BMGE-1.12
+
+build:
+  number: 1
+
+about:
+  summary: This is a simple meta-package
+  license: GPL

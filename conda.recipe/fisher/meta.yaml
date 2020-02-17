@@ -1,0 +1,40 @@
+package:
+  name: phylofisher
+  version: 0.1
+
+source:
+  path: ../../
+
+build:
+  number: 2
+  script:
+    - python -m pip install --no-deps --ignore-installed .
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python=3.7
+    - trimal
+    - raxml
+    - biopython
+    - hmmer
+    - pyqt
+    - ete3
+    - diamond
+    - pandas
+    - matplotlib
+    - fasttree
+    - blast
+    - cd-hit
+    - mafft
+    - setuptools
+    - divvier
+    - bmge
+    - prequal
+
+about:
+  summary: This is a simple meta-package
+  license: MIT

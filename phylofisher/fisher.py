@@ -8,6 +8,7 @@ output: fasta files with predicted candidate orthologous sequences
 
 import os
 import sys
+import textwrap
 from collections import defaultdict
 import subprocess
 import argparse
@@ -26,8 +27,32 @@ with warnings.catch_warnings():
     from Bio import SearchIO
 
 
+class CustomHelpFormatter(argparse.HelpFormatter):
+    """This class can be used to make chanes in the help"""
+
+    def _format_action_invocation(self, action):
+        # This removes metvar after short option
+        if not action.option_strings or action.nargs == 0:
+            return super()._format_action_invocation(action)
+        default = self._get_default_metavar_for_optional(action)
+        args_string = self._format_args(action, default)
+        return ', '.join(action.option_strings) + ' ' + args_string
+
+    def _split_lines(self, text, width):
+        # This adds 3 spaces before lines that wrap
+        lines = text.splitlines()
+        for i in range(0, len(lines)):
+            if i >= 1:
+                lines[i] = (3 * ' ') + lines[i]
+        return lines
+
+
+class myHelpFormatter(CustomHelpFormatter, argparse.RawTextHelpFormatter):
+    pass
+
+
 class Hit:
-    #TODO: it would be nice to refractor me
+    # TODO: it would be nice to refractor me
     """ Represents candidate hit.
 
     attributes:
@@ -64,6 +89,7 @@ class Query:
     attributes:
     - query: refers to a gene
     - squery: always False, not a sprcific query (fix it)"""
+
     def __init__(self, query, hmm_hits, infile_proteins):
         self.query = query
         self.hmm_hits = hmm_hits
@@ -215,9 +241,9 @@ def best_hits(max_hits, gene):
 
 
 def bac_gog_db():
-    """Parses bacterial names and gene: orthogroup/s from orthomcl.
+    """Parses bacterial names and gene: orthogroup/df from orthomcl.
 
-    returns tuple with ls of [bacterial names] and {gene: orthogtoup/s} dir"""
+    returns tuple with ls of [bacterial names] and {gene: orthogtoup/df} dir"""
     bac = set()
     for line_ in open(str(Path(dfo, 'orthomcl/bacterial'))):
         bac.add(line_[:-1])
@@ -266,7 +292,6 @@ def makedirs():
 
 
 def phylofisher(threads, max_hits, spec_queries=None):
-
     infile_proteins = get_infile_proteins()
     if spec_queries:
         # makes blastdb from input proteins
@@ -318,7 +343,7 @@ def cluster_rename_sequences():
             n += 1
     abs_path = os.path.abspath(f'tmp/{sample_name}/clustered_renamed.fasta')
 
-    #prepares file tsv files which keep information about old name: new name
+    # prepares file tsv files which keep information about old name: new name
     with open('original_names.tsv', 'a') as f:
         for new_name, or_name in original_names.items():
             f.write(f'{or_name}\t{new_name}\n')
@@ -327,7 +352,7 @@ def cluster_rename_sequences():
 
 def check_input():
     """Checks input metadata file for possible mistakes."""
-    #TODO check is file is aa not nucl
+    # TODO check is file is aa not nucl
     errors = ''
     taxonomic_groups = set(tax_group.values())
     n = 1
@@ -336,7 +361,7 @@ def check_input():
             n += 1
             metadata_input = line.split('\t')
             f_file = str(Path(metadata_input[0], metadata_input[1]))
-            #checks if file for given organism exists
+            # checks if file for given organism exists
             if os.path.isfile(f_file.strip()) is False:
                 errors += f"line {n}: file {f_file} doesn't exist\n"
             s_name = metadata_input[2].strip()
@@ -348,17 +373,16 @@ def check_input():
             if s_queries.lower().strip() != 'none':
                 for q in s_queries.split(','):
                     if q.strip() not in tax_group:
-                        #checks if specific query exists in metadata
+                        # checks if specific query exists in metadata
                         errors += f'line {n}: {q} not in metadata\n'
                 tax = metadata_input[3].strip()
                 if '*' not in tax:
-                    #checks if taxonomic group is already in metadata.
+                    # checks if taxonomic group is already in metadata.
                     # If you want to use new tax group: use * in its name
                     if tax not in taxonomic_groups:
                         errors += f'line {n}: {tax} not in metadata\n'
     if errors:
         sys.exit(f'Please check your input file:\n{errors[:-1]}')
-
 
 
 def diamond():
@@ -475,7 +499,7 @@ def new_best_hits(candidate_hits):
             with open(dataset, 'a') as d:
                 seq_name = cand.name.split("@")[0]
                 gene = cand.name.split("@")[1]
-                #TODO: is this exception handling just for debugging?
+                # TODO: is this exception handling just for debugging?
                 try:
                     # if hit is reciprocal hit to a corresponding gene
                     if gene == reciprocal_hits[seq_name[:-4]]:
@@ -483,7 +507,8 @@ def new_best_hits(candidate_hits):
                     else:
                         d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
                         with open('nonreciprocal_hits.txt', 'a') as nonrep:
-                            nonrep.write(f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
+                            nonrep.write(
+                                f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
                             print(f'nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
                 except KeyError:
                     n -= 1
@@ -537,53 +562,74 @@ def additions_to_input():
 
 
 if __name__ == '__main__':
+
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    parser = argparse.ArgumentParser(description='Script for ortholog fishing.', usage="fisher.py [OPTIONS]")
-    parser.add_argument('-t', '--threads', type=int,
-                        help='Number of threads, default:1', default=1)
-    parser.add_argument('-n', '--max_hits', type=int,
-                        help='Max number of hits to check. Default = 5.', default=5)
-    parser.add_argument('-v', '--version', action='version', version='0.1')
-    parser.add_argument('--keep_tmp', action='store_true')
-    parser.add_argument('--add', help='Input file (different from original one in config.ini'
-                                      ' only with new organisms. ')
+    formatter = lambda prog: myHelpFormatter(prog, max_help_position=100)
+    parser = argparse.ArgumentParser(description='Script for ortholog fishing.',
+                                     usage="fisher.py [OPTIONS]",
+                                     formatter_class=formatter,
+                                     epilog=textwrap.dedent("""\
+                                     additional information:
+                                        stuff
+                                     """))
+    parser.add_argument('-t', '--threads', type=int, metavar='#',
+                        help=textwrap.dedent("""\
+                        Number of threads, where # is an integer.
+                        Default=1
+                        """))
+    parser.add_argument('-n', '--max_hits', type=int, metavar='#',
+                        help=textwrap.dedent("""\
+                        Max number of hits to check, where # is
+                        an interger. Default=5
+                        """))
+    parser.add_argument('-v', '--version', action='version', version='0.1',
+                        help=textwrap.dedent("""\
+                        Show version"""))
+    parser.add_argument('--keep_tmp', action='store_true',
+                        help=textwrap.dedent("""\
+                        Keep temporary files
+                        """))
+    parser.add_argument('--add', metavar='<inputfile>',
+                        help=textwrap.dedent("""\
+                        Input file (different from original one
+                        in config.in) only with new organisms.
+                        """))
     args = parser.parse_args()
 
-    #dataset folder
+    # dataset folder
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
-    #taxon: group for all orgs in metadata
+    # taxon: group for all orgs in metadata
     tax_group = taxonomy_dict()
 
     if args.add:
-        #uses additional input metadata file
+        # uses additional input metadata file
         input_metadata = os.path.abspath(args.add)
     else:
-        #reads input metadata file from config
+        # reads input metadata file from config
         input_metadata = os.path.abspath(config['PATHS']['input_file'])
 
-    #checks input for potentional mistakes
+    # checks input for potentional mistakes
     check_input()
 
-    #reads bacterial names from orthocml database and also
-    #information  abour gene: orthogroup for all genes
+    # reads bacterial names from orthocml database and also
+    # information  abour gene: orthogroup for all genes
     bacterial, gene_og = bac_gog_db()
 
-    #returns list with gene names
+    # returns list with gene names
     profiles = get_hmm_profiles()
 
-
     if not args.add:
-        #creates output dictionaries tmp and fasta
+        # creates output dictionaries tmp and fasta
         makedirs()
     else:
-        #if --add option
+        # if --add option
         if os.path.exists('tmp/'):
             try:
-                #in a case that user used --keep-tmp option before:
-                #it cleans problematic tmp files
+                # in a case that user used --keep-tmp option before:
+                # it cleans problematic tmp files
                 os.remove('tmp/dataset_diamond.res')
                 os.remove('tmp/diamond.res')
                 os.remove('tmp/for_diamond.fasta')
@@ -596,7 +642,7 @@ if __name__ == '__main__':
     input_taxonomy = {}
 
     for line in open(input_metadata):
-        if "FILE_NAME" not in line: #TODO fix me motherfucker
+        if "FILE_NAME" not in line:  # TODO fix me motherfucker
             # input metadata file parsing
             metadata_input = line.split('\t')
             fasta_file = str(Path(metadata_input[0].strip(), metadata_input[1].strip()))

@@ -2,6 +2,7 @@ import os
 import sys
 import re  
 from decimal import *
+
 ### AGPST, C, FWY, HRK, MILV, NDEQ === DAYHOFF classes 0-5
 
 infile = sys.argv[1]

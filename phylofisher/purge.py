@@ -3,9 +3,13 @@ import os
 import configparser
 import argparse
 import csv
+import textwrap
+
 from Bio import SeqIO
 from glob import glob
 from pathlib import Path
+
+from phylofisher import fisher
 
 
 def fasta_cleaner(file, org_set):
@@ -59,16 +63,47 @@ def delete_group_org(orgs_=None, groups=None):
 
 #TODO input as a file
 if __name__ == '__main__':
+    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+
+    parser = argparse.ArgumentParser(prog='purge.py',
+                                     description='Script for deleting orgs/taxonomic groups from the dataset',
+                                     usage='purge.py [OPTIONS]',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                         additional information:
+                                            stuff
+                                            """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    # Required Arguments
+    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
+                          help=textwrap.dedent("""\
+                              Path to input directory
+                              """))
+
+    # Optional Arguments
+    optional.add_argument('-o', '--orgs', default="output", type=str, metavar='',
+                          help=textwrap.dedent("""\
+                              Short names of organisms for deletion: Org1,Org2,Org3
+                              """))
+    optional.add_argument('-g', '--tax_groups', metavar='<format>', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                              Names of taxonomic groups for deletion: Group1,Group2,Group3
+                              """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                              Show this help message and exit.
+                              """))
+
+    parser._action_groups.append(optional)
+    args = parser.parse_args()
+
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     multi_input = os.path.abspath(config['PATHS']['input_file'])
-
-    parser = argparse.ArgumentParser(description='Script for deleting orgs/taxonomic'
-                                                 'groups from the dataset', usage="purge.py [OPTIONS]")
-    parser.add_argument('-o', '--orgs', help='Short names of organisms for deletion: Org1,Org2,Org3')
-    parser.add_argument('-g', '--tax_groups', help='Names of taxonomic groups for deletion: Group1,Group2,Group3')
-    args = parser.parse_args()
 
     delete_group_org(args.orgs, args.tax_groups)
 
