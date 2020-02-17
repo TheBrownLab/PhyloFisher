@@ -115,7 +115,7 @@ def table_with_paths(df, paths):
     for all organisms, dictionary with paths for all sequences
     output: modifiend input dataframe with information about path
     """
-    #TODO: refractor me please
+    # TODO: refractor me please
     full_names = []
     tax_list = []
     for org in df.index:
@@ -226,7 +226,6 @@ def stats_orgs(table):
     df["#Missing"] = df['#Missing'].astype(int)
     df["%Missing"] = df['%Missing'].round(2)
     df.to_csv(f'{output_fold}/orgs_stats.csv')
-
 
 
 def stats_gene(table):
