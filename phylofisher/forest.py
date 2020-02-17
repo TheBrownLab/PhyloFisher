@@ -6,6 +6,8 @@ import textwrap
 from collections import defaultdict, Counter
 import configparser
 from multiprocessing import Pool
+
+import phylofisher.help_formatter
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -406,7 +408,7 @@ def backpropagate_contamination(tree_file, cont_names):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='forest.py',
                                      description='some description',
                                      usage='forest.py [OPTIONS] -t <tree_dir> -o <out_dir>',

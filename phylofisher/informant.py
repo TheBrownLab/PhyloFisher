@@ -2,6 +2,7 @@
 import glob
 from collections import defaultdict
 import pandas as pd
+import phylofisher.help_formatter
 from Bio import SeqIO
 import numpy as np
 import argparse
@@ -244,7 +245,7 @@ def stats_gene(table):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='informant.py',
                                      description='some description',

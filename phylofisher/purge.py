@@ -5,6 +5,7 @@ import argparse
 import csv
 import textwrap
 
+import phylofisher.help_formatter
 from Bio import SeqIO
 from glob import glob
 from pathlib import Path
@@ -63,7 +64,7 @@ def delete_group_org(orgs_=None, groups=None):
 
 #TODO input as a file
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='purge.py',
                                      description='Script for deleting orgs/taxonomic groups from the dataset',

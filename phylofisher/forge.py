@@ -3,6 +3,8 @@ import os
 import sys
 import textwrap
 from glob import glob
+
+import phylofisher.help_formatter
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -101,7 +103,7 @@ def main():
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='forge.py',
                                      description='some description',

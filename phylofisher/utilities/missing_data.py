@@ -5,6 +5,8 @@ import glob
 import shutil
 import textwrap
 from collections import defaultdict
+
+import phylofisher.help_formatter
 from Bio import SeqIO
 import statistics
 import pandas as pd
@@ -218,7 +220,7 @@ def subsetter(df):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: fisher.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='missing_data.py',
                                      # TODO: Description
