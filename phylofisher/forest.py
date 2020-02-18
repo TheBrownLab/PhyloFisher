@@ -16,6 +16,11 @@ plt.style.use('ggplot')
 
 
 def parse_metadata(metadata, input_metadata=None):
+    """
+    Parse metadata from dataset and input_metadata (if provided)
+    input:  metadata csv file, input metadata csv file (optional)
+    return: dictionary with combined metadata, dictionary with taxonomy: color
+    """
     metadata_comb = {}
     tax_col = {}
     for line_ in open(metadata):
@@ -45,9 +50,9 @@ def parse_metadata(metadata, input_metadata=None):
 
 def suspicious_clades(tree):
     """
+    Find suspicious clades (more than 70 bs and more than 2 tax groups)
     input: phylogenetic tree
-    output: tree object, suspicious clades (those with more than 70 bs
-    and more than 2 tax groups)
+    output: tuple of tree name and list of suspicious clades 
     """
     t = Tree(tree)
     # midpoint rooted tree
@@ -57,9 +62,10 @@ def suspicious_clades(tree):
     supported_clades = []
     for node in t.traverse('preorder'):
         if (node.is_root() is False) and (node.is_leaf() is False):
-            if node.support >= 70 and (len(node) < (len(t) - len(node))):  # describe me better
+            # report only clades which encompass less than a half of all oranisms
+            if node.support >= 70 and (len(node) < (len(t) - len(node))):
                 clade = node.get_leaf_names()
-                if len(clade) > 1:  # more than one org. I don't know why now.
+                if len(clade) > 1:  # do we need this statement?
                     supported_clades.append(clade)
     suspicious = []
     for clade in supported_clades:
@@ -78,8 +84,10 @@ def suspicious_clades(tree):
 
 def get_best_candidates(tree_file):
     """
-    check best candidates after trimming.
+    Check best candidates after trimming.
     example: if q1 doesn't survived -> q2 is ranked as best candidate == ortholog
+    input: tree file
+    output: set of best candidate sequences
     """
     t = Tree(tree_file)
     top_rank = defaultdict(dict)
@@ -102,7 +110,18 @@ def get_best_candidates(tree_file):
 
 
 def parse_contaminations(file):
-    # TODO check contamination file
+    """
+    Parse contamination file.
+    example:
+    ==============================
+    Pirisoci	Alveolata	group
+    DiplDSTH	GoniavonGEN	org
+    Fucucera	Ochrophyta	subtax
+    ==============================
+    input: tab separated file with contaminations
+    result: dictionary with organism as key and tuple with taxonomy
+            and rank 
+    """
     cont_dict = {}
     for line in open(file):
         org, tax, rank = line.split('\t')
@@ -111,13 +130,22 @@ def parse_contaminations(file):
 
 
 def expected_neighborhood(parent, cont_key_rank):
+    """
+    Recursively check if ornanisms around target has some taxonomical group 
+    (not added in this run of fisher) and evaluete if target has expected 
+    neighbourhood.
+    input: parent node, (key, rank) => example: (Alveolata, group) or (Gonianon, org)
+    output: True/False
+    """
     keywords = set()
     key = cont_key_rank[0]
     rank = cont_key_rank[1]
+    # check that rank is valid (group, subtax, org)
     assert rank in ['group', 'subtax', 'org'], f'{rank} has to be group,subtax or org'
     for org in parent.get_leaf_names():
         if (org.count('_') != 4):
             if '..' in org:
+                # in case of paralogs
                 org = org.split('..')[0]
             else:
                 org = org.split('_')[0]
@@ -129,6 +157,8 @@ def expected_neighborhood(parent, cont_key_rank):
                 keywords.add(org)
     if keywords:
         if len(keywords) == 1:
+            # only in a case that expected neighbourhood is exactly what we
+            # are expecting to be. Only one group, subtax, tax
             if key in list(keywords)[0]:
                 return True
             else:
@@ -139,11 +169,16 @@ def expected_neighborhood(parent, cont_key_rank):
 
 
 def collect_contaminations(tree_file, cont_dict):
+    """
+    Collect name of all sequences where position on tree corresponds to expected place 
+    for a contamination.
+    input: tree file, contamination dict from parse_contaminations fucntion
+    result: set of proven contaminations, set of proven contamination (same names as in csv result tables)
+    """
     t = Tree(tree_file)
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
     cont_table_names = set()
-
     contaminations = set()
     n = 0
     for node in t.traverse('preorder'):
@@ -203,7 +238,7 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
     title_face = TextFace(f'<{name_}  trim_aln_len: {trim_len}, {sus_clades} suspicious clades>', bold=True)
     ts.title.add_face(title_face, column=1)
     t.render(output_base + '_tree.svg', tree_style=ts)
-    if not backpropagation:
+    if not backpropagation: #what what what?
         table.close()
 
 
@@ -332,12 +367,22 @@ def nonredundant(result_clades):
     return nonredundant
 
 
-def problematic(nonredundant_clades_):
-    problematic_orgs_ = defaultdict(list)
+def collect_major_taxa(nonredundant_clades_):
+    """
+    Collect information about major taxonomic group for all nonreduntant clades
+    and connect this information with all organisms in that clade. This function
+    prepares data for plot_major_taxa function.
+    input: set of nonredundant clades
+    return: dictionary with orgs as keys and list of taxonomic groups (major tax groups
+    from clades with a given organism) as values
+    """
+    orgs_ = defaultdict(list)
     for clade in nonredundant_clades_:
+        # collect all taxonomic groups for a given clade
         taxons = []
         for org in clade:
             if '..' in org:
+                # for paralogs
                 org = org.split('..')[0]
             else:
                 org = org.split('_')[0]
@@ -347,28 +392,39 @@ def problematic(nonredundant_clades_):
             group_perc[tax] = (taxons.count(tax) / len(taxons)) * 100
         max_perc = max(group_perc, key=group_perc.get)
         for seq in clade:
+            # parse names again
             if '..' in seq:
+                # paralogs
                 org = seq.split('..')[0]
             else:
                 org = seq.split('_')[0]
             if group_perc[metadata[org]["group"]] == 50:
-                problematic_orgs_[org].append('unspecified')
+                orgs_[org].append('unspecified')
             else:
-                problematic_orgs_[org].append(max_perc)
-    return problematic_orgs_
+                orgs_[org].append(max_perc)
+    return orgs_
 
 
-def plot_problematic(problematic_orgs):
+def plot_major_taxa(orgs_taxa):
+    """
+    Plot major taxonomic groups from clades (with a given org) for all organisms.
+    input: result from collect_major_taxa function (dictionary with list as keys)
+    return: None
+    """
     max_ = 0
-    for org, groups in sorted(problematic_orgs.items()):
+    for org, groups in sorted(orgs_taxa.items()):
+        # this 'for loop' is just looking for maximum value of clades
+        # with same taxonomic group for one organism. This number (max_)
+        # is then used as maximum in plt.ylim to put all orgs on the same
+        # scale
         counted_groups = dict(Counter(groups))
         group_total = 0
         for group in counted_groups.values():
             group_total += group
         if group_total > max_:
             max_ = group_total
-    with PdfPages('problematic_orgs.pdf') as pdf:
-        for org, groups in sorted(problematic_orgs.items()):
+    with PdfPages('orgs_taxa.pdf') as pdf:
+        for org, groups in sorted(orgs_taxa.items()):
             counted_groups = dict(Counter(groups))
             colors = []
             for group in counted_groups.keys():
@@ -387,6 +443,12 @@ def plot_problematic(problematic_orgs):
 
 
 def backpropagate_contamination(tree_file, cont_names):
+    """
+    Changes status in all csv result tables for all proven contaminations
+    to 'd' as delete.
+    input: tree file, set of proven contaminations (same name format as in csv tables)
+    result: None
+    """
     tree_base = str(os.path.basename(tree_file))
     if args.prefix:
         tree_base = tree_base.replace(args.prefix, '')
@@ -411,9 +473,7 @@ if __name__ == '__main__':
                                      description='some description',
                                      usage='forest.py [OPTIONS] -t <tree_dir> -o <out_dir>',
                                      formatter_class=formatter,
-                                     epilog=textwrap.dedent("""\
-                                     additional information:
-                                        stuff
+                                     epilog=textwrap.dedent("""\backpropagation
                                         """))
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
@@ -427,22 +487,11 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Path to desired output directory
                           """))
-    # Optional Arguments
-    optional.add_argument('-m', '--metadata', metavar='',
-                          help=textwrap.dedent("""\
-                          suffix used
-                          """))
-    optional.add_argument('-n', '--input_metadata', metavar='',
-                          help=textwrap.dedent("""\
-                          suffix used
-                          """))
+    # Optional Argumentsbackpropagation
     optional.add_argument('-a', '--contaminations', metavar='<contams>',
                           help=textwrap.dedent("""\
                           Path to file containing contaminations
-                          to be removed
-                          """))
-    optional.add_argument('-p', '--threads', default=1, metavar='#',
-                          help=textwrap.dedent("""\
+                          to be removedbackpropagation
                           Number of threads to be used, where
                           N is an integer. Default: N=1"""))
     optional.add_argument('-c', '--use_config', action='store_true',
@@ -501,8 +550,8 @@ if __name__ == '__main__':
                     res.write(f'\n\n\n')
         result_clades = [clades[1] for clades in suspicious]
         nonredundant_clades = nonredundant(result_clades)
-        problematic_orgs = problematic(nonredundant_clades)
-        plot_problematic(problematic_orgs)
+        orgs_taxa = collect_major_taxa(nonredundant_clades)
+        plot_major_taxa(orgs_taxa)
 
     if args.contaminations:
         cont_dict = parse_contaminations(args.contaminations)
