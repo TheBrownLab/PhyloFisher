@@ -120,7 +120,7 @@ if __name__ == '__main__':
     # Required Arguments
     required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
                           help=textwrap.dedent("""\
-                          Path to input directory
+                          Path to input directory containing trimmed alignments in FASTA format.
                           """))
 
     # Optional Arguments

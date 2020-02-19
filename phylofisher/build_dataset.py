@@ -24,6 +24,7 @@ def prepare_diamond_input():
             for record in SeqIO.parse(file, 'fasta'):
                 res.write(f'>{gene}@{record.name}\n{record.seq}\n')
 
+
 def diamond():
     """
     Uses for_diamond.fasta to diamond orthomcl.diamonddb
