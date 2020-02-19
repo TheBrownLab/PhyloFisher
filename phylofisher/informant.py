@@ -280,7 +280,7 @@ if __name__ == '__main__':
                               """))
     optional.add_argument('--orthologs', action='store_true',
                           help=textwrap.dedent("""\
-                          some description
+                          Path to dataset directory containing orthologs
                           """))
     optional.add_argument('--occupancy_with_paths', action='store_true',
                           help=textwrap.dedent("""\

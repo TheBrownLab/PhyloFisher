@@ -5,21 +5,19 @@ from statistics import mean
 from Bio import SeqIO
 import argparse
 
-class Leaves:
 
+class Leaves:
 
     def __init__(self, tree):
         self.tree = tree
         self.leaf_names = self.tree.get_leaf_names()
         self.leaves = self.tree.get_leaves()
 
-
     def get_locations(self):
         locs = {}
         for name in self.leaf_names:
             locs[name] = self.tree & name
         return locs
-
 
     def get_mean_distance(self, leaf):
         locations = self.get_locations()
@@ -29,7 +27,6 @@ class Leaves:
                 distances.append(leaf.get_distance(locations[name]))
         sorted_dist = sorted(distances, reverse=True)
         return mean(sorted_dist[:10])
-
 
     def org_speed(self):
         mean_distances = []
@@ -41,19 +38,16 @@ class Leaves:
 
 class Matrix:
 
-
     def __init__(self, matrix, format, ranked_orgs):
         self.matrix = matrix
         self.format = format
         self.ranked_orgs = ranked_orgs
 
-
     def fast_evol_taxa(self, chunk_size):
         chunks = []
         for i in range(0, len(self.ranked_orgs), chunk_size):
-            chunks.append(self.ranked_orgs[0:i+chunk_size])
+            chunks.append(self.ranked_orgs[0:i + chunk_size])
         return chunks
-
 
     def generate_subset(self, output_folder, iterations, chunk_size):
         chunks = self.fast_evol_taxa(chunk_size)
@@ -67,7 +61,7 @@ class Matrix:
                         res.write(f'>{record.name}\n{record.seq}\n')
 
 
-def main():
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Fast taxon removal', usage="fast_tax_removal.py [OPTIONS]")
     parser.add_argument('-t', '--tree', required=True)
     parser.add_argument('-m', '--matrix', required=True)
@@ -81,7 +75,3 @@ def main():
     x = Leaves(tree)
     m = Matrix(args.matrix, args.format, x.org_speed())
     m.generate_subset(args.output_folder, args.iterations, args.chunk_size)
-
-
-if __name__ == '__main__':
-    main()

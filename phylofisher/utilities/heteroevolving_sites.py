@@ -21,7 +21,7 @@ def fast_and_slow(matrix, format, portion, sorted_orgs):
                 f.write(f'>{record.name}\n{record.seq}\n')
 
 
-def main():
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Fast taxon removal', usage="fast_tax_removal.py [OPTIONS]")
     parser.add_argument('-t', '--tree', required=True)
     parser.add_argument('-m', '--matrix', required=True)
@@ -33,8 +33,3 @@ def main():
     leaves = Leaves(tree)
     sorted_taxa = leaves.org_speed()
     fast_and_slow(args.matrix, args.format, args.portion, sorted_taxa)
-
-
-
-if __name__ == '__main__':
-    main()

@@ -231,7 +231,7 @@ if __name__ == '__main__':
                                      add_help=False,
                                      epilog=textwrap.dedent("""\
                                          additional information:
-                                            
+                                            stuff
                                             """))
     optional = parser._action_groups.pop()
     mut_excl = parser.add_mutually_exclusive_group()

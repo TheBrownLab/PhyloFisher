@@ -3,9 +3,8 @@ import configparser
 import argparse
 import textwrap
 from pathlib import Path
-
 import phylofisher.help_formatter
-from phylofisher import fisher
+
 
 if __name__ == '__main__':
     formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
@@ -32,7 +31,7 @@ if __name__ == '__main__':
     # Optional Arguments
     optional.add_argument('--orthomcl', metavar='<omcl_data>',
                           help=textwrap.dedent("""\
-                          Path to orthomcl if not in dataset_dir
+                          Path to orthomcl if NOT in dataset_dir
                           """))
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
