@@ -9,6 +9,9 @@ from Bio import SeqIO
 
 
 def parse_genes(gene_file):
+    """Select gene to exclude: where sgt column is not 'yes' 
+    input: csv file with genes
+    return: set of genes which should be exluded"""
     to_exlude = set()
     with open(gene_file) as lines:
         next(lines)
@@ -21,11 +24,16 @@ def parse_genes(gene_file):
 
 
 def parse_orgs(org_file):
+    """Parse csv table for organisms selection
+    input: csv file with organisms
+    return: set of organisms to exclude, set of organisms
+    for which we want to select paralogs"""
     to_exlude = set()
     paralogs = set()
     with open(org_file) as lines:
         header = next(lines)
         if header.count(',') == 10:
+            # only with paralog selection option
             sgt_idx = 9
         else:
             sgt_idx = 6
@@ -35,6 +43,7 @@ def parse_orgs(org_file):
             if sgt.lower() != 'yes':
                 to_exlude.add(org)
             if header.count(',') == 10:
+                # only with paralog selection option
                 if line.split(',')[sgt_idx + 1].strip().lower() == "yes":
                     if org not in to_exlude:
                         paralogs.add(org)
@@ -42,11 +51,16 @@ def parse_orgs(org_file):
 
 
 def fasta_filtr(file, o_to_ex, paralogs=None):
+    """Filter fasta sequences with genes. Exludes organisms which should be 
+    excluded (o_to_ex)
+    input: fasta file with genes, set with orgs to exlude, paralogs=True/None
+    result: None"""
     with open(str(Path(args.output_directory, file)), 'w') as res:
         for record in SeqIO.parse(str(Path(args.input_directory, file)), 'fasta'):
             if record.name.split('_')[0] not in o_to_ex:
                 res.write(f'>{record.name}\n{record.seq}\n')
         if paralogs:
+            # only with paralog selection option
             para_file = str(Path(dfo, f'paralogs/{file.split(".")[0]}_paralogs.fas'))
             if os.path.isfile(para_file):
                 for record in SeqIO.parse(para_file, 'fasta'):
@@ -55,14 +69,13 @@ def fasta_filtr(file, o_to_ex, paralogs=None):
 
 
 def main():
-    # if args.orthologs:
-    #     gene_file = 'orthologs_stats/genes_stats.csv'
-    #     orgs_file = 'orthologs_stats/orgs_stats.csv'
-    # else:
     gene_file = str(Path(args.input_directory + '_stats', 'genes_stats.csv'))
     orgs_file = str(Path(args.input_directory + '_stats', 'orgs_stats.csv'))
+    # genes to exclude
     g_to_ex = parse_genes(gene_file)
+    # organisms to exlude
     o_to_ex, paralogs = parse_orgs(orgs_file)
+    # only genes which are not in g_to_ex
     filtered_genes = []
     for file in glob(args.input_directory + f'/*{args.sufix}'):
         if file.split('.')[0] not in g_to_ex:
@@ -70,6 +83,7 @@ def main():
 
     for file in filtered_genes:
         if paralogs:
+            # only with paralog selection option
             fasta_filtr(os.path.basename(file), o_to_ex, paralogs)
         else:
             fasta_filtr(os.path.basename(file), o_to_ex)
