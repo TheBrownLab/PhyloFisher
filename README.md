@@ -63,57 +63,62 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 `mkdir <analysis_dir>`<br/>
 `cd <analysis_dir>`<br/>
 
-2. (Optional) Prepare config file in your folder:<br/>
+2. (Optional, but Recommended) Prepare config file in your folder:<br/>
 `config.py [OPTIONS] -d <dataset_folder> -i <input_file.tsv>`<br/>
-Use config.py --help for more options.<br/>
+Use `config.py --help` for all options.<br/>
 
 3. Run fisher.py for ortholog fishing:<br/>
 `fisher.py [OPTIONS]`<br/>
+Use `fisher.py --help` for all options.<br/>
 
 4. Prepare *_stats folder for organism and gene selection:<br/>
 `informant.py [OPTIONS] -i fasta/ --paralog_selection`<br/>
+Use `informant.py --help` for all options.<br/>
 
 5. Apply your selection:<br/>
 `fishing_net.py [OPTIONS] -i fasta/ -o <folder_with_selected_seqs>`<br/>
+Use `fishing_net.py --help` for all options.<br/>
 
 6. Trimming and single gene tree computations:<br/>
-`trimming.py [OPTIONS] -d <dataset_folder> -i <folder_with_fasta_files> -s <suffix>`
+`trimming.py [OPTIONS] -d <dataset_folder> -i <folder_with_fasta_files> -s <suffix>`<br/>
+Use `trimming.py --help` for all options.<br/>
 
 7. Build phylogenomic matrix (Concatenation):<br/>
-`forge.py [OPTIONS] --input <input_dir> `
+`forge.py [OPTIONS] --input <input_dir> `<br/>
+Use `forge.py --help` for all options.<br/>
 
 
 
 ## Utilities
 * **examine_bipartitions.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `examine_bipartitions.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `examine_bipartitions.py --help` to see all options<br/><br/>
 * **fast_site_removal.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `fast_site_removal.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `fast_site_removal.py --help` to see all options<br/><br/>
 * **aa_comp_calculator.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `aa_comp_calculator.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `aa_comp_calculator.py --help` to see all options<br/><br/>
 * **fast_tax_removal.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `fast_tax_removal.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `fast_tax_removal.py --help` to see all options<br/><br/>
 * **genetic_code_check.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `genetic_code_check.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `genetic_code_check.py --help` to see all options<br/><br/>
 * **heteroevoloving_sites.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `heteroevoloving_sites.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `heteroevoloving_sites.py --help` to see all options<br/><br/>
 * **SR4_class_recoder.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `SR4_class_recoder.py --help` to see all options<br/><br/>
+    * Usage: `usage goes here`<br/>
+      Use `SR4_class_recoder.py --help` to see all options<br/><br/>
 * **missing_data.py**
     * Description
-    * Usage: `usage goes here`
-        * Use `missing_data.py --help` to see all options
+    * Usage: `usage goes here`<br/>
+      Use `missing_data.py --help` to see all options
