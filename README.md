@@ -66,41 +66,64 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 `mkdir <analysis_dir>`<br/>
 `cd <analysis_dir>`<br/>
 
-2. Prepare config file in your folder:<br/>
-`config.py -d <dataset_folder> -i <input_file.tsv> [OPTIONS]`<br/>
+2. (Optional) Prepare config file in your folder:<br/>
+`config.py [OPTIONS] -d <dataset_folder> -i <input_file.tsv>`<br/>
 Use config.py --help for more options.<br/>
 
 3. Run fisher.py for ortholog fishing:<br/>
 `fisher.py [OPTIONS]`<br/>
 
 4. Prepare *_stats folder for organism and gene selection:<br/>
-`informant.py -i fasta/ --paralog_selection`<br/>
+`informant.py [OPTIONS] -i fasta/ --paralog_selection`<br/>
 
 5. Apply your selection:<br/>
-`fishing_net.py -i fasta/ -o <folder_with_selected_seqs>`<br/>
+`fishing_net.py [OPTIONS] -i fasta/ -o <folder_with_selected_seqs>`<br/>
 
 6. Trimming and single gene tree computations:<br/>
-`trimming.py -d <dataset_folder> -i <folder_with_fasta_files> -s <suffix>`
+`trimming.py [OPTIONS] -d <dataset_folder> -i <folder_with_fasta_files> -s <suffix>`
 
- Build phylogenomic matrix (Concatenation):<br/>
+7. Build phylogenomic matrix (Concatenation):<br/>
 `forge.py [OPTIONS] --input <input_dir> `
 
 
 
 ## Utilities
-* add_aln_length.py
-    * description
-    * 
-* AgentEllie.py
-* AgentEllie2.py
-* CalculateAAComposition.py
-* corrected_translation.py
-* fast_tax_removal.py
-* genetic_code_check.py
-* heteroevoloving_sites.py
-* len_filter.py
-* len_filter2.py
-* no_gap_stops.py
-* pre_trimal.py
-* Recode_Phylip_SR4classes.py
-* missing_data.py
+#### examine_bipartitions.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `examine_bipartitions.py --help` to see all options
+    
+#### fast_site_removal.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `fast_site_removal.py --help` to see all options
+
+#### aa_comp_calculator.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `aa_comp_calculator.py --help` to see all options
+
+#### fast_tax_removal.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `fast_tax_removal.py --help` to see all options
+
+#### genetic_code_check.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `genetic_code_check.py --help` to see all options
+
+#### heteroevoloving_sites.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `heteroevoloving_sites.py --help` to see all options
+
+#### SR4_class_recoder.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `SR4_class_recoder.py --help` to see all options
+
+#### missing_data.py<br/>
+* Description
+* Usage: `usage goes here`
+    * Use `missing_data.py --help` to see all options
