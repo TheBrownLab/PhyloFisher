@@ -103,7 +103,7 @@ def main():
 if __name__ == "__main__":
     formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
-    parser = argparse.ArgumentParser(prog='AgentEllie2.py',
+    parser = argparse.ArgumentParser(prog='bipartition_examiner.py',
                                      # TODO: Get description and usage
                                      description='some description',
                                      usage='some usage',

@@ -9,7 +9,6 @@ from Bio import SeqIO
 import pandas as pd
 import string
 import random
-from phylofisher import fisher
 
 
 def id_generator(size=10, chars=string.digits):
@@ -108,7 +107,7 @@ def main():
 if __name__ == "__main__":
     formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
-    parser = argparse.ArgumentParser(prog='AgentEllie.py',
+    parser = argparse.ArgumentParser(prog='fast_site_removal.py',
                                      # TODO: Get description and usage
                                      description='some description',
                                      usage='some usage',
@@ -120,7 +119,6 @@ if __name__ == "__main__":
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
 
-    # TODO: What is optional and required?
     # Required Arguments
     required.add_argument('-m', '--matrix', required=True, type=str, metavar='<matrix>',
                           help=textwrap.dedent("""\
