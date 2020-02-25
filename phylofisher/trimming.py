@@ -2,69 +2,96 @@
 import os
 import argparse
 import textwrap
+import subprocess
 from glob import glob
+from Bio import SeqIO
 from pathlib import Path
+from multiprocessing import Pool
+from phylofisher import help_formatter
 
 
-# TODO fucking cleaning
+def bash_command(cmd):
+    """Function to run bash commands in a shell"""
+    subprocess.run(cmd, shell=True, executable='/bin/bash')
 
 
-def prepare_analyses(dataset, threads):
+def delete_gaps_stars(file):
+    """Removes -'s and *'s from alignments"""
+    file_name = f'{file.split(".")[0]}.aa'
+    with open(file_name, 'w') as res:
+        for record in SeqIO.parse(file, 'fasta'):
+            res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
+
+
+def add_length(root):
+    """Adds length to the file name"""
+    length = open(f'{root}.length').readline()
+    os.rename(f'RAxML_bipartitions.{root}.tre', f'RAxML_bipartitions.{root}_{length}.tre')
+
+
+def x_to_dash(file):
+    """Replaces X's in alignments with -'s"""
+    file_name = f'{file.split(".")[0]}.pre_trimal'
+    with open(file_name, 'w') as res:
+        for record in SeqIO.parse(file, 'fasta'):
+            res.write(f'>{record.name}\n{str(record.seq).replace("X", "-")}\n')
+
+
+def read_full_proteins(core):
+    full_prots = {}
+    for record in SeqIO.parse(f'{core}.aa.filtered', 'fasta'):
+        full_prots[record.name] = record.seq
+    return full_prots
+
+
+def good_length(trimmed_aln, threshold):
+    core = trimmed_aln.split('.')[0]
+    full_proteins = read_full_proteins(core)
+    original_name = f'{core}.len'
+    length = None
+    with open(original_name, 'w') as res:
+        for record in SeqIO.parse(trimmed_aln, 'fasta'):
+            if length is None:
+                length = len(record.seq)
+            coverage = len(str(record.seq).replace('-', '').replace('X', '')) / len(record.seq)
+            if coverage > threshold:
+                res.write(f'>{record.description}_{round(coverage, 2)}\n{full_proteins[record.name]}\n')
+            else:
+                print('deleted:', record.name, coverage)
+    with open(f'{core}.length', 'w') as f:
+        f.write(str(length))
+
+
+def prepare_analyses(dataset):
     root = dataset.split('/')[-1].split('.')[0]
-    command = (f'no_gap_stops.py {dataset} &&'
-               
-               f'prequal {root}.aa && '
-               
-               f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6'
-               f' --thread {threads} {root}.aa.filtered > {root}.aln && '
-               
-               f'divvier -mincol 4 -divvygap {root}.aln && '
-               
-               f'pre_trimal.py {root}.aln.divvy.fas && '
-               
-               f'BMGE -t AA -g 0.3 -i {root}.pre_trimal -of {root}.bmge && '
-               
-               f'len_filter2.py -i {root}.bmge -t 0.5 && '
-               
-               f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6'
-               f' --thread {threads} {root}.len > {root}.aln2 && '
-               
-               f'divvier -mincol 4 -divvygap {root}.aln2 && '
-               
-               f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final\n'
-               
-               f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final'
-               f' -n {root}.tre -x 123 -N 100 -p 12345 && '
-               
-               f'add_aln_length.py {root}\n')
 
-    return command
+    delete_gaps_stars(dataset)
+
+    # Runs Prequal, MAFFT and Divvier
+    cmds1 = [f'prequal {root}.aa',
+             f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.aa.filtered > {root}.aln',
+             f'divvier -mincol 4 -divvygap {root}.aln'
+             ]
+    [bash_command(cmd) for cmd in cmds1]
+    x_to_dash(f'{root}.aln.divvy.fas')
+
+    bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_trimal -of {root}.bmge')
+    good_length(trimmed_aln='{root}.bmge', threshold=0.5)
+
+    # Runs MAFFT, Divvier, trimal, and raxml
+    cmds2 = [f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.len > {root}.aln2',
+             f'divvier -mincol 4 -divvygap {root}.aln2',
+             f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final',
+             f'raxmlHPC-PTHREADS-AVX2 -m PROTGAMMALG4XF -f a -s {root}.final -n {root}.tre -x 123 -N 100 -p 12345'
+             ]
+    [bash_command(cmd) for cmd in cmds2]
+
+    add_length(root)
 
 
 if __name__ == '__main__':
-    class CustomHelpFormatter(argparse.HelpFormatter):
-        """This class can be used to make visual changes in the help"""
+    formatter = lambda prog: help_formatter.myHelpFormatter(prog, max_help_position=100)
 
-        def _format_action_invocation(self, action):
-            # This removes metvar after short option
-            if not action.option_strings or action.nargs == 0:
-                return super()._format_action_invocation(action)
-            default = self._get_default_metavar_for_optional(action)
-            args_string = self._format_args(action, default)
-            return ', '.join(action.option_strings) + ' ' + args_string
-
-        def _split_lines(self, text, width):
-            # This adds 3 spaces before lines that wrap
-            lines = text.splitlines()
-            for i in range(0, len(lines)):
-                if i >= 1:
-                    lines[i] = (3 * ' ') + lines[i]
-            return lines
-
-    class myHelpFormatter(CustomHelpFormatter, argparse.RawTextHelpFormatter):
-        pass
-
-    formatter = lambda prog: myHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='trimming.py',
                                      description='description',
                                      usage='trimming.py -i path/to/input/ [OPTIONS]',
@@ -88,7 +115,7 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                               Suffix of input files
                               Default: NONE
-                              Example: path/to/input/*.suffix
+                              Example: path/to/input/*.suffix 
                               """))
     optional.add_argument('-t', '--threads', metavar='N', type=int, default=1,
                           help=textwrap.dedent("""\
@@ -103,10 +130,9 @@ if __name__ == '__main__':
     parser._action_groups.append(optional)
     args = parser.parse_args()
 
-    lib = f'{os.path.realpath(__file__).split("phylofisher")[0]}lib'
-
     os.chdir(args.input_folder)
-    with open('commands.txt', 'w') as res:
-        for file in glob(f'*{args.suffix}'):
-            line = prepare_analyses(file, args.threads)
-            res.write(line)
+
+    # Parallelization of prepare_analyses function
+    files = [file for file in glob(f'*{args.suffix}')]
+    with Pool(args.threads) as p:
+        p.map(prepare_analyses, files)
