@@ -1,11 +1,11 @@
 ![PhyloFIsher](docs/_static/fisher.png)
 
 Jump to:<br/>
-    [Installation](#Installation via Conda)<br/>
+    [Installation](#Installation-via-Conda)<br/>
     [Usage](#Usage)<br/>
-    [Custom Dataset Prep](#Custom dataset preparation)
+    [Custom Dataset Prep](#Custom-dataset-preparation)<br/>
     
-#Installation via Conda
+# Installation via Conda
 
 1. Install conda via Miniconda or Anaconda:<br/>
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/
@@ -61,6 +61,8 @@ Use `trimming.py --help` for all options.<br/>
 `forge.py [OPTIONS] --input <input_dir> `<br/>
 Use `forge.py --help` for all options.<br/>
 
+***Use `<script>.py --help`  to see all options and their desctriptions.
+
 
 ### Utilities
 * **bipartition_examiner.py**
@@ -71,7 +73,7 @@ Use `forge.py --help` for all options.<br/>
     * Usage: `usage goes here`<br/><br/>
 * **aa_comp_calculator.py**
     * Description
-    * Usage: `usage goes here`<br/><br/>
+    * Usage: `aa_comp_calculator.py [OPTIONS] -i /path/to/input/`<br/><br/>
 * **fast_tax_removal.py**
     * Description
     * Usage: `usage goes here`<br/><br/>
@@ -86,8 +88,9 @@ Use `forge.py --help` for all options.<br/>
     * Usage: `usage goes here`<br/><br/>
 * **missing_data.py**
     * Description
-    * Usage: `usage goes here`<br/><br/>
+    * Usage: `missing_data.py [OPTIONS] -i <input> -m <metadata> {-n <gene_number> | -c <percent_complete>}`<br/><br/>
 
+***Use `<script>.py --help`  to see all options and their desctriptions.
  
  
       
