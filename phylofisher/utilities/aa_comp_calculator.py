@@ -1,80 +1,97 @@
-import os
-import sys
-import re  
-from decimal import *
+#!/usr/bin/env python
+import argparse
+import textwrap
 
-### AGPST, C, FWY, HRK, MILV, NDEQ === DAYHOFF classes 0-5
-
-infile = sys.argv[1]
-out = sys.argv[2]
-
-
-infile = open(infile, "r")
-out = open(out, "w")
-
-lines = infile.readlines()
-
-out.write("taxon\tA\tG\tP\tS\tT\tC\tF\tW\tY\tH\tR\tK\tM\tI\tL\tV\tN\tD\tE\tQ\n")
-
-for line in lines[1:]:
-	line =line.strip()
-	taxon= line.split()[0]
-	sentence=line.split()[1]
-	length=len(sentence)
-	gaps=sentence.count('-')
-	sites = length-gaps
-	print(sites)
-	out.write(taxon)
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('A'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('G'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('P'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('S'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('T'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('C'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('F'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('W'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('Y'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('H'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('R'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('K'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('M'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('I'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('L'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('V'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('N'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('D'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('E'))/Decimal(sites))))
-	out.write("\t")
-	out.write(str(float(Decimal(sentence.count('Q'))/Decimal(sites))))
-	out.write("\n")
-out.close()
+import pandas as pd
+import phylofisher.help_formatter
+from Bio import SeqIO
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
+import matplotlib.pyplot as plt
+import scipy.cluster.hierarchy as shc
 
 
-"""
-mydata = read.table("/Users/mbrown/Documents/MyDocuments-Aine/Molecular-AINE/Bordor/Bordor.351.64.3-7-2016.Roger/CalculateAAComposition/Bordor.351.64.3-7-2016.dat.AAcomposition.tsv",header=T,row.names = 1)
-d <- dist(as.matrix(mydata))
-hc <- hclust(d)  
-plot(hc)
+def get_args():
+    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
 
-"""
-	
-	
+    parser = argparse.ArgumentParser(prog='aa_comp_calculator.py',
+                                     description='some description',
+                                     usage='aa_comp_calculator.py [OPTIONS] -i /path/to/input/',
+                                     formatter_class=formatter,
+                                     add_help=False,
+                                     epilog=textwrap.dedent("""\
+                                         additional information:
+                                            stuff
+                                            """))
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+
+    # Required Arguments
+    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
+                          help=textwrap.dedent("""\
+                              Path to input directory containing trimmed alignments in FASTA format.
+                              """))
+
+    # Optional Arguments
+    optional.add_argument('-o', '--output', default="output", type=str, metavar='',
+                          help=textwrap.dedent("""\
+                              Desired name of output tsv files. 
+                              Default: output
+                              Example: output.tsv hcluster.output.pdf
+                              """))
+    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                              Desired format of the output matrix.
+                              Options: fasta, phylip (names truncated at 10 characters), 
+                              phylip-relaxed (names are not truncated), or nexus.
+                              Default: fasta
+                              """))
+    optional.add_argument('-plot_df', '--suffix', metavar='<suffix>', type=str,
+                          help=textwrap.dedent("""\
+                              Suffix of input files
+                              Default: NONE
+                              Example: path/to/input/*.suffix
+                              """))
+    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
+                          help=textwrap.dedent("""\
+                              Show this help message and exit.
+                              """))
+
+    return parser.parse_args()
+
+
+def make_plot():
+    df = pd.read_csv(f'{args.output}.tsv', sep="\t")
+    print(df.head(10))
+
+    plt.figure(figsize=(40, 10))
+    plt.title("AA Composition Hierarchical Clustering")
+    shc.dendrogram(shc.linkage(df, method='ward'), labels=df.index.values)
+    plt.tight_layout()
+    plt.savefig(f'hcluster.{args.output}.pdf')
+
+
+if __name__ == '__main__':
+    args = get_args()
+    peptides = ['A', 'G', 'P', 'S', 'T', 'C', 'F', 'W', 'Y', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'N', 'D', 'E', 'Q']
+
+    with open(args.input, 'r') as infile, open(f'{args.output}.tsv', 'w') as outfile:
+        outfile.write('\t'.join(peptides) + '\n')
+
+        # Reads in input file
+        for record in SeqIO.parse(infile, format='fasta'):
+            outfile.write(f'{record.id}\t')
+            analysed_seq = ProteinAnalysis(str(record.seq))
+            count_dict = analysed_seq.count_amino_acids()
+            length = len(str(record.seq).replace("-", "").replace("X", "").replace("*", ""))
+            out_str = ''
+
+            # Loops through peptides and checks to see if it is in count_dict
+            for pep in peptides:
+                if pep in count_dict.keys():
+                    out_str += f'{float(count_dict[pep]) / length}\t'
+                else:
+                    out_str += '0\t'
+
+            outfile.write(out_str.strip() + '\n')
+
+    make_plot()
