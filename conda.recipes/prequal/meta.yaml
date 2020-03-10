@@ -2,21 +2,10 @@ package:
   name: prequal
   version: 1.02
 source:
-    path: ../../../lib/prequal
+    path: ../../lib/prequal
 build:
     number: '0'
     string: test
-requirements:
-    build:
-        - clang_osx-64
-        - clangxx_osx-64
-    host:
-        - libcxx
-        - libcxxabi 9.0.0
-        - zlib 1.2.11
-    run:
-        - libcxx
-        - zlib >=1.2.11,<1.3.0a0
 test:
     commands:
         - prequal | grep prequal > /dev/null
