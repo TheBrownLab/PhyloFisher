@@ -13,7 +13,7 @@ setup(
              'phylofisher/lumberjack.py',
              'phylofisher/purge.py',
              'phylofisher/build_dataset.py',
-             'phylofisher/trimming.py',
+             'phylofisher/single_gene_tree_constructor.py',
              'phylofisher/utilities/missing_data.py',
              'phylofisher/utilities/fast_site_removal.py',
              'phylofisher/utilities/bipartition_examiner.py',
