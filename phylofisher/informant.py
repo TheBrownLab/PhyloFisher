@@ -11,7 +11,7 @@ from pathlib import Path
 import os
 import sys
 import textwrap
-from phylofisher import fisher
+from phylofisher import fisher, help_formatter
 
 
 def taxonomy_dict(metadata, input_metadata=None):
@@ -95,8 +95,8 @@ def make_table(folder):
     return: pd.DataFrame with genes; dictionary with information about
     'paths' used for sequence selection (BBH, SBH, HMM)
     """
-    if args.sufix:
-        genes = glob.glob(f'{folder}/*{args.sufix}')
+    if args.suffix:
+        genes = glob.glob(f'{folder}/*{args.suffix}')
     else:
         genes = glob.glob(f'{folder}/*')
     names, paths = collect_names(genes)
@@ -245,73 +245,41 @@ def stats_gene(table):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
-
-    parser = argparse.ArgumentParser(prog='informant.py',
-                                     description='some description',
-                                     usage='informant.py -i input_folder [OPTIONS]',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                         additional information:
-                                            stuff
-                                            """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    parser, optional, required = help_formatter.initialize_argparse(name='informant.py',
+                                                                    desc='some description',
+                                                                    usage='informant.py -i input_folder [OPTIONS]',
+                                                                    input_meta=True,
+                                                                    dataset=True)
 
     # Required Arguments
-    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
-                          help=textwrap.dedent("""\
-                          Path to input directory
-                          """))
-    required.add_argument('-m', '--metadata', required=True, type=str, metavar='meta.tsv',
+    required.add_argument('-m', '--metadata', type=str, metavar='meta.tsv',
                           help=textwrap.dedent("""\
                           Path to metadata.tsv
                           """))
-
     # Optional Arguments
-    optional.add_argument('-n', '--input_metadata', type=str, metavar='new',
-                          help=textwrap.dedent("""\
-                          Meta data from newly added data
-                          """))
     optional.add_argument('--paralog_selection', action='store_true',
                           help=textwrap.dedent("""\
-                          some description
+                          Enable paralog selection
                               """))
+    # TODO: Fix code to include this in with config option
     optional.add_argument('--orthologs', action='store_true',
                           help=textwrap.dedent("""\
-                          Path to dataset directory containing orthologs
+                          Path to dataset directory containing orthologs if not path/to/dataset/orthologs
                           """))
     optional.add_argument('--occupancy_with_paths', action='store_true',
                           help=textwrap.dedent("""\
                           some description
                           """))
-    optional.add_argument('-c', '--use_config', action='store_true',
-                          help=textwrap.dedent("""\
-                          Use config
-                          """))
-    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str,
-                          help=textwrap.dedent("""\
-                          Suffix of input files
-                          Default: NONE
-                          Example: path/to/input/*.suffix
-                          """))
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                          Show this help message and exit.
-                          """))
+    args = help_formatter.get_args(parser, optional, required)
 
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    # if args.use_config:
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
+    args.metadata = os.path.join(dfo, 'metadata.tsv')
 
-    if args.use_config:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-        args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
-        args.metadata = os.path.join(dfo, 'metadata.tsv')
-        if args.orthologs:
-            args.input_folder = os.path.join(dfo, 'orthologs')
+    args.input_folder = os.path.join(dfo, 'orthologs')
 
     output_fold = os.path.basename(os.path.normpath(args.input_folder)) + '_stats'
     if os.path.isdir(output_fold):

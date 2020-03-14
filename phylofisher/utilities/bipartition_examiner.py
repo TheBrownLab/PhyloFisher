@@ -101,7 +101,7 @@ def main():
 
 
 if __name__ == "__main__":
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='bipartition_examiner.py',
                                      # TODO: Get description and usage

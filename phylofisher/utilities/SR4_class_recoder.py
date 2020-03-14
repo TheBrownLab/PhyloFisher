@@ -8,7 +8,7 @@ from Bio.Alphabet import generic_protein
 
 def get_args():
     global args
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='SR4_class_recoder.py',
                                      description='some description',
                                      usage='some usage',

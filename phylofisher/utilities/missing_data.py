@@ -1,23 +1,16 @@
 #!/usr/bin/env python
-import os
 import argparse
-import glob
+import os
 import shutil
 import textwrap
 from collections import defaultdict
-
 import phylofisher.help_formatter
 from Bio import SeqIO
-import statistics
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import matplotlib.patches as mpatches
 import numpy as np
-from pathlib import Path
-from shutil import copyfile
-import configparser
-from phylofisher import fisher
 
 
 def parse_metadata():
@@ -127,9 +120,9 @@ def make_plot(df, plot_name, taxa_count):
     df_colors = [''] * len(df.index)
     for i, row in enumerate(df["% complete"]):
         for j, threshhold in enumerate(colors_threshold.keys()):
-            if row >= threshhold:                                   # Assisns color based on completeness value
+            if row >= threshhold:  # Assisns color based on completeness value
                 df_colors[i] = colors_threshold[threshhold]
-    df['colors'] = df_colors                                        # Adds color list as a column in this DataFrame
+    df['colors'] = df_colors  # Adds color list as a column in this DataFrame
     df_colors = tuple([x for x in df['colors']])  # Converts list to tuple because df.plot requires tuple not list
     threshold_counts = df['colors'].value_counts().to_dict()
 
@@ -152,7 +145,7 @@ def make_plot(df, plot_name, taxa_count):
             break
         if i == 0:
             label_str = f'Completeness ≥ {round(x * 100)}% ({threshold_counts[colors_threshold[x]]} Genes)'
-        else :
+        else:
             label_str = f'{round(x * 100)}% ≤ Completeness < {round((x + 0.1) * 100)}% ({threshold_counts[colors_threshold[x]]} Genes)'
         legend_data.append(mpatches.Patch(color=colors_threshold[x],
                                           label=label_str))
@@ -220,13 +213,13 @@ def subsetter(df):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='missing_data.py',
                                      # TODO: Description
                                      description='some description',
-                                     usage='missing_data.py [OPTIONS] -i <in_dir> -t <taxa> '
-                                           '-d <dataset> -n <gene_number>',
+                                     usage='missing_data.py [OPTIONS] -i <input> -m <metadata> '
+                                           '{-n <gene_number> | -c <percent_complete>}',
                                      formatter_class=formatter,
                                      add_help=False,
                                      epilog=textwrap.dedent("""\

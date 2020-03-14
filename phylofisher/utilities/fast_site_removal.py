@@ -3,7 +3,6 @@ import os
 import subprocess
 import argparse
 import textwrap
-
 import phylofisher.help_formatter
 from Bio import SeqIO
 import pandas as pd
@@ -105,7 +104,7 @@ def main():
 
 
 if __name__ == "__main__":
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='fast_site_removal.py',
                                      # TODO: Get description and usage

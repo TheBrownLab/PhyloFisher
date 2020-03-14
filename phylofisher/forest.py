@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 import glob
 import os
-import argparse
 import textwrap
 from collections import defaultdict, Counter
 import configparser
 from multiprocessing import Pool
 
-import phylofisher.help_formatter
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from pathlib import Path
-from phylofisher import fisher
+from phylofisher import help_formatter
 
 plt.style.use('ggplot')
 
@@ -208,9 +206,11 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
     if args.suffix:
         tree_base = tree_base.replace(args.suffix, '')
 
-    output_base = f"{output_folder}/{tree_base.split('_')[0]}"
+    output_base = f"{tree_base.split('.')[1].split('_')[0]}"
     if not backpropagation:
-        table = open(f"{output_folder}/{tree_base.split('_')[0]}.tsv", 'w')
+        table = open(f"{output_folder}/{output_base.split('_')[0]}.tsv", 'w')
+    else:
+        table = open(f"{output_folder}/{output_base.split('_')[0]}.tsv", 'r')
 
     top_ranked = get_best_candidates(tree_file)
     t = Tree(tree_file)
@@ -231,16 +231,17 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
                 # All internal nodes
                 supp, sus_clades = format_nodes(node, node_style, sus_clades, t)
                 node.add_face(supp, column=0, position="branch-bottom")
+                node.set_style(node_style)
             else:
                 # All leaves
                 format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked)
                 node.set_style(node_style)
 
-    name_, trim_len = tree_base.split('_')
+    name_, trim_len = tree_base.split('.')[1].split('_')
     title_face = TextFace(f'<{name_}  trim_aln_len: {trim_len}, {sus_clades} suspicious clades>', bold=True)
     ts.title.add_face(title_face, column=1)
     t.render(output_base + '_tree.svg', tree_style=ts)
-    if not backpropagation: #what what what?
+    if not backpropagation:  # what what what?
         table.close()
 
 
@@ -452,13 +453,14 @@ def backpropagate_contamination(tree_file, cont_names):
     result: None
     """
     tree_base = str(os.path.basename(tree_file))
+    output_base = f"{tree_base.split('.')[1].split('_')[0]}"
     if args.prefix:
         tree_base = tree_base.replace(args.prefix, '')
     if args.suffix:
         tree_base = tree_base.replace(args.suffix, '')
     tree_base = tree_base.split("_")[0]
-    original_table = open(f"{output_folder}/{tree_base}.tsv", 'r').readlines()
-    with open(f"{output_folder}/{tree_base}.tsv", 'w') as res_:
+    original_table = open(f"{output_folder}/{output_base}.tsv", 'r').readlines()
+    with open(f"{output_folder}/{output_base}.tsv", 'w') as res_:
         for line in original_table:
             sline = line.split('\t')
             name = sline[0]
@@ -470,70 +472,47 @@ def backpropagate_contamination(tree_file, cont_names):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
-    parser = argparse.ArgumentParser(prog='forest.py',
-                                     description='some description',
-                                     usage='forest.py [OPTIONS] -t <tree_dir> -o <out_dir>',
-                                     formatter_class=formatter,
-                                     epilog=textwrap.dedent("""\backpropagation
-                                        """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
-    # Required Arguments
-    required.add_argument('-t', '--trees', required=True, metavar='<tree_dir>',
-                          help=textwrap.dedent("""\
-                          Path to the directory containing tree 
-                          files
-                          """))
-    required.add_argument('-o', '--output', required=True, metavar='<out_dir>',
-                          help=textwrap.dedent("""\
-                          Path to desired output directory
-                          """))
-    # Optional Argumentsbackpropagation
+    parser, optional, required = help_formatter.initialize_argparse(name='forest.py',
+                                                                    desc='Inspects single gene trees for'
+                                                                         ' contamination.',
+                                                                    usage='forest.py [OPTIONS] -i <in_dir>',
+                                                                    dataset=True,
+                                                                    input_meta=True)
+    # Add Arguments Specific to this script
+    # Optional Arguments
     optional.add_argument('-a', '--contaminations', metavar='<contams>',
                           help=textwrap.dedent("""\
-                          Path to file containing contaminations
-                          to be removedbackpropagation
-                          Number of threads to be used, where
-                          N is an integer. Default: N=1"""))
-    optional.add_argument('-c', '--use_config', action='store_true',
-                          help=textwrap.dedent("""\
-                          Use a configuration file
-                          """))
+                          Path to file containing previously known contaminations to be removed."""))
     optional.add_argument('-b', '--backpropagate', action='store_true',
                           help=textwrap.dedent("""\
-                          backpropagate contaminations.
-                          """))
-    optional.add_argument('--prefix', metavar='<suff>',
+                          Remove contaminations through backpropagation."""))
+    optional.add_argument('-t', '--threads', metavar='<N>',
                           help=textwrap.dedent("""\
-                          prefix used
-                          """))
-    optional.add_argument('--suffix', metavar='<pre>',
-                          help=textwrap.dedent("""\
-                          suffix used
-                          """))
-    parser._action_groups.append(optional)
+                          Number of threads to be used, where N is an integer. 
+                          Default: N=1"""))
 
-    args = parser.parse_args()
-    trees_folder = args.trees_folder
-    output_folder = args.output_folder
+    args = help_formatter.get_args(parser, optional, required)
 
-    if args.use_config:
+    trees_folder = args.input
+    output_folder = args.output
+
+    if args.dataset_folder:
+        dfo = str(Path(args.dataset_folers))
+    else:
         config = configparser.ConfigParser()
         config.read('config.ini')
         dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-        args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
+    args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
+
+    if not args.input_metadata:
+        config = configparser.ConfigParser()
+        config.read('config.ini')
         args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
 
     if not args.backpropagate:
         os.mkdir(output_folder)
 
-    if args.prefix:
-        trees = glob.glob(f"{trees_folder}/{args.prefix}*")
-    elif args.suffix:
-        trees = glob.glob(f"{trees_folder}/*{args.suffix}")
-    else:
-        trees = glob.glob(f"{trees_folder}/*")
+    trees = glob.glob(f"{trees_folder}/{args.prefix}*{args.suffix}")
 
     number_of_genes = len(trees)
     metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)

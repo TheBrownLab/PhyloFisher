@@ -21,7 +21,7 @@ from shutil import copyfile, rmtree
 from Bio import SeqIO
 from ete3 import Tree
 from Bio import BiopythonExperimentalWarning
-from phylofisher.help_formatter import myHelpFormatter
+from phylofisher import help_formatter
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonExperimentalWarning)
@@ -543,17 +543,19 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    formatter = lambda prog: myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: help_formatter.MyHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(description='Script for ortholog fishing.',
                                      usage="fisher.py [OPTIONS]",
                                      formatter_class=formatter,
                                      epilog=textwrap.dedent("""\
                                      additional information:
-                                        stuff
+                                        Version: 0.1
+                                        GitHub: https://github.com/DavidZihala/PhyloFisher
+                                        Cite: 
                                      """))
     parser.add_argument('-t', '--threads', type=int, metavar='#',
                         help=textwrap.dedent("""\
-                        Number of threads, where # is an integer.
+                        Number of threads, where N is an integer.
                         Default=1
                         """))
     parser.add_argument('-n', '--max_hits', type=int, metavar='#',
@@ -571,7 +573,7 @@ if __name__ == '__main__':
     parser.add_argument('--add', metavar='<inputfile>',
                         help=textwrap.dedent("""\
                         Input file (different from original one
-                        in config.in) only with new organisms.
+                        in config.ini) only with new organisms.
                         """))
     args = parser.parse_args()
 
