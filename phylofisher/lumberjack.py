@@ -5,14 +5,12 @@ import string
 import random
 import argparse
 import textwrap
-
-import phylofisher.help_formatter
 from Bio import SeqIO
 import configparser
 from pathlib import Path
 from collections import defaultdict
 
-from phylofisher import fisher
+from phylofisher import help_formatter
 
 
 def dataset_orgs():
@@ -226,18 +224,10 @@ def main():
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
-    parser = argparse.ArgumentParser(description='description',
-                                     usage="lumberjack.py -i <in_dir>",
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                     additional information:
-                                        stuff
-                                     """))
-
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    parser, optional, required = help_formatter.initialize_argparse(name='lumberjack.py',
+                                                                    desc='description',
+                                                                    usage="lumberjack.py -i <in_dir>",
+                                                                    config=True)
 
     required.add_argument('-i', '--input_folder', type=int, metavar='<in_dir>',
                         help=textwrap.dedent("""\
@@ -251,8 +241,6 @@ if __name__ == '__main__':
 
     parser._action_groups.append(optional)
     args = parser.parse_args()
-
-
 
     config = configparser.ConfigParser()
     config.read('config.ini')

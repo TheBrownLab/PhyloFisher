@@ -3,16 +3,13 @@ import os
 import sys
 import textwrap
 from glob import glob
-
-import phylofisher.help_formatter
+from phylofisher import help_formatter
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 from collections import defaultdict
-import argparse
 import csv
-from phylofisher import fisher
 
 
 def parse_names(input_folder):
@@ -103,33 +100,14 @@ def main():
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
-
-    parser = argparse.ArgumentParser(prog='forge.py',
-                                     description='some description',
-                                     usage='forge.py [OPTIONS] -i /path/to/input/',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                     additional information:
-                                        stuff
-                                        """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    parser, optional, required = help_formatter.initialize_argparse(name='forge.py',
+                                                                    desc='Concatenates alignments into one'
+                                                                         ' super-matrix.',
+                                                                    usage='forge.py [OPTIONS] -i path/to/input/',
+                                                                    dataset=False,
+                                                                    input_meta=False)
 
     # Required Arguments
-    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
-                          help=textwrap.dedent("""\
-                          Path to input directory containing trimmed alignments in FASTA format.
-                          """))
-
-    # Optional Arguments
-    optional.add_argument('-o', '--output', default="output", type=str, metavar='',
-                          help=textwrap.dedent("""\
-                          Desired basename of output files. 
-                          Default: output
-                          Example: output, output_indices.tsv, & output_forge_stats.tsv
-                          """))
     optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Desired format of the output matrix.
@@ -137,18 +115,12 @@ if __name__ == '__main__':
                           phylip-relaxed (names are not truncated), or nexus.
                           Default: fasta
                           """))
-    optional.add_argument('-plot_df', '--suffix', metavar='<suffix>', type=str,
-                          help=textwrap.dedent("""\
-                          Suffix of input files
-                          Default: NONE
-                          Example: path/to/input/*.suffix
-                          """))
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                          Show this help message and exit.
-                          """))
 
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    # Changes help descriptions from the default input and output help descriptions
+    in_help = 'Path to input directory containing alignments in FASTA format'
+    out_help = ('Desired basename of output files.\n'
+                'Default: output \n'
+                'Example: output, output_indices.tsv, & output_forge_stats.tsv')
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, out_help=out_help)
 
     main()

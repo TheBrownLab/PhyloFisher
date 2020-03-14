@@ -11,7 +11,7 @@ import scipy.cluster.hierarchy as shc
 
 
 def get_args():
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
 
     parser = argparse.ArgumentParser(prog='aa_comp_calculator.py',
                                      description='some description',

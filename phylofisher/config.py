@@ -7,7 +7,7 @@ import phylofisher.help_formatter
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
     parser = argparse.ArgumentParser(prog='forest.py',
                                      description='Script for the analysis folder configuration.',
                                      usage="config.py -d <dataset_folder> -i <input_file.tsv> [OPTIONS]",
@@ -26,7 +26,7 @@ if __name__ == '__main__':
                           """))
     required.add_argument('-i', '--input_file', required=True, metavar='<input.tsv>',
                           help=textwrap.dedent("""\
-                          Path to input file in tsv format
+                          Path to input metadata in tsv format
                           """))
     # Optional Arguments
     optional.add_argument('--orthomcl', metavar='<omcl_data>',

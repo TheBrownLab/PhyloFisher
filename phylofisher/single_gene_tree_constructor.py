@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import os
 import argparse
+import sys
 import textwrap
 import subprocess
-from glob import glob
 from Bio import SeqIO
 from pathlib import Path
 from multiprocessing import Pool
@@ -12,7 +12,8 @@ from phylofisher import help_formatter
 
 def bash_command(cmd):
     """Function to run bash commands in a shell"""
-    subprocess.run(cmd, shell=True, executable='/bin/bash')
+    my_p = subprocess.Popen(cmd, shell=True, executable='/bin/bash', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return my_p.communicate()
 
 
 def delete_gaps_stars(file):
@@ -63,38 +64,45 @@ def good_length(trimmed_aln, threshold):
 
 
 def prepare_analyses(dataset):
+    threads = int(args.threads / file_count)
     root = dataset.split('/')[-1].split('.')[0]
 
     delete_gaps_stars(dataset)
 
     # Runs Prequal, MAFFT and Divvier
     cmds1 = [f'prequal {root}.aa',
-             f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.aa.filtered > {root}.aln',
+             f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.aa.filtered > {root}.aln',
              f'divvier -mincol 4 -divvygap {root}.aln'
              ]
-    [bash_command(cmd) for cmd in cmds1]
+    output1 = [bash_command(cmd) for cmd in cmds1]
     x_to_dash(f'{root}.aln.divvy.fas')
 
-    bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_trimal -of {root}.bmge')
-    good_length(trimmed_aln='{root}.bmge', threshold=0.5)
+    output2 = bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_trimal -of bmge/{root}.bmge')
+    good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
 
     # Runs MAFFT, Divvier, trimal, and raxml
-    cmds2 = [f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.len > {root}.aln2',
+    cmds2 = [f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.len > {root}.aln2',
              f'divvier -mincol 4 -divvygap {root}.aln2',
              f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final',
-             f'raxmlHPC-PTHREADS-AVX2 -m PROTGAMMALG4XF -f a -s {root}.final -n {root}.tre -x 123 -N 100 -p 12345'
+             f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final -n {root}.tre -x 123 -N 100 -p 12345'
              ]
-    [bash_command(cmd) for cmd in cmds2]
+    output3 = [bash_command(cmd) for cmd in cmds2]
 
     add_length(root)
 
+    output = output1.append(output2) + output3
+
+    for err, out in output:
+        print(out, file=sys.stdout)
+        print(err, file=sys.stderr)
+
 
 if __name__ == '__main__':
-    formatter = lambda prog: help_formatter.myHelpFormatter(prog, max_help_position=100)
+    formatter = lambda prog: help_formatter.MyHelpFormatter(prog, max_help_position=100)
 
-    parser = argparse.ArgumentParser(prog='trimming.py',
+    parser = argparse.ArgumentParser(prog='single_gene_tree_constructor.py',
                                      description='description',
-                                     usage='trimming.py -i path/to/input/ [OPTIONS]',
+                                     usage='single_gene_tree_constructor.py -i path/to/input/ [OPTIONS]',
                                      formatter_class=formatter,
                                      add_help=False,
                                      epilog=textwrap.dedent("""\
@@ -105,7 +113,7 @@ if __name__ == '__main__':
     required = parser.add_argument_group('required arguments')
 
     # Required Arguments
-    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
+    required.add_argument('-i', '--input_folder', required=True, type=str, metavar='path/to/input/',
                           help=textwrap.dedent("""\
                           Path to input directory
                           """))
@@ -133,6 +141,11 @@ if __name__ == '__main__':
     os.chdir(args.input_folder)
 
     # Parallelization of prepare_analyses function
-    files = [file for file in glob(f'*{args.suffix}')]
-    with Pool(args.threads) as p:
+    files = [file for file in os.listdir(".") if file.endswith('.fas')]
+    file_count = len(files)
+    processes = args.threads
+    if file_count < args.threads:
+        processes = file_count
+
+    with Pool(processes) as p:
         p.map(prepare_analyses, files)
