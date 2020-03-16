@@ -118,9 +118,6 @@ if __name__ == '__main__':
 
     # Changes help descriptions from the default input and output help descriptions
     in_help = 'Path to input directory containing alignments in FASTA format'
-    out_help = ('Desired basename of output files.\n'
-                'Default: output \n'
-                'Example: output, output_indices.tsv, & output_forge_stats.tsv')
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help, out_help=out_help)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help)
 
     main()

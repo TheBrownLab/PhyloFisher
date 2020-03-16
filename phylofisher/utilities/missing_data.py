@@ -17,7 +17,7 @@ def parse_metadata():
     """
     Parses metadata.csv to get all org names in each group and subtax
     Input: NONE
-    Output: (1)dictionary with groups/subtax as keys and sets of orgs in those groups/subtax as values
+    Output: (1) dictionary with groups/subtax as keys and sets of orgs in those groups/subtax as values
             (2) list of all orgs in metadata
     """
     groups = defaultdict(set)
@@ -76,7 +76,7 @@ def parse_aligns():
 
 def completeness():
     """
-    Comptutes completeness of genes based on either all taxa or a seet of taxa provided by user
+    Comptutes completeness of genes based on either all taxa or a set of taxa provided by user
     """
     if args.taxa:
         possible_orgs = parse_taxa_list()
@@ -183,6 +183,7 @@ def make_plot(df, plot_name, taxa_count):
 
 def genes_to_keep(df):
     genes = []
+    df = df.sort_values(["% complete"], ascending=False)
     if args.gene_number:
         count = 0
         for index, _ in df.iterrows():
