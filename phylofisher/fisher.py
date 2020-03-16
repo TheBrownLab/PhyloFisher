@@ -262,7 +262,7 @@ def get_hmm_profiles():
 
 def makedirs():
     """Creates output dictionaries tmp and fasta"""
-    directories = ['tmp', 'fasta']
+    directories = ['tmp', args.output]
     for directory in directories:
         if not os.path.isdir(directory):
             os.makedirs(directory)
@@ -467,7 +467,7 @@ def new_best_hits(candidate_hits):
     # prepares final files with orthologs from dataset and new candidates
     if top_candidates:
         gene = top_candidates[0].name.split('@')[1]
-        dataset = f'fasta/{gene}.fas'
+        dataset = f'{args.output}/{gene}.fas'
         if not os.path.isfile(dataset):
             copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), dataset)
         n = 0
@@ -539,43 +539,35 @@ def additions_to_input():
 
 
 if __name__ == '__main__':
-
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    formatter = lambda prog: help_formatter.MyHelpFormatter(prog, max_help_position=100)
-    parser = argparse.ArgumentParser(description='Script for ortholog fishing.',
-                                     usage="fisher.py [OPTIONS]",
-                                     formatter_class=formatter,
-                                     epilog=textwrap.dedent("""\
-                                     additional information:
-                                        Version: 0.1
-                                        GitHub: https://github.com/DavidZihala/PhyloFisher
-                                        Cite: 
-                                     """))
-    parser.add_argument('-t', '--threads', type=int, metavar='#',
-                        help=textwrap.dedent("""\
+    description = 'Script for ortholog fishing.'
+    parser, optional, required = help_formatter.initialize_argparse(name='fisher.py',
+                                                                    desc=description,
+                                                                    usage='fisher.py [OPTIONS]',
+                                                                    dataset=False,
+                                                                    input_meta=False)
+
+    optional.add_argument('-t', '--threads', type=int, metavar='N',
+                          help=textwrap.dedent("""\
                         Number of threads, where N is an integer.
-                        Default=1
+                        Default: 1
                         """))
-    parser.add_argument('-n', '--max_hits', type=int, metavar='#',
-                        help=textwrap.dedent("""\
-                        Max number of hits to check, where # is
-                        an interger. Default=5
+    optional.add_argument('-n', '--max_hits', type=int, metavar='N',
+                          help=textwrap.dedent("""\
+                        Max number of hits to check, where N is an interger. 
+                        Default: 5
                         """))
-    parser.add_argument('-v', '--version', action='version', version='0.1',
-                        help=textwrap.dedent("""\
-                        Show version"""))
-    parser.add_argument('--keep_tmp', action='store_true',
-                        help=textwrap.dedent("""\
+    optional.add_argument('--keep_tmp', action='store_true',
+                          help=textwrap.dedent("""\
                         Keep temporary files
                         """))
-    parser.add_argument('--add', metavar='<inputfile>',
-                        help=textwrap.dedent("""\
-                        Input file (different from original one
-                        in config.ini) only with new organisms.
+    optional.add_argument('--add', metavar='<inputfile>',
+                          help=textwrap.dedent("""\
+                        Input file (different from original one in config.ini) only with new organisms.
                         """))
-    args = parser.parse_args()
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp=False)
 
     # dataset folder
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())

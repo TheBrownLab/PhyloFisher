@@ -32,7 +32,7 @@ def parse_input(input_metadata):
     return: dictionary with info about input metadata
     """
     input_info = defaultdict(dict)
-    for line in open(multi_input):
+    for line in open(input_metadata):
         sline = line.split('\t')
         abbrev = sline[2].strip()
         group = sline[3].strip()
@@ -48,7 +48,6 @@ def parse_input(input_metadata):
         input_info[abbrev]['data_type'] = data_type
         input_info[abbrev]['notes'] = notes
     return input_info
-
 
 
 def collect_seqs(gene):
@@ -219,7 +218,7 @@ def new_database(table):
 
 def main():
     """Main function. Run new_database on all parsed trees (tsv files)"""
-    for table in glob.glob(f'{args.input_folder}/*.tsv'):
+    for table in glob.glob(f'{args.input}/*.tsv'):
         new_database(table)
 
 
@@ -227,25 +226,15 @@ if __name__ == '__main__':
     parser, optional, required = help_formatter.initialize_argparse(name='lumberjack.py',
                                                                     desc='description',
                                                                     usage="lumberjack.py -i <in_dir>",
-                                                                    config=True)
+                                                                    dataset=False,
+                                                                    input_meta=False)
 
-    required.add_argument('-i', '--input_folder', type=int, metavar='<in_dir>',
-                        help=textwrap.dedent("""\
-                        Input directory containing tsv files
-                        """))
-
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                          Show this help message and exit.
-                          """))
-
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    args = help_formatter.get_args(parser, optional, required)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-    multi_input = os.path.abspath(config['PATHS']['input_file'])
+    input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
     meta_orgs = dataset_orgs()
     input_info = parse_input(input_metadata)

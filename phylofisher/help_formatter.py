@@ -1,5 +1,9 @@
 import argparse
 import textwrap
+from datetime import date
+
+
+today = date.today()
 
 
 class CustomHelpFormatter(argparse.HelpFormatter):
@@ -28,7 +32,7 @@ class MyHelpFormatter(CustomHelpFormatter, argparse.RawTextHelpFormatter):
     pass
 
 
-def add_global_arguments(optional, required, in_help, out_help):
+def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre_suf):
     """
     Function to add argparse arguments used in all scripts
 
@@ -39,24 +43,28 @@ def add_global_arguments(optional, required, in_help, out_help):
     """
 
     # Required
-    required.add_argument('-i', '--input', required=True, type=str, metavar='<in_dir>',
-                          help=textwrap.dedent(f"""{in_help}"""))
+    if inp is True:
+        required.add_argument('-i', '--input', required=True, type=str, metavar='<in_dir>',
+                              help=textwrap.dedent(f"""{in_help}"""))
 
     # Optional
-    optional.add_argument('-o', '--output', default="output", type=str, metavar='<out_dir>',
+    today_date = today.strftime("%b.%d.%Y")
+    out_dir = f'{format(parser.prog).split(".")[0]}_out_{today_date}'
+    optional.add_argument('-o', '--output', default=out_dir, type=str, metavar='<out_dir>',
                           help=textwrap.dedent(f"""{out_help}
                                   """))
-    optional.add_argument('-p', '--prefix', metavar='<prefix>', type=str, default='',
-                          help=textwrap.dedent("""\
-                          Prefix of input files
-                          Default: NONE
-                          Example: path/to/input/prefix*"""))
-    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='',
-                          help=textwrap.dedent("""\
-                              Suffix of input files.
+    if pre_suf is True:
+        optional.add_argument('-p', '--prefix', metavar='<prefix>', type=str, default='',
+                              help=textwrap.dedent("""\
+                              Prefix of input files
                               Default: NONE
-                              Example: path/to/input/*suffix
-                              """))
+                              Example: path/to/input/prefix*"""))
+        optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='',
+                              help=textwrap.dedent("""\
+                                  Suffix of input files.
+                                  Default: NONE
+                                  Example: path/to/input/*suffix
+                                  """))
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
                                       Show this help message and exit.
@@ -86,24 +94,24 @@ def initialize_argparse(name, desc, usage, dataset, input_meta):
     if dataset:
         optional.add_argument('-d', '--dataset_folder', metavar='<dataset>', type=str,
                               help=textwrap.dedent("""\
-                                      Path to directory containing the dataset. (ONLY if different from original one 
-                                      in config.ini)
+                                      Path to directory containing the dataset. 
+                                      (ONLY if different from original one in config.ini)
                                       """))
     if input_meta:
         optional.add_argument('-im', '--input_metadata', metavar='<in_meta.tsv>', type=str,
                               help=textwrap.dedent("""\
-                                      Path to input metadata file in TSV format. (ONLY if different from original one 
-                                      in config.ini)
+                                      Path to input metadata file in TSV format.
+                                      (ONLY if different from original one in config.ini)
                                       """))
 
     return parser, optional, required
 
 
-def get_args(parser, optional, required,
-             in_help='Path to input directory',
-             out_help=('Path to alternative output directory\n'
-                       'Default: ./output')):
-    add_global_arguments(optional, required, in_help, out_help)
+def get_args(parser, optional, required, pre_suf=True, inp=True,
+             in_help='Path to input directory'):
+    out_help = ('Path to user-defined output directory\n'
+                f'Default: ./{format(parser.prog).split(".")[0]}_out_<M.D.Y>')
+    add_global_arguments(parser, optional, required, in_help, out_help, inp, pre_suf,)
 
     parser._action_groups.append(optional)
 

@@ -24,15 +24,14 @@ def delete_gaps_stars(file):
             res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
 
 
-def add_length(root):
+def add_length(root, length):
     """Adds length to the file name"""
-    length = open(f'{root}.length').readline()
     os.rename(f'RAxML_bipartitions.{root}.tre', f'RAxML_bipartitions.{root}_{length}.tre')
 
 
 def x_to_dash(file):
     """Replaces X's in alignments with -'s"""
-    file_name = f'{file.split(".")[0]}.pre_trimal'
+    file_name = f'{file.split(".")[0]}.pre_bmge'
     with open(file_name, 'w') as res:
         for record in SeqIO.parse(file, 'fasta'):
             res.write(f'>{record.name}\n{str(record.seq).replace("X", "-")}\n')
@@ -48,7 +47,7 @@ def read_full_proteins(core):
 def good_length(trimmed_aln, threshold):
     core = trimmed_aln.split('.')[0]
     full_proteins = read_full_proteins(core)
-    original_name = f'{core}.len'
+    original_name = f'{core}.length_filtered'
     length = None
     with open(original_name, 'w') as res:
         for record in SeqIO.parse(trimmed_aln, 'fasta'):
@@ -59,8 +58,7 @@ def good_length(trimmed_aln, threshold):
                 res.write(f'>{record.description}_{round(coverage, 2)}\n{full_proteins[record.name]}\n')
             else:
                 print('deleted:', record.name, coverage)
-    with open(f'{core}.length', 'w') as f:
-        f.write(str(length))
+    return length
 
 
 def prepare_analyses(dataset):
@@ -75,20 +73,20 @@ def prepare_analyses(dataset):
              f'divvier -mincol 4 -divvygap {root}.aln'
              ]
     output1 = [bash_command(cmd) for cmd in cmds1]
-    x_to_dash(f'{root}.aln.divvy.fas')
+    x_to_dash(f'{root}.aln.divvy.fas')  # outputs pre_bmge
 
-    output2 = bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_trimal -of bmge/{root}.bmge')
-    good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
+    output2 = bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
+    length = good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
 
     # Runs MAFFT, Divvier, trimal, and raxml
-    cmds2 = [f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.len > {root}.aln2',
+    cmds2 = [f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 {root}.length_filtered > {root}.aln2',
              f'divvier -mincol 4 -divvygap {root}.aln2',
              f'trimal -in {root}.aln2.divvy.fas -gt 0.01 -out {root}.final',
              f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a -s {root}.final -n {root}.tre -x 123 -N 100 -p 12345'
              ]
     output3 = [bash_command(cmd) for cmd in cmds2]
 
-    add_length(root)
+    add_length(root, length=length)
 
     output = output1.append(output2) + output3
 

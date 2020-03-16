@@ -472,9 +472,9 @@ def backpropagate_contamination(tree_file, cont_names):
 
 
 if __name__ == '__main__':
+    description = 'Inspects single gene trees for contamination.'
     parser, optional, required = help_formatter.initialize_argparse(name='forest.py',
-                                                                    desc='Inspects single gene trees for'
-                                                                         ' contamination.',
+                                                                    desc=description,
                                                                     usage='forest.py [OPTIONS] -i <in_dir>',
                                                                     dataset=True,
                                                                     input_meta=True)

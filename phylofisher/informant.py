@@ -251,34 +251,26 @@ if __name__ == '__main__':
                                                                     input_meta=True,
                                                                     dataset=True)
 
-    # Required Arguments
-    required.add_argument('-m', '--metadata', type=str, metavar='meta.tsv',
-                          help=textwrap.dedent("""\
-                          Path to metadata.tsv
-                          """))
     # Optional Arguments
     optional.add_argument('--paralog_selection', action='store_true',
                           help=textwrap.dedent("""\
                           Enable paralog selection
                               """))
-    # TODO: Fix code to include this in with config option
-    optional.add_argument('--orthologs', action='store_true',
-                          help=textwrap.dedent("""\
-                          Path to dataset directory containing orthologs if not path/to/dataset/orthologs
-                          """))
     optional.add_argument('--occupancy_with_paths', action='store_true',
                           help=textwrap.dedent("""\
                           some description
                           """))
     args = help_formatter.get_args(parser, optional, required)
 
-    # if args.use_config:
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-    args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
-    args.metadata = os.path.join(dfo, 'metadata.tsv')
-
+    if not args.dataset and not args.metadata:
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+        args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
+        args.metadata = os.path.join(dfo, 'metadata.tsv')
+    elif args.dataset and not args.metadata:
+        dfo = str(Path(args.dataset))
+        args.metadata = os.path.join(dfo, 'metadata.tsv')
     args.input_folder = os.path.join(dfo, 'orthologs')
 
     output_fold = os.path.basename(os.path.normpath(args.input_folder)) + '_stats'
