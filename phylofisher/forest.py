@@ -497,7 +497,7 @@ if __name__ == '__main__':
     output_folder = args.output
 
     if args.dataset_folder:
-        dfo = str(Path(args.dataset_folers))
+        dfo = str(Path(args.dataset_folder))
     else:
         config = configparser.ConfigParser()
         config.read('config.ini')
