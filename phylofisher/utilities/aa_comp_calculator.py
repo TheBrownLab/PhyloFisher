@@ -28,7 +28,7 @@ def get_args():
     # Required Arguments
     required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
                           help=textwrap.dedent("""\
-                              Path to input directory containing trimmed alignments in FASTA format.
+                              Path to input 
                               """))
 
     # Optional Arguments
@@ -38,19 +38,7 @@ def get_args():
                               Default: output
                               Example: output.tsv hcluster.output.pdf
                               """))
-    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
-                          help=textwrap.dedent("""\
-                              Desired format of the output matrix.
-                              Options: fasta, phylip (names truncated at 10 characters), 
-                              phylip-relaxed (names are not truncated), or nexus.
-                              Default: fasta
-                              """))
-    optional.add_argument('-plot_df', '--suffix', metavar='<suffix>', type=str,
-                          help=textwrap.dedent("""\
-                              Suffix of input files
-                              Default: NONE
-                              Example: path/to/input/*.suffix
-                              """))
+
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
                               Show this help message and exit.
@@ -61,13 +49,15 @@ def get_args():
 
 def make_plot():
     df = pd.read_csv(f'{args.output}.tsv', sep="\t")
-    print(df.head(10))
+    df = df.set_index('Taxon')
 
-    plt.figure(figsize=(40, 10))
+    # Todo: Make plot prettier
+    plt.figure(figsize=(25, 10))
     plt.title("AA Composition Hierarchical Clustering")
-    shc.dendrogram(shc.linkage(df, method='ward'), labels=df.index.values)
+    plt.xticks(rotation=90)
+    shc.dendrogram(shc.linkage(df, method='ward'), labels=df.index.values, color_threshold=0)
     plt.tight_layout()
-    plt.savefig(f'hcluster.{args.output}.pdf')
+    plt.savefig(f'AA_Composition_Hierarchical_Clustering.pdf')
 
 
 if __name__ == '__main__':
@@ -75,7 +65,7 @@ if __name__ == '__main__':
     peptides = ['A', 'G', 'P', 'S', 'T', 'C', 'F', 'W', 'Y', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'N', 'D', 'E', 'Q']
 
     with open(args.input, 'r') as infile, open(f'{args.output}.tsv', 'w') as outfile:
-        outfile.write('\t'.join(peptides) + '\n')
+        outfile.write('Taxon\t'+'\t'.join(peptides) + '\n')
 
         # Reads in input file
         for record in SeqIO.parse(infile, format='fasta'):

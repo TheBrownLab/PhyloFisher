@@ -2,6 +2,7 @@
 import os
 import sys
 import textwrap
+import shutil
 from glob import glob
 from phylofisher import help_formatter
 from Bio import SeqIO
@@ -33,17 +34,17 @@ def parse_names(input_folder):
     return files, sorted(list(name_set))
 
 
-def stats(total_len):
+def stats(total_len, out_dict):
     """
 
     :param total_len:
     :return:
     """
-    with open(f'{args.output}_forge_stats.tsv', 'w') as out_file:
+    with open(f'{args.output}/forge_stats.tsv', 'w') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
-        tsv_writer.writerow(['org', 'missing[%]'])
+        tsv_writer.writerow(['Taxon', 'PercentMissingData'])
         missing = []
-        for record in SeqIO.parse(args.output, 'fasta'):
+        for record in SeqIO.parse(f'{args.output}/matrix.{out_dict[args.out_format.lower()]}', 'fasta'):
             missing.append((record.name, (record.seq.count('-') / total_len) * 100))
         for org_missing in sorted(missing, key=lambda x: x[1], reverse=True):
             tsv_writer.writerow(list(org_missing))
@@ -54,11 +55,13 @@ def main():
 
     :return: NONE
     """
-    input_folder = os.path.basename((args.input.strip('/')))
+    input_folder = args.input
     files, orgs = parse_names(input_folder)
     total_len = 0
     res_dict = defaultdict(str)
-    with open(f'{args.output}_indices.tsv', 'w') as outfile:
+    with open(f'{args.output}/indices.tsv', 'w') as outfile:
+        outfile.write('Gene\tStart\tStop\n'
+                      '')
         for file in files:
             gene = os.path.basename(file).split('.')[0]
             length = 0
@@ -91,21 +94,19 @@ def main():
 
     # Writes to output matrix in user specified output
     if args.out_format.lower() in out_dict:
-        with open(f'{args.output}', "w") as handle:
+        with open(f'{args.output}/matrix.{out_dict[args.out_format.lower()]}', "w") as handle:
             SeqIO.write(records, handle, args.out_format.lower())
     else:
         sys.exit('Invalid Output Format')
 
-    stats(total_len)
+    stats(total_len, out_dict)
 
 
 if __name__ == '__main__':
     parser, optional, required = help_formatter.initialize_argparse(name='forge.py',
                                                                     desc='Concatenates alignments into one'
                                                                          ' super-matrix.',
-                                                                    usage='forge.py [OPTIONS] -i path/to/input/',
-                                                                    dataset=False,
-                                                                    input_meta=False)
+                                                                    usage='forge.py [OPTIONS] -i path/to/input/')
 
     # Required Arguments
     optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
@@ -120,4 +121,9 @@ if __name__ == '__main__':
     in_help = 'Path to input directory containing alignments in FASTA format'
     args = help_formatter.get_args(parser, optional, required, in_help=in_help)
 
+    try:
+        os.mkdir(args.output)
+    except OSError:
+        shutil.rmtree(args.output)
+        os.mkdir(args.output)
     main()

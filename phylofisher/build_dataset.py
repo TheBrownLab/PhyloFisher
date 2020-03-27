@@ -31,7 +31,15 @@ def diamond():
 
     :return: None
     """
+    with open('for_diamond.fasta', 'r') as infile, open('new.fas', 'w') as outfile:
+        for line in infile:
+            line = line.strip()
+            if line.startswith(">") is False:
+                line = line.replace('-', '')
+            outfile.write(f'{line}\n')
 
+    shutil.move('new.fas', 'for_diamond.fasta')
+    
     db = 'orthomcl/orthomcl.diamonddb.dmnd'
     out = 'diamond.res'
     cmd = (
@@ -52,8 +60,8 @@ def parse_diamond_output():
 
 
 def get_og_file(threshold):
-    prepare_diamond_input() # prepares orthologs for diamond
-    diamond() # starts diamond
+    prepare_diamond_input()  # prepares orthologs for diamondF
+    diamond()  # starts diamond
     gene_filtered_ogs = defaultdict(list)
     gene_ogs = parse_diamond_output()
     for gene, ogs in gene_ogs.items():
@@ -65,8 +73,8 @@ def get_og_file(threshold):
     with open('orthomcl/gene_og', 'w') as res:
         for gene, ogs in gene_filtered_ogs.items():
             res.write(f'{gene}\t{",".join(ogs)}\n')
-    os.remove('diamond.res')
-    os.remove('for_diamond.fasta')
+    # os.remove('diamond.res')
+    # os.remove('for_diamond.fasta')
 
 
 def datasetdb():
@@ -76,7 +84,7 @@ def datasetdb():
     subprocess.run('cat *.fas > datasetdb.fasta', shell=True)
     shutil.move('datasetdb.fasta', '../datasetdb')
     os.chdir('../datasetdb')
-    dmd_db = 'diamond makedb --in datasetdb.fasta -d prot'
+    dmd_db = 'diamond makedb --in datasetdb.fasta -d datasetdb'
     subprocess.run(dmd_db, shell=True)
     os.remove('datasetdb.fasta')
     os.chdir('..')
@@ -90,7 +98,6 @@ def make_profiles(threads):
     :param threads: number of threads
     :return: None
     """
-
 
     os.mkdir('profiles')
     os.chdir('orthologs')
@@ -108,7 +115,7 @@ def make_profiles(threads):
     os.chdir('..')
 
 
-def main(threads, make_og_file, threshold):
+def main(threads, no_og_file, threshold):
     """
     :param threads: number of threads
     :param make_og_file: Boolean
@@ -125,7 +132,7 @@ def main(threads, make_og_file, threshold):
 
     make_profiles(threads)
 
-    if make_og_file:
+    if not no_og_file:
         get_og_file(threshold)
 
 
@@ -134,11 +141,10 @@ if __name__ == "__main__":
                                      usage="build_dataset.py [OPTIONS]")
     parser.add_argument('-t', '--threads', type=int,
                         help='Number of threads, default:1', default=1)
-    parser.add_argument('-m', '--make_og_file', action='store_true',
-                        help='Make file with information about gene: ogs')
+    parser.add_argument('-n', '--no_og_file', action='store_true',
+                        help='Do not make Gene OG file')
     parser.add_argument('-o', '--og_threshold', type=float,
-                        help='Threshold 0-1 for OG. Use only with --make_og_file option.',
-                        default=0.1)
+                        help='Threshold 0-1 for OG.', default=0.1)
     args = parser.parse_args()
 
-    main(args.threads, args.make_og_file, args.og_threshold)
+    main(args.threads, args.no_og_file, args.og_threshold)
