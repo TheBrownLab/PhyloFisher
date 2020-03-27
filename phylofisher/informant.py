@@ -2,16 +2,14 @@
 import glob
 from collections import defaultdict
 import pandas as pd
-import phylofisher.help_formatter
 from Bio import SeqIO
 import numpy as np
-import argparse
 import configparser
 from pathlib import Path
 import os
 import sys
 import textwrap
-from phylofisher import fisher, help_formatter
+from phylofisher import help_formatter
 
 
 def taxonomy_dict(metadata, input_metadata=None):
@@ -96,9 +94,9 @@ def make_table(folder):
     'paths' used for sequence selection (BBH, SBH, HMM)
     """
     if args.suffix:
-        genes = glob.glob(f'{folder}/*{args.suffix}')
+        genes = [gene for gene in glob.glob(f'{folder}/*{args.suffix}') if os.path.isfile(gene)]
     else:
-        genes = glob.glob(f'{folder}/*')
+        genes = [gene for gene in glob.glob(f'{folder}/*') if os.path.isfile(gene)]
     names, paths = collect_names(genes)
     columns = []
     for gene in genes:
@@ -239,7 +237,7 @@ def stats_gene(table):
     with open(f'{output_fold}/genes_stats.csv', 'w') as res:
         res.write(f'gene,total,total[%],SGT\n')
         for i in columns:
-            orgs = tab_len - table[i].value_counts()['0']
+            orgs = tab_len - table[i].value_counts()[0]
             orgs_perc = (orgs / tab_len) * 100
             res.write(f"{i},{orgs},{orgs_perc.round(2)},yes\n")
 
@@ -247,9 +245,7 @@ def stats_gene(table):
 if __name__ == '__main__':
     parser, optional, required = help_formatter.initialize_argparse(name='informant.py',
                                                                     desc='some description',
-                                                                    usage='informant.py -i input_folder [OPTIONS]',
-                                                                    input_meta=True,
-                                                                    dataset=True)
+                                                                    usage='informant.py -i input_folder [OPTIONS]')
 
     # Optional Arguments
     optional.add_argument('--paralog_selection', action='store_true',
@@ -262,25 +258,22 @@ if __name__ == '__main__':
                           """))
     args = help_formatter.get_args(parser, optional, required)
 
-    if not args.dataset and not args.metadata:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-        args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
-        args.metadata = os.path.join(dfo, 'metadata.tsv')
-    elif args.dataset and not args.metadata:
-        dfo = str(Path(args.dataset))
-        args.metadata = os.path.join(dfo, 'metadata.tsv')
-    args.input_folder = os.path.join(dfo, 'orthologs')
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
+    args.metadata = os.path.join(dfo, 'metadata.tsv')
 
-    output_fold = os.path.basename(os.path.normpath(args.input_folder)) + '_stats'
+    # args.input_folder = os.path.join(dfo, 'orthologs')
+
+    output_fold = os.path.basename(os.path.normpath(args.input)) + '/informant_stats'
     if os.path.isdir(output_fold):
         sys.exit(f'Error: {output_fold} folder already exists.')
     else:
         os.mkdir(output_fold)
 
     t_dict, fnames = taxonomy_dict(args.metadata, args.input_metadata)
-    tab, paths = make_table(args.input_folder)
+    tab, paths = make_table(args.input)
     res = table_with_paths(tab, paths)
 
     if args.occupancy_with_paths:

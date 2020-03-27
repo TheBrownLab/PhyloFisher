@@ -3,8 +3,6 @@ import os
 import glob
 import string
 import random
-import argparse
-import textwrap
 from Bio import SeqIO
 import configparser
 from pathlib import Path
@@ -119,7 +117,7 @@ def parse_table(table):
     for line in open(table):
         # for orthologs from the dataset
         tree_name, tax, status = line.split('\t')
-        status = status.strip() # o,p,d (ortholog, paralog, delete(
+        status = status.strip()  # o,p,d (ortholog, paralog, delete(
         abbrev = tree_name.split('@')[-1]
         if tree_name.count('_') != 3 and '..' not in abbrev:
             record = seq_dict[abbrev]
@@ -135,7 +133,7 @@ def parse_table(table):
                 del orthologs[abbrev]
 
     for line in open(table):
-        #for new sequences
+        # for new sequences
         tree_name, tax, status = line.split('\t')
         status = status.strip()
         abbrev = tree_name.split('@')[-1]
@@ -223,13 +221,12 @@ def main():
 
 
 if __name__ == '__main__':
+    desc = ''
     parser, optional, required = help_formatter.initialize_argparse(name='lumberjack.py',
-                                                                    desc='description',
-                                                                    usage="lumberjack.py -i <in_dir>",
-                                                                    dataset=False,
-                                                                    input_meta=False)
+                                                                    desc=desc,
+                                                                    usage="lumberjack.py -i <in_dir>")
 
-    args = help_formatter.get_args(parser, optional, required)
+    args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')

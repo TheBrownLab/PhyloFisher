@@ -32,7 +32,7 @@ class MyHelpFormatter(CustomHelpFormatter, argparse.RawTextHelpFormatter):
     pass
 
 
-def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre_suf):
+def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre_suf, out_dir):
     """
     Function to add argparse arguments used in all scripts
 
@@ -48,11 +48,12 @@ def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre
                               help=textwrap.dedent(f"""{in_help}"""))
 
     # Optional
-    today_date = today.strftime("%b.%d.%Y")
-    out_dir = f'{format(parser.prog).split(".")[0]}_out_{today_date}'
-    optional.add_argument('-o', '--output', default=out_dir, type=str, metavar='<out_dir>',
-                          help=textwrap.dedent(f"""{out_help}
-                                  """))
+    if out_dir is True:
+        today_date = today.strftime("%b.%d.%Y")
+        out_dir = f'{format(parser.prog).split(".")[0]}_out_{today_date}'
+        optional.add_argument('-o', '--output', default=out_dir, type=str, metavar='<out_dir>',
+                              help=textwrap.dedent(f"""{out_help}
+                                      """))
     if pre_suf is True:
         optional.add_argument('-p', '--prefix', metavar='<prefix>', type=str, default='',
                               help=textwrap.dedent("""\
@@ -71,7 +72,7 @@ def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre
                                       """))
 
 
-def initialize_argparse(name, desc, usage, dataset, input_meta):
+def initialize_argparse(name, desc, usage):
     """
     This function initialized argparse
     """
@@ -91,27 +92,19 @@ def initialize_argparse(name, desc, usage, dataset, input_meta):
 
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
-    if dataset:
-        optional.add_argument('-d', '--dataset_folder', metavar='<dataset>', type=str,
-                              help=textwrap.dedent("""\
-                                      Path to directory containing the dataset. 
-                                      (ONLY if different from original one in config.ini)
-                                      """))
-    if input_meta:
-        optional.add_argument('-im', '--input_metadata', metavar='<in_meta.tsv>', type=str,
-                              help=textwrap.dedent("""\
-                                      Path to input metadata file in TSV format.
-                                      (ONLY if different from original one in config.ini)
-                                      """))
 
     return parser, optional, required
 
 
-def get_args(parser, optional, required, pre_suf=True, inp=True,
+def get_args(parser, optional, required, pre_suf=True, inp=True, out_dir=True,
              in_help='Path to input directory'):
+
     out_help = ('Path to user-defined output directory\n'
                 f'Default: ./{format(parser.prog).split(".")[0]}_out_<M.D.Y>')
-    add_global_arguments(parser, optional, required, in_help, out_help, inp, pre_suf,)
+
+    add_global_arguments(parser, optional, required,
+                         in_help=in_help, out_help=out_help, inp=inp,
+                         pre_suf=pre_suf, out_dir=out_dir)
 
     parser._action_groups.append(optional)
 

@@ -7,6 +7,7 @@ output: fasta files with predicted candidate orthologous sequences
 """
 
 import os
+import shutil
 import sys
 import textwrap
 from collections import defaultdict
@@ -327,9 +328,26 @@ def cluster_rename_sequences():
     return abs_path
 
 
+def is_aa_seq(file):
+    """check input gene files to make sure they are amino acid sequences and not nucletotide sequences"""
+    with open(file, 'r') as infile:
+        all_count, atcg_count = 0, 0
+        for line in infile:
+            if line.startswith(">"):
+                pass
+            else:
+                all_count += len(line)
+                atcg_count += (line.upper().count('A') + line.upper().count('T')
+                               + line.upper().count('C') + line.upper().count('g'))
+        atcg_per = atcg_count / all_count
+        if atcg_per > 0.7:
+            return False
+        else:
+            return True
+
+
 def check_input():
     """Checks input metadata file for possible mistakes."""
-    # TODO check is file is aa not nucl
     errors = ''
     taxonomic_groups = set(tax_group.values())
     n = 1
@@ -341,6 +359,9 @@ def check_input():
             # checks if file for given organism exists
             if os.path.isfile(f_file.strip()) is False:
                 errors += f"line {n}: file {f_file} doesn't exist\n"
+            # Checks if file is amino acid seq or nucleotide seq
+            elif is_aa_seq(f_file) is False:
+                errors += f"line {n}: file {f_file} contains nucleotide sequences\n"
             s_name = metadata_input[2].strip()
             if s_name in tax_group:
                 # checks if short name is already included in metadata
@@ -545,9 +566,7 @@ if __name__ == '__main__':
     description = 'Script for ortholog fishing.'
     parser, optional, required = help_formatter.initialize_argparse(name='fisher.py',
                                                                     desc=description,
-                                                                    usage='fisher.py [OPTIONS]',
-                                                                    dataset=False,
-                                                                    input_meta=False)
+                                                                    usage='fisher.py [OPTIONS]')
 
     optional.add_argument('-t', '--threads', type=int, metavar='N',
                           help=textwrap.dedent("""\
@@ -613,7 +632,7 @@ if __name__ == '__main__':
     input_taxonomy = {}
 
     for line in open(input_metadata):
-        if "FILE_NAME" not in line:  # TODO fix me motherfucker
+        if "FILE_NAME" not in line:  # TODO fix me
             # input metadata file parsing
             metadata_input = line.split('\t')
             fasta_file = str(Path(metadata_input[0].strip(), metadata_input[1].strip()))

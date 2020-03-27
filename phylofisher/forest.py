@@ -475,9 +475,7 @@ if __name__ == '__main__':
     description = 'Inspects single gene trees for contamination.'
     parser, optional, required = help_formatter.initialize_argparse(name='forest.py',
                                                                     desc=description,
-                                                                    usage='forest.py [OPTIONS] -i <in_dir>',
-                                                                    dataset=True,
-                                                                    input_meta=True)
+                                                                    usage='forest.py [OPTIONS] -i <in_dir>')
     # Add Arguments Specific to this script
     # Optional Arguments
     optional.add_argument('-a', '--contaminations', metavar='<contams>',
@@ -496,18 +494,12 @@ if __name__ == '__main__':
     trees_folder = args.input
     output_folder = args.output
 
-    if args.dataset_folder:
-        dfo = str(Path(args.dataset_folder))
-    else:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
 
-    if not args.input_metadata:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
+    args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
 
     if not args.backpropagate:
         os.mkdir(output_folder)

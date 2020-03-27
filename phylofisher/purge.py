@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 def fasta_cleaner(file, org_set):
-    records = list(SeqIO.parse(file,'fasta'))
+    records = list(SeqIO.parse(file, 'fasta'))
     with open(file, 'w') as res:
         for record in records:
             if record.name.split('.')[0] not in org_set:
@@ -59,7 +59,7 @@ def delete_group_org(orgs_=None, groups=None):
     delete_homologs(orgs_to_del)
 
 
-#TODO input as a file
+# TODO input as a file
 if __name__ == '__main__':
     formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
 

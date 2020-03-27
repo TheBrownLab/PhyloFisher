@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-import os
-import argparse
-import textwrap
-from glob import glob
 import configparser
+import os
+import textwrap
 from pathlib import Path
-
-import phylofisher.help_formatter
 from Bio import SeqIO
 from phylofisher import help_formatter
 
@@ -96,9 +92,7 @@ if __name__ == '__main__':
     parser, optional, required = help_formatter.initialize_argparse(name='fishing_net.py',
                                                                     desc='Script for filtering organisms [and|or] genes',
                                                                     usage='fishing_net.py [OPTIONS] '
-                                                                          '-i <input> ',
-                                                                    dataset=True,
-                                                                    input_meta=False)
+                                                                          '-i <input> ')
 
     # Add Arguments Specific to this script
     # Optional
@@ -110,8 +104,9 @@ if __name__ == '__main__':
     in_help = ""
     args = help_formatter.get_args(parser, optional, required, in_help=in_help)
 
-    if args.dataset_folder:
-        dfo = str(Path(args.dataset_folder).resolve())
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
     if args.input[-1] == '/':
         args.input = args.input[:-1]

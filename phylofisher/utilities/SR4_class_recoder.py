@@ -22,7 +22,7 @@ def get_args():
     # Required Arguments
     required.add_argument('-i', '--input', required=True, type=str, metavar='',
                           help=textwrap.dedent("""\
-                          Name of input alignment file.
+                          Name of input file.
                           """))
     required.add_argument('-o', '--output', type=str, required=True, metavar='',
                           help=textwrap.dedent("""\
