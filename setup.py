@@ -20,7 +20,9 @@ setup(
              'phylofisher/utilities/fast_tax_removal.py',
              'phylofisher/utilities/heteroevolving_sites.py',
              'phylofisher/utilities/aa_comp_calculator.py',
-             'phylofisher/utilities/SR4_class_recoder.py'
+             'phylofisher/utilities/SR4_class_recoder.py',
+             'phylofisher/utilities/taxon_collapser.py',
+             'phylofisher/utilities/genetic_code.py'
              ],
 
     url='',
@@ -28,4 +30,4 @@ setup(
     author='david',
     author_email='zihaladavid@gmail.com',
     description=''
-    )
+)
