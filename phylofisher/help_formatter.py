@@ -96,14 +96,14 @@ def initialize_argparse(name, desc, usage):
     return parser, optional, required
 
 
-def get_args(parser, optional, required, pre_suf=True, inp=True, out_dir=True,
+def get_args(parser, optional, required, pre_suf=True, inp_dir=True, out_dir=True,
              in_help='Path to input directory'):
 
     out_help = ('Path to user-defined output directory\n'
                 f'Default: ./{format(parser.prog).split(".")[0]}_out_<M.D.Y>')
 
     add_global_arguments(parser, optional, required,
-                         in_help=in_help, out_help=out_help, inp=inp,
+                         in_help=in_help, out_help=out_help, inp=inp_dir,
                          pre_suf=pre_suf, out_dir=out_dir)
 
     parser._action_groups.append(optional)

@@ -22,6 +22,7 @@ def taxonomy_dict(metadata, input_metadata=None):
     tax_g = {}
     full_names = {}
     for line_ in open(metadata):
+        line_ = line_.strip()
         if 'Full Name' not in line_:
             sline = line_.split('\t')
             tax = sline[0].strip()
@@ -31,12 +32,14 @@ def taxonomy_dict(metadata, input_metadata=None):
             full_names[tax] = full_name
     if input_metadata:
         for line in open(input_metadata):
-            metadata_input = line.split('\t')
-            tax = metadata_input[2].strip()
-            group = metadata_input[3].strip()
-            full_name = metadata_input[6].strip()
-            tax_g[tax] = group
-            full_names[tax] = full_name
+            line = line.strip()
+            if 'Long name' not in line:
+                metadata_input = line.split('\t')
+                tax = metadata_input[2].strip()
+                group = metadata_input[3].strip()
+                full_name = metadata_input[6].strip()
+                tax_g[tax] = group
+                full_names[tax] = full_name
     return tax_g, full_names
 
 
@@ -93,10 +96,7 @@ def make_table(folder):
     return: pd.DataFrame with genes; dictionary with information about
     'paths' used for sequence selection (BBH, SBH, HMM)
     """
-    if args.suffix:
-        genes = [gene for gene in glob.glob(f'{folder}/*{args.suffix}') if os.path.isfile(gene)]
-    else:
-        genes = [gene for gene in glob.glob(f'{folder}/*') if os.path.isfile(gene)]
+    genes = [gene for gene in glob.glob(f'{folder}/*') if os.path.isfile(gene)]
     names, paths = collect_names(genes)
     columns = []
     for gene in genes:
@@ -218,12 +218,13 @@ def stats_orgs(table):
         missing = genes_tot - genes
         missing_perc = (missing / genes_tot) * 100
         rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc, "yes"],
-                              index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing', "SGT"],
+                              index=["Full Name", "Taxonomy", "# of Genes", "# Missing", '% Missing', "Build SGT?"],
                               name=org))
     df = pd.DataFrame(rows)
-    df["#Genes"] = df['#Genes'].astype(int)
-    df["#Missing"] = df['#Missing'].astype(int)
-    df["%Missing"] = df['%Missing'].round(2)
+    df = df.rename_axis('Unique ID')
+    df["# of Genes"] = df['# of Genes'].astype(int)
+    df["# Missing"] = df['# Missing'].astype(int)
+    df["% Missing"] = df['% Missing'].round(2)
     df.to_csv(f'{output_fold}/orgs_stats.csv')
 
 
@@ -256,7 +257,9 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           some description
                           """))
-    args = help_formatter.get_args(parser, optional, required)
+
+    in_help = 'Path to fisher.py output directory'
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help, out_dir=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')

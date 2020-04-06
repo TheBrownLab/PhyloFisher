@@ -8,7 +8,7 @@ from ete3 import Tree
 from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
-from phylofisher import fisher
+from phylofisher import fisher, help_formatter
 
 plt.rcParams["figure.figsize"] = (10, 5)
 
@@ -101,19 +101,11 @@ def main():
 
 
 if __name__ == "__main__":
-    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
-
-    parser = argparse.ArgumentParser(prog='bipartition_examiner.py',
-                                     # TODO: Get description and usage
-                                     description='some description',
-                                     usage='some usage',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                         additional information:
-                                         """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    description = 'Script for ortholog fishing.'
+    parser, optional, required = help_formatter.initialize_argparse(name='bipartition_examiner.py',
+                                                                    desc=description,
+                                                                    usage='bipartition_examiner.py '
+                                                                          '[OPTIONS] -i /path/to/input/')
 
     # TODO: What is optional and required?
     # Required Arguments
@@ -126,14 +118,7 @@ if __name__ == "__main__":
                                   groups
                                   """))
 
-    # Optional Aruments
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                          Show this help message and exit.
-                          """))
-
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     queries = parse_groups(args.groups)
     main()

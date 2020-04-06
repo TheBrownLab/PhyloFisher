@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import os
 import subprocess
-import argparse
 import textwrap
-import phylofisher.help_formatter
 from Bio import SeqIO
 import pandas as pd
 import string
 import random
+
+from phylofisher import help_formatter
 
 
 def id_generator(size=10, chars=string.digits):
@@ -104,19 +104,11 @@ def main():
 
 
 if __name__ == "__main__":
-    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
-
-    parser = argparse.ArgumentParser(prog='fast_site_removal.py',
-                                     # TODO: Get description and usage
-                                     description='some description',
-                                     usage='some usage',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                     additional information:
-                                     """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    description = 'Script for ortholog fishing.'
+    parser, optional, required = help_formatter.initialize_argparse(name='fast_site_removal.py',
+                                                                    desc=description,
+                                                                    usage='fast_site_removal.py '
+                                                                          '[OPTIONS] -i /path/to/input/')
 
     # Required Arguments
     required.add_argument('-m', '--matrix', required=True, type=str, metavar='<matrix>',
@@ -133,11 +125,7 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                           description of chunk
                           """))
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                          """))
 
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     main()

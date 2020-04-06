@@ -190,6 +190,7 @@ def main(args):
     stats = collect_counts(transcriptome, args.conserved)
     genecode_plot(stats, args.all_codons)
 
+
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -236,5 +237,5 @@ if __name__ == '__main__':
             Plot conserved positions for all codons.
             """))
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp=False)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
     main(args)

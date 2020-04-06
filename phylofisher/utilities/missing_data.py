@@ -4,13 +4,13 @@ import os
 import shutil
 import textwrap
 from collections import defaultdict
-import phylofisher.help_formatter
 from Bio import SeqIO
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import matplotlib.patches as mpatches
 import numpy as np
+from phylofisher import help_formatter
 
 
 def parse_metadata():
@@ -214,70 +214,36 @@ def subsetter(df):
 
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
+    description = 'Script for ortholog fishing.'
+    parser, optional, required = help_formatter.initialize_argparse(name='missing_data.py',
+                                                                    desc=description,
+                                                                    usage='missing_data.py '
+                                                                          '[OPTIONS] -i <input> -m <metadata> '
+                                                                          '{-n <gene_number> | -c <percent_complete>}')
 
-    parser = argparse.ArgumentParser(prog='missing_data.py',
-                                     # TODO: Description
-                                     description='some description',
-                                     usage='missing_data.py [OPTIONS] -i <input> -m <metadata> '
-                                           '{-n <gene_number> | -c <percent_complete>}',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                         additional information:
-                                            stuff
-                                            """))
-    optional = parser._action_groups.pop()
-    mut_excl = parser.add_mutually_exclusive_group()
-    required = parser.add_argument_group('required arguments')
-
-    # Required Arguments
-    required.add_argument('-i', '--input', required=True, type=str, metavar='<in_dir>',
-                          help=textwrap.dedent("""\
-                                  Path to input directory containing gene alignments.
-                                  """))
-
-    required.add_argument('-m', '--metadata', required=True, metavar='<dataset>',
-                          help=textwrap.dedent("""\
-                                  Path to metadata.tsv
-                                  """))
     # Mutually Exclusive Arguments
-    mut_excl.add_argument('-n', '--gene_number', type=int, metavar='<N>',
+    optional.add_argument('-n', '--gene_number', type=int, metavar='<N>',
                           help=textwrap.dedent("""\
                                   Number of genes for analysis
                                   """))
-    mut_excl.add_argument('-c', '--percent_complete', type=float, metavar='<N>',
+    optional.add_argument('-c', '--percent_complete', type=float, metavar='<N>',
                           help=textwrap.dedent("""\
                                   Threshold for percent missing
                                   """))
     # Optional Arguments
-    optional.add_argument('-o', '--output', type=str, default='missing_data_out', metavar='<out_dir>',
-                          help=textwrap.dedent("""\
-                                  Path to output directory
-                                  """))
+
     optional.add_argument('-t', '--taxa', metavar='<taxa.tsv>',
                           help=textwrap.dedent("""\
                                   TSV file of taxa to be considered for completeness.
                                   Default is all taxa
-                                  """))
-    optional.add_argument('-s', '--suffix', type=str, default='', metavar='<suff>',
-                          help=textwrap.dedent("""\
-                                  Suffix of input files
-                                  Default: NONE
-                                  Example: path/to/input/*.suffix
                                   """))
     optional.add_argument('-p', '--plot', metavar='taxa_completeness.pdf',
                           help=textwrap.dedent("""\
                                   Plot missing data statistics.
                                   Default: out.pdf
                                   """))
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                                  Show this help message and exit.
-                                  """))
 
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     completeness_df, taxa = completeness()
     if args.plot:

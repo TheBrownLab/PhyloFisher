@@ -16,11 +16,12 @@ from functools import partial
 
 def bash_command(cmd):
     """Function to run bash commands in a shell"""
-    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash')
+    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash',
+                                  stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     if command_run == 0:
-        pass
+        return True
     else:
-        p.terminate()
+        return False
 
 
 def mkdir_and_cd(dir_name):
@@ -42,7 +43,8 @@ def delete_gaps_stars(root):
 
 def add_length(root, length):
     """Adds length to the file name"""
-    os.rename(f'RAxML_bipartitions.{root}.tre', f'RAxML_bipartitions.{root}_{length}.tre')
+    os.rename(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
+              f'{args.output}/RAxML/RAxML_bipartitions.{root}_{length}.tre')
 
 
 def x_to_dash(file):
@@ -108,6 +110,8 @@ def update_checkpoints(root, prog, length=None):
     with open(filename, 'r') as csvfile, tempfile:
         reader = csv.DictReader(csvfile, fieldnames=fields)
         writer = csv.DictWriter(tempfile, fieldnames=fields)
+        # Writes header to the output file
+        writer.writerow(next(reader))
         for row in reader:
             if length:
                 row['length'] = length
@@ -115,9 +119,9 @@ def update_checkpoints(root, prog, length=None):
                 row[prog] = 1
             row = {'taxon': row['taxon'], 'prequal': row['prequal'], 'mafft1': row['mafft1'],
                    'divvier1': row['divvier1'], 'bmge': row['bmge'], 'mafft2': row['mafft2'],
-                   'divvier2': row['divvier2'], 'trimal': row['trimal'], 'raxml': row['raxml'], 'length': row['length']}
+                   'divvier2': row['divvier2'], 'trimal': row['trimal'], 'raxml': row['raxml'],
+                   'length': row['length']}
             writer.writerow(row)
-
     shutil.move(tempfile.name, filename)
 
 
@@ -125,77 +129,102 @@ def prepare_analyses(checks, root):
     threads = int(args.threads / file_count)
     checks = checks[root]
 
-    # prequal
-    if checks[0] == '0':
-        mkdir_and_cd(f'{args.output}/prequal')
-        delete_gaps_stars(root)
-        bash_command(f'prequal {root}.aa')
-        update_checkpoints(root, 'prequal')
-        os.chdir('..')
+    length = int(checks[8])
 
-    # Length Filtration
-    mkdir_and_cd(f'{args.output}/length_filtration')
-    # mafft1
-    if checks[1] == '0':
-        mkdir_and_cd('mafft')
-        # MAFFT - length filtration
-        bash_command(
-            f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 '
-            f'{args.output}/prequal/{root}.aa.filtered > {root}.aln')
-        update_checkpoints(root, 'mafft1')
-        os.chdir('..')
-    # divvier1
-    if checks[2] == '0':
-        mkdir_and_cd(f'{args.output}/length_filtration/divvier')
-        # Divvier - length filtration
-        bash_command(f'divvier -mincol 4 -divvygap {args.output}/length_filtration/mafft/{root}.aln')
-        shutil.move(f'../mafft/{root}.aln.divvy.fas', f'./{root}.aln.divvy.fas')
-        update_checkpoints(root, 'divvier1')
-        os.chdir('..')
-    # bmge
-    if checks[3] == '0':
-        mkdir_and_cd(f'{args.output}/length_filtration/bmge')
-        # outputs pre_bmge
-        x_to_dash(f'{args.output}/length_filtration/divvier/{root}.aln.divvy.fas')
-        # BMGE
-        bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
-        length = good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
-        update_checkpoints(root, 'divvier1', length=length)
-        os.chdir('..')
-    os.chdir('..')
+    for i, check in enumerate(checks):
+        # prequal
+        if i == 0 and check == '0':
+            mkdir_and_cd(f'{args.output}/prequal')
+            delete_gaps_stars(root)
+            status = bash_command(f'prequal {root}.aa')
+            if status:
+                update_checkpoints(root, 'prequal')
+            else:
+                break
 
-    # mafft2
-    if checks[4] == '0':
-        mkdir_and_cd(f'{args.output}/mafft')
-        bash_command(
-            f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 '
-            f'{args.output}/length_filtration/bmge/{root}.length_filtered > {root}.aln2')
-        update_checkpoints(root, 'mafft2')
-        os.chdir('..')
+        # Length Filtration
+        elif i == 1 and check == '0':
+            mkdir_and_cd(f'{args.output}/length_filtration')
+            # mafft1
+            mkdir_and_cd('mafft')
+            # MAFFT - length filtration
+            status = bash_command(
+                f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 '
+                f'{args.output}/prequal/{root}.aa.filtered > {root}.aln')
+            if status:
+                update_checkpoints(root, 'mafft1')
+            else:
+                break
 
-    # divvier2
-    if checks[5] == '0':
-        mkdir_and_cd(f'{args.output}/divvier')
-        bash_command(f'divvier -mincol 4 -divvygap {args.output}/mafft/{root}.aln2')
-        shutil.move(f'../mafft/{root}.aln2.divvy.fas', f'./{root}.aln2.divvy.fas')
-        update_checkpoints(root, 'divvier2')
-        os.chdir('..')
+        elif i == 2 and check == '0':
+            mkdir_and_cd(f'{args.output}/length_filtration')
+            mkdir_and_cd(f'{args.output}/length_filtration/divvier')
+            # Divvier - length filtration
+            status = bash_command(f'divvier -mincol 4 -divvygap {args.output}/length_filtration/mafft/{root}.aln')
+            if status:
+                shutil.move(f'../mafft/{root}.aln.divvy.fas', f'./{root}.aln.divvy.fas')
+                update_checkpoints(root, 'divvier1')
+            else:
+                break
 
-    # trimal
-    if checks[6] == '0':
-        mkdir_and_cd(f'{args.output}/trimal')
-        bash_command(f'trimal -in {args.output}/divvier/{root}.aln2.divvy.fas -gt 0.01 -out {root}.final')
-        update_checkpoints(root, 'trimal')
-        os.chdir('..')
+        elif i == 3 and check == '0':
+            mkdir_and_cd(f'{args.output}/length_filtration')
+            mkdir_and_cd(f'{args.output}/length_filtration/bmge')
+            # outputs pre_bmge
+            x_to_dash(f'{args.output}/length_filtration/divvier/{root}.aln.divvy.fas')
+            # BMGE
+            status = bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
+            if status:
+                length = good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
+                update_checkpoints(root, 'bmge', length=length)
+            else:
+                break
 
-    # raxml
-    if args.no_tree is False and checks[7] == '0':
-        mkdir_and_cd(f'{args.output}/RAxML')
-        bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a '
-                     f'-s {args.output}/trimal/{root}.final -n {root}.tre -x 123 -N 100 -p 12345')
-        add_length(root, length=checks[8])
-        update_checkpoints(root, 'raxml')
-        os.chdir('..')
+        # mafft2
+        elif i == 4 and check == '0':
+            mkdir_and_cd(f'{args.output}/mafft')
+            status = bash_command(
+                f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 '
+                f'{args.output}/length_filtration/bmge/{root}.length_filtered > {root}.aln2')
+            if status:
+                update_checkpoints(root, 'mafft2')
+            else:
+                break
+
+        # divvier2
+        elif i == 5 and check == '0':
+            mkdir_and_cd(f'{args.output}/divvier')
+            status = bash_command(f'divvier -mincol 4 -divvygap {args.output}/mafft/{root}.aln2')
+            if status:
+                shutil.move(f'../mafft/{root}.aln2.divvy.fas', f'./{root}.aln2.divvy.fas')
+                update_checkpoints(root, 'divvier2')
+            else:
+                break
+
+        # trimal
+        elif i == 6 and check == '0':
+            mkdir_and_cd(f'{args.output}/trimal')
+            status = bash_command(f'trimal -in {args.output}/divvier/{root}.aln2.divvy.fas -gt 0.01 -out {root}.final')
+            if status:
+                update_checkpoints(root, 'trimal')
+            else:
+                break
+
+        # raxml
+        elif args.no_tree is False and i == 7 and check == '0':
+            mkdir_and_cd(f'{args.output}/RAxML')
+            status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a '
+                                  f'-s {args.output}/trimal/{root}.final -n {root}.tre -x 123 -N 100 -p 12345')
+            if status:
+                update_checkpoints(root, 'raxml')
+            else:
+                break
+
+        elif not args.no_tree and i == 8 and length > 0:
+            add_length(root, length)
+            mkdir_and_cd(f'{args.output}/trees')
+            shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}_{length}.tre',
+                        f'{args.output}/trees/RAxML_bipartitions.{root}_{length}.tre')
 
     return root, checks
 
@@ -219,7 +248,7 @@ if __name__ == '__main__':
                               Length filtration and trimmming only.
                               """))
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp=True)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=True)
 
     # Parallelization of prepare_analyses function
     args.input = os.path.abspath(args.input)

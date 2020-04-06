@@ -3,6 +3,8 @@ import os
 import glob
 import string
 import random
+import textwrap
+
 from Bio import SeqIO
 import configparser
 from pathlib import Path
@@ -24,27 +26,41 @@ def dataset_orgs():
     return orgs
 
 
+def taxa_to_exclude():
+    to_skip = set()
+    with open(args.to_exclude, 'w') as infile:
+        for line in infile:
+            unique_id = line.strip().split(',')[0]
+            to_skip.add(unique_id)
+
+    return to_skip
+
+
 def parse_input(input_metadata):
     """"Parse input metadata.
     input: input metadata csv
     return: dictionary with info about input metadata
     """
+    orgs_to_exc = taxa_to_exclude()
     input_info = defaultdict(dict)
     for line in open(input_metadata):
         sline = line.split('\t')
         abbrev = sline[2].strip()
-        group = sline[3].strip()
-        full_name = sline[6].strip()
-        subtax = sline[4]
-        col = sline[7]
-        data_type = sline[8]
-        notes = sline[9].strip()
-        input_info[abbrev]['tax'] = group
-        input_info[abbrev]['full_name'] = full_name
-        input_info[abbrev]['subtax'] = subtax
-        input_info[abbrev]['col'] = col
-        input_info[abbrev]['data_type'] = data_type
-        input_info[abbrev]['notes'] = notes
+        if abbrev in orgs_to_exc:
+            pass
+        else:
+            group = sline[3].strip()
+            full_name = sline[6].strip()
+            subtax = sline[4]
+            col = sline[7]
+            data_type = sline[8]
+            notes = sline[9].strip()
+            input_info[abbrev]['tax'] = group
+            input_info[abbrev]['full_name'] = full_name
+            input_info[abbrev]['subtax'] = subtax
+            input_info[abbrev]['col'] = col
+            input_info[abbrev]['data_type'] = data_type
+            input_info[abbrev]['notes'] = notes
     return input_info
 
 
@@ -225,6 +241,15 @@ if __name__ == '__main__':
     parser, optional, required = help_formatter.initialize_argparse(name='lumberjack.py',
                                                                     desc=desc,
                                                                     usage="lumberjack.py -i <in_dir>")
+
+    optional.add_argument('--to_exclude', type=str, metavar='to_exclude.txt',
+                          help=textwrap.dedent("""\
+                              Path to .txt file containing taxa to exclude from 
+                              dataset addition with one taxon per line.
+                              Example:
+                                Taxon1
+                                Taxon2
+                                  """))
 
     args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False)
 
