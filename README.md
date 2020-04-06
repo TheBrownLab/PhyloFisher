@@ -19,11 +19,11 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 `conda activate fisher`
 
 4. Add the Bioconda, Conda-Forge, & PhyloFisher Anaconda Cloud channels to your channels:<br/>
-`conda config --append channels phylofisher`
-`conda config --append channels bioconda`
-`conda config --append channels conda-forge`
+`conda config --append channels phylofisher`<br/>
+`conda config --append channels bioconda`<br/>
+`conda config --append channels conda-forge`<br/>
 
-5. Install phylofisher:<br/>
+5. Install PhyloFisher:<br/>
 `conda install phylofisher`
 
 - After you finish using PhyloFisher, use `conda deactivate` to deactivate the `fisher` conda virtual enviornment.
@@ -39,8 +39,7 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 ### Main Workflow
 1. **config.py**
     - config.py allows the user to set to configure the analyis directory <br/>
-    - Usage: `config.py [OPTIONS] -d <dataset_folder> -i <input_file.tsv>`<br/><br/>
-    - User `script.py -c `
+    - Usage: `config.py [OPTIONS] -d <dataset_folder> -i <input_metadata.tsv>`<br/>
 2. **fisher.py**
     - Run fisher.py for ortholog fishing:<br/>
     - Usage: `fisher.py [OPTIONS]`<br/><br/>
@@ -50,9 +49,9 @@ https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 4. **fishing_net.py**
     - Apply your selection:<br/>
     - Usage: `fishing_net.py [OPTIONS] -i fasta/ -o <folder_with_selected_seqs>`<br/><br/>
-5. **trimming.py**
+5. **single_gene_tree_constructor.py**
     - Trimming and single gene tree computations:<br/>
-    - Usage: `trimming.py [OPTIONS] -d <dataset_folder> -i <folder_with_fasta_files> -s <suffix>`<br/><br/>
+    - Usage: `trimming.py [OPTIONS] -i <folder_with_fasta_files>`<br/><br/>
 6. **forge.py**
     - Build phylogenomic matrix (Concatenation):<br/>
     - Usage: `forge.py [OPTIONS] --input <input_dir> `<br/><br/>
