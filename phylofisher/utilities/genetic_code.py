@@ -192,10 +192,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
-
     description = 'Script for fast genetic code analysis.'
     parser, optional, required = help_formatter.initialize_argparse(name='genetic_code.py',
                                                                     desc=description,
@@ -236,6 +232,10 @@ if __name__ == '__main__':
                 help=textwrap.dedent("""\
             Plot conserved positions for all codons.
             """))
+          
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
     main(args)
