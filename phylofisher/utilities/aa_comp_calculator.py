@@ -3,48 +3,11 @@ import argparse
 import textwrap
 
 import pandas as pd
-import phylofisher.help_formatter
 from Bio import SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as shc
-
-
-def get_args():
-    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
-
-    parser = argparse.ArgumentParser(prog='aa_comp_calculator.py',
-                                     description='some description',
-                                     usage='aa_comp_calculator.py [OPTIONS] -i /path/to/input/',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                         additional information:
-                                            stuff
-                                            """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
-
-    # Required Arguments
-    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
-                          help=textwrap.dedent("""\
-                              Path to input 
-                              """))
-
-    # Optional Arguments
-    optional.add_argument('-o', '--output', default="output", type=str, metavar='',
-                          help=textwrap.dedent("""\
-                              Desired name of output tsv files. 
-                              Default: output
-                              Example: output.tsv hcluster.output.pdf
-                              """))
-
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                              Show this help message and exit.
-                              """))
-
-    return parser.parse_args()
+from phylofisher import help_formatter
 
 
 def make_plot():
@@ -61,7 +24,13 @@ def make_plot():
 
 
 if __name__ == '__main__':
-    args = get_args()
+    description = 'Script for ortholog fishing.'
+    parser, optional, required = help_formatter.initialize_argparse(name='aa_comp_calculator.py',
+                                                                    desc=description,
+                                                                    usage='aa_comp_calculator.py '
+                                                                          '[OPTIONS] -i /path/to/input/')
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+
     peptides = ['A', 'G', 'P', 'S', 'T', 'C', 'F', 'W', 'Y', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'N', 'D', 'E', 'Q']
 
     with open(args.input, 'r') as infile, open(f'{args.output}.tsv', 'w') as outfile:

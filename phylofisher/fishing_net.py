@@ -81,11 +81,12 @@ def main():
             filtered_genes.append(file)
 
     for file in filtered_genes:
-        if paralogs:
-            # only with paralog selection option
-            fasta_filtr(os.path.basename(file), o_to_ex, paralogs)
-        else:
+        if args.orthologs is True:
+            # Option to only include orthologs
             fasta_filtr(os.path.basename(file), o_to_ex)
+        else:
+            # Default: Inclueds orthologs and paralogs
+            fasta_filtr(os.path.basename(file), o_to_ex, paralogs)
 
 
 if __name__ == '__main__':
@@ -101,7 +102,7 @@ if __name__ == '__main__':
                               Only for ortholog selection. Without information
                               about used path."""))
 
-    in_help = ""
+    in_help = "Path to output directory of fisher.py containing the output of informant.py"
     args = help_formatter.get_args(parser, optional, required, in_help=in_help)
 
     config = configparser.ConfigParser()

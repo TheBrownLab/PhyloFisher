@@ -338,7 +338,7 @@ def is_aa_seq(file):
             else:
                 all_count += len(line)
                 atcg_count += (line.upper().count('A') + line.upper().count('T')
-                               + line.upper().count('C') + line.upper().count('g'))
+                               + line.upper().count('C') + line.upper().count('G'))
         atcg_per = atcg_count / all_count
         if atcg_per > 0.7:
             return False
@@ -352,7 +352,7 @@ def check_input():
     taxonomic_groups = set(tax_group.values())
     n = 1
     for line in open(input_metadata):
-        if "FILE_NAME" not in line:
+        if "File Name" not in line:
             n += 1
             metadata_input = line.split('\t')
             f_file = str(Path(metadata_input[0], metadata_input[1]))
@@ -555,7 +555,7 @@ def additions_to_input():
     original_input = config['PATHS']['input_file']
     with open(original_input, 'a') as ori:
         for line in open(args.add):
-            if "FILE_NAME" not in line:
+            if "File Name" not in line:
                 ori.write(line)
 
 
@@ -586,7 +586,7 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                         Input file (different from original one in config.ini) only with new organisms.
                         """))
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp=False)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     # dataset folder
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
@@ -632,7 +632,7 @@ if __name__ == '__main__':
     input_taxonomy = {}
 
     for line in open(input_metadata):
-        if "FILE_NAME" not in line:  # TODO fix me
+        if "File Name" not in line:  # TODO fix me
             # input metadata file parsing
             metadata_input = line.split('\t')
             fasta_file = str(Path(metadata_input[0].strip(), metadata_input[1].strip()))

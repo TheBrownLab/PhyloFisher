@@ -240,7 +240,7 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
     name_, trim_len = tree_base.split('.')[1].split('_')
     title_face = TextFace(f'<{name_}  trim_aln_len: {trim_len}, {sus_clades} suspicious clades>', bold=True)
     ts.title.add_face(title_face, column=1)
-    t.render(output_base + '_tree.svg', tree_style=ts)
+    t.render(f'{output_folder}/{output_base}_tree.svg', tree_style=ts)
     if not backpropagation:  # what what what?
         table.close()
 
