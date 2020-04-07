@@ -2,10 +2,10 @@
 import os
 import subprocess
 import textwrap
-from Bio import SeqIO
-import pandas as pd
 import string
 import random
+from Bio import SeqIO
+import pandas as pd
 
 from phylofisher import help_formatter
 
@@ -65,7 +65,7 @@ ub = 10.0              * upper bound for rates"""
 
 
 def run_dist():
-    cmd = './dist_est dist_est.ctl'
+    cmd = 'dist_est dist_est.ctl'
     subprocess.run(cmd, shell=True)
 
 
