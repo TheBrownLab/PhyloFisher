@@ -2,7 +2,18 @@ package:
   name: prequal
   version: 1.02
 source:
-    path: ../../lib/prequal
+    path: ../../../lib/prequal
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - {{ compiler('c') }}
+  host:
+    - zlib
+
 test:
     commands:
         - prequal | grep prequal > /dev/null

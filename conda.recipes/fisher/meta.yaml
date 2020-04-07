@@ -6,7 +6,7 @@ source:
   path: ../../
 
 build:
-  string: "dev"
+  number: 1
   script:
     - python -m pip install --no-deps --ignore-installed .
 
@@ -16,7 +16,7 @@ requirements:
     - setuptools
 
   run:
-    - python=3.6
+    - python=3.7
     - trimal
     - raxml
     - biopython
@@ -30,10 +30,10 @@ requirements:
     - blast
     - cd-hit
     - mafft
-    - setuptools
     - divvier
     - bmge
     - prequal
+    - dist_est
 
 about:
   summary: This is a simple meta-package
