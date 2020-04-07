@@ -3,4 +3,4 @@ set -eu -o pipefail
 echo ${PREFIX}
 mkdir -p ${PREFIX}/bin
 make
-cp prequal ${PREFIX}/bin
+cp dist_est ${PREFIX}/bin
