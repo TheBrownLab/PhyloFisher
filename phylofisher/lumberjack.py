@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import calendar
+import datetime
 import os
 import glob
 import string
@@ -41,7 +43,9 @@ def parse_input(input_metadata):
     input: input metadata csv
     return: dictionary with info about input metadata
     """
-    orgs_to_exc = taxa_to_exclude()
+    orgs_to_exc = set()
+    if args.to_exclude:
+        orgs_to_exc = taxa_to_exclude()
     input_info = defaultdict(dict)
     for line in open(input_metadata):
         sline = line.split('\t')
@@ -52,16 +56,37 @@ def parse_input(input_metadata):
             group = sline[3].strip()
             full_name = sline[6].strip()
             subtax = sline[4]
-            col = sline[7]
-            data_type = sline[8]
-            notes = sline[9].strip()
+            data_type = sline[7]
+            notes = sline[8].strip()
             input_info[abbrev]['tax'] = group
             input_info[abbrev]['full_name'] = full_name
             input_info[abbrev]['subtax'] = subtax
-            input_info[abbrev]['col'] = col
             input_info[abbrev]['data_type'] = data_type
             input_info[abbrev]['notes'] = notes
     return input_info
+
+
+def get_fisher_dir():
+    """
+    Returns the latest fisher output directory if there are more that one in the cwd. If only one return that one.
+    """
+    posbl_folds = [fold for fold in os.listdir('.') if os.path.isdir(fold) and fold.startswith('fisher_out')]
+    cal_dict = dict((v, k) for k, v in enumerate(calendar.month_abbr))
+    # if only one fisher output use that one
+    if len(posbl_folds) == 1:
+        fisher_dir = posbl_folds[0]
+    # if there are multiple fisher output directories use the latest
+    else:
+        # Gets the month day and year from fisher output dir
+        month, day, year = posbl_folds.pop(0).split('_')[-1].split('.')
+        date = datetime.date(year, cal_dict[month], day)
+        for fold in posbl_folds:
+            month1, day1, year1 = fold.split('_')[-1].split('.')
+            date1 = datetime.date(year, cal_dict[month], day)
+            if date1 > date:
+                month, day, year = month1, day1, year1
+        fisher_dir = f'fisher_out_{month}.{day}.{year}'
+    return fisher_dir
 
 
 def collect_seqs(gene):
@@ -71,7 +96,8 @@ def collect_seqs(gene):
     return: dictionary of all seqs for a given gene
     """
     seq_dict = {}
-    for record in SeqIO.parse(f'fasta/{gene}.fas', 'fasta'):
+    fisher_dir = get_fisher_dir()
+    for record in SeqIO.parse(f'{fisher_dir}/{gene}.fas', 'fasta'):
         if record.name.count('_') == 3:
             abbrev, _, _, quality = record.name.split('_')
             qname = f'{abbrev}_{quality}'
@@ -111,7 +137,7 @@ def parse_table(table):
      return: dictionaries of new orthologs and paralogs"""
 
     # gene name
-    gene = table.split('/')[-1].split('_')[0]
+    gene = table.split('/')[-1].split('.')[0]
     # path to orthologs in the dataset folder
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
     # path to paralogs in the dataset folder
@@ -195,17 +221,16 @@ def add_to_meta(abbrev):
         full = input_info[abbrev]['full_name']
         tax = input_info[abbrev]['tax']
         subtax = input_info[abbrev]['subtax']
-        col = input_info[abbrev]['col']
         data_type = input_info[abbrev]['data_type']
         notes = input_info[abbrev]['notes']
-        res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}\t{col}\t{data_type}\t{notes}\n')
+        res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}\t{data_type}\t{notes}\n')
 
 
 def new_database(table):
     """Make changes in the PhyloFisher dataset according to information from
      parsed single gene tree."""
 
-    gene = table.split('/')[-1].split('_')[0]
+    gene = table.split('/')[-1].split('.')[0]
     # Orthologs for a given gene
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
     # Paralogs for a given gene

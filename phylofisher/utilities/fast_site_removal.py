@@ -65,7 +65,8 @@ ub = 10.0              * upper bound for rates"""
 
 
 def run_dist():
-    cmd = 'dist_est dist_est.ctl'
+    dist_cmd = '/mnt/scratch/brownlab/rej110/PhyloFisher/git_repo/lib/dist_estv1.1/dist_est'
+    cmd = f'{dist_cmd} dist_est.ctl'
     subprocess.run(cmd, shell=True)
 
 

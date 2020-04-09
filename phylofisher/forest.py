@@ -15,27 +15,36 @@ from phylofisher import help_formatter
 plt.style.use('ggplot')
 
 
+def configure_colors():
+    color_dict = dict()
+    with open('tree_colors.csv', 'r') as infile:
+        infile.readline()
+        for line in infile:
+            line = line.strip()
+            tax, color = line.split(',')
+            color_dict[tax] = color
+
+    return color_dict
+
+
 def parse_metadata(metadata, input_metadata=None):
     """
     Parse metadata from dataset and input_metadata (if provided)
     input:  metadata csv file, input metadata csv file (optional)
     return: dictionary with combined metadata, dictionary with taxonomy: color
     """
+    color_dict = configure_colors()
     metadata_comb = {}
-    tax_col = {}
     for line_ in open(metadata):
         if 'Full Name' not in line_:
             sline = line_.split('\t')
             tax = sline[0].strip()
             group = sline[2].strip()
-            col = sline[4].strip()
             sub_tax = sline[3]
             full = sline[1].strip()
-            if group not in tax_col:
-                if col.lower() in ['x', 'xx']:
-                    col = 'white'
-                tax_col[group] = col
-            metadata_comb[tax] = {'group': group, 'col': tax_col[group], 'full': full, 'subtax': sub_tax}
+            if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
+                color_dict[group] = 'white'
+            metadata_comb[tax] = {'group': group, 'col': color_dict[group], 'full': full, 'subtax': sub_tax}
     if input_metadata:
         for line in open(input_metadata):
             if "FILE_NAME" not in line:
@@ -45,7 +54,7 @@ def parse_metadata(metadata, input_metadata=None):
                 full = metadata_input[6].strip()
                 sub_tax = metadata_input[4]
                 metadata_comb[tax] = {'group': group, 'col': "white", 'full': full, 'subtax': sub_tax}
-    return metadata_comb, tax_col
+    return metadata_comb, color_dict
 
 
 def suspicious_clades(tree):
