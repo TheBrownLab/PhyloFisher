@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import textwrap
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -6,11 +7,17 @@ from phylofisher import help_formatter
 
 
 if __name__ == '__main__':
-    description = 'Script for ortholog fishing.'
+    description = 'Recodes input matrix based on SR4 amino acid classification.'
     parser, optional, required = help_formatter.initialize_argparse(name='SR4_class_recoder.py',
                                                                     desc=description,
-                                                                    usage='SR4_class_recoder.py')
-
+                                                                    usage='SR4_class_recoder.py [OPTIONS] '
+                                                                          '-i <matrix>')
+    # Required Arguments
+    required.add_argument('-i', '--input', required=True, type=str, metavar='matrix',
+                          help=textwrap.dedent("""\
+                                      Path to input matrix for recoding.
+                                      """))
+    # Optional Arguments
     optional.add_argument('-in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                                       Input file format if not FASTA.

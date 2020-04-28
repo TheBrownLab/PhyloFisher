@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import os
+import textwrap
 from ete3 import Tree
 from Bio import SeqIO
-import argparse
+
+from phylofisher import help_formatter
 from phylofisher.utilities.fast_tax_removal import Leaves
 
 
@@ -13,7 +14,7 @@ def fast_and_slow(matrix, format, portion, sorted_orgs):
     print(len(sorted_orgs))
     print(len(slow))
     print(len(fast))
-    with open('slow.fas', 'w') as s, open('fast.fas', 'w') as f:
+    with open('slow.fas', 'w') as s, open(f'{args.output}/fast.fas', 'w') as f:
         for record in SeqIO.parse(matrix, format):
             if record.name in slow:
                 s.write(f'>{record.name}\n{record.seq}\n')
@@ -22,14 +23,47 @@ def fast_and_slow(matrix, format, portion, sorted_orgs):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Fast taxon removal', usage="fast_tax_removal.py [OPTIONS]")
-    parser.add_argument('-t', '--tree', required=True)
-    parser.add_argument('-m', '--matrix', required=True)
-    parser.add_argument('-f', '--format', default='fasta', help='format of your matrix [default: fasta]')
-    parser.add_argument('-p', '--portion', default=0.2, type=float)
-    args = parser.parse_args()
+    description = 'Fast taxon removal'
+    parser, optional, required = help_formatter.initialize_argparse(name='heteroevolving_sites.py',
+                                                                    desc=description,
+                                                                    usage='heteroevolving_sites.py [OPTIONS] '
+                                                                          '-t <tree> '
+                                                                          '-m <matrix>')
+    # Required Arguments
+    required.add_argument('-m', '--matrix', required=True, type=str, metavar='matrix',
+                          help=textwrap.dedent("""\
+                              Path to input matrix.
+                              """))
+    required.add_argument('-t', '--tree', required=True, type=str, metavar='tree',
+                          help=textwrap.dedent("""\
+                              Path to input tree.
+                              """))
+
+    # Optional Arguments
+    optional.add_argument('-in_format', metavar='<format>', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                              Input matrix format if not FASTA.
+                              Options: fasta, phylip (names truncated at 10 characters), 
+                              phylip-relaxed (names are not truncated), or nexus.
+                              Default: fasta
+                              """))
+    # optional.add_argument('-out_format', metavar='<format>', type=str, default='fasta',
+    #                       help=textwrap.dedent("""\
+    #                                   Desired output format.
+    #                                   Options: fasta, phylip (names truncated at 10 characters),
+    #                                   phylip-relaxed (names are not truncated), or nexus.
+    #                                   Default: fasta
+    #                                   """))
+
+    optional.add_argument('-p', '--portion', default=0.2, type=float,
+                          help=textwrap.dedent("""\
+                              Portion
+                              Default: 0.2
+                              """))
+
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     tree = Tree(args.tree)
     leaves = Leaves(tree)
     sorted_taxa = leaves.org_speed()
-    fast_and_slow(args.matrix, args.format, args.portion, sorted_taxa)
+    fast_and_slow(args.matrix, args.in_format, args.portion, sorted_taxa)

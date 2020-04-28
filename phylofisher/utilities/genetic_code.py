@@ -16,6 +16,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from phylofisher import help_formatter
+
 plt.style.use('ggplot')
 
 
@@ -25,9 +26,9 @@ def prepare_alignments(threads):
         os.mkdir(alignmnets_folder)
     for file in glob(str(Path(dfo, f'orthologs/*.fas'))):
         cmd = f'mafft --auto --reorder --anysymbol --thread {threads} \
-            {file} > {file.replace("orthologs","alignments").split(".")[0]}.aln'
+            {file} > {file.replace("orthologs", "alignments").split(".")[0]}.aln'
         print(cmd)
-        subprocess.call(cmd,shell=True)
+        subprocess.call(cmd, shell=True)
 
 
 def parse_query(alignment_file, queries_list):
@@ -35,7 +36,7 @@ def parse_query(alignment_file, queries_list):
     ali_dict = {}
     n = 0
     for record in SeqIO.parse(alignment_file, 'fasta'):
-        seq = str(record.seq).replace('-','')
+        seq = str(record.seq).replace('-', '')
         ali_dict[record.name] = f'>{record.name}@{gene}@{n}\n{seq}\n'
         n += 1
     for query in queries_list:
@@ -119,11 +120,11 @@ def collect_counts(transcriptome, conservation_lvl):
                                 real_trans_position = int(
                                     hit_start + (3 * (position - int(hit_seq[:position].count('-')))) - 1)
                                 codon = (
-                                transcriptome_dict[hit_name][real_trans_position:real_trans_position + 3]).upper()
+                                    transcriptome_dict[hit_name][real_trans_position:real_trans_position + 3]).upper()
                             else:
                                 sequence = transcriptome_dict[hit_name]
                                 real_trans_position = int(len(sequence) - hit_end + (
-                                            3 * (position - int(hit_seq[:position].count('-')))))
+                                        3 * (position - int(hit_seq[:position].count('-')))))
                                 revcom = sequence.reverse_complement()
                                 codon = (revcom[real_trans_position:real_trans_position + 3]).upper()
                             col = str(positional_dict[real_position][1])
@@ -156,19 +157,21 @@ def genecode_plot(res_list_dict, all_codons):
                 res = pd.Series(result)
             if all_codons == True:
                 if (codon in std_code) and (most_freq[1] != std_code[codon]):
-                    print(f"Suspicious codon:{codon.replace('T','U')} doens't seem to match The standart genetic code: {std_code[codon]}")
+                    print(
+                        f"Suspicious codon:{codon.replace('T', 'U')} doens't seem to match The standart genetic code: {std_code[codon]}")
                 final_result = res.sort_values(ascending=False)
                 final_result.plot.bar()
-                plt.title(f"{codon.replace('T','U')} (The Standard Code: {std_code[codon]})")
+                plt.title(f"{codon.replace('T', 'U')} (The Standard Code: {std_code[codon]})")
                 plt.xticks(rotation='horizontal')
                 pdf.savefig(bbox_inches='tight')
                 plt.close()
             else:
                 if (codon in std_code) and (most_freq[1] != std_code[codon]):
-                    print(f"Suspicious codon:{codon.replace('T','U')} doens't seem to match The standart genetic code: {std_code[codon]}")
+                    print(
+                        f"Suspicious codon:{codon.replace('T', 'U')} doens't seem to match The standart genetic code: {std_code[codon]}")
                     final_result = res.sort_values(ascending=False)
                     final_result.plot.bar()
-                    plt.title(f"{codon.replace('T','U')} (The Standard Code: {std_code[codon]})")
+                    plt.title(f"{codon.replace('T', 'U')} (The Standard Code: {std_code[codon]})")
                     plt.xticks(rotation='horizontal')
                     pdf.savefig(bbox_inches='tight')
                     plt.close()
@@ -184,18 +187,19 @@ def main(args):
     os.chdir(folder)
     queries_list = args.queries.split(',')
     collect_queries(queries_list)
-    print(f'{"="*20}\nPerforming blast searches ...\n{"="*20}\n')
+    print(f'{"=" * 20}\nPerforming blast searches ...\n{"=" * 20}\n')
     blastDB_tblastn(transcriptome, args.threads, args.blast_evalue)
-    print(f'{"="*20}\nCollecting information from conserved positions ...\n{"="*20}\n')
+    print(f'{"=" * 20}\nCollecting information from conserved positions ...\n{"=" * 20}\n')
     stats = collect_counts(transcriptome, args.conserved)
     genecode_plot(stats, args.all_codons)
 
 
 if __name__ == '__main__':
     description = 'Script for fast genetic code analysis.'
+    usage = 'genetic_code.py [OPTIONS] -i, --input file.fas -q, --queries Allomacr,Mantplas,...'
     parser, optional, required = help_formatter.initialize_argparse(name='genetic_code.py',
                                                                     desc=description,
-                                                                    usage='genetic_code.py [OPTIONS]')
+                                                                    usage=usage)
 
     # Required Arguments
     required.add_argument('-i', '--input', required=True, type=str, metavar='file.fas',
@@ -208,34 +212,35 @@ if __name__ == '__main__':
                               """))
     # Optional Arguments
     optional.add_argument('-t', '--threads', type=int, metavar='N', default=1,
-                        help=textwrap.dedent("""\
+                          help=textwrap.dedent("""\
                     Number of threads, where N is an integer.
                     Default: 1
                     """))
 
     optional.add_argument('--prepare_alignments', action='store_true',
-                    help=textwrap.dedent("""\
+                          help=textwrap.dedent("""\
                 Prepare alignments for genetic code analysis.
                 """))
 
-    optional.add_argument('-c', '--conserved', type=float, metavar='0-1',default=0.7,
-                help=textwrap.dedent("""\
+    optional.add_argument('-c', '--conserved', type=float, metavar='0-1', default=0.7,
+                          help=textwrap.dedent("""\
             Conservation level. 0-1.
             """))
 
-    optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X',default='1e-30',
-                help=textwrap.dedent("""\
+    optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X', default='1e-30',
+                          help=textwrap.dedent("""\
             Evalue for blast searches. Default: 1e-30.
             """))
 
     optional.add_argument('-a', '--all_codons', action='store_true', default=False,
-                help=textwrap.dedent("""\
+                          help=textwrap.dedent("""\
             Plot conserved positions for all codons.
             """))
-          
+
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
     main(args)

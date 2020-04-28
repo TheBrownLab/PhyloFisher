@@ -108,7 +108,7 @@ if __name__ == '__main__':
                                                                          ' super-matrix.',
                                                                     usage='forge.py [OPTIONS] -i path/to/input/')
 
-    # Required Arguments
+    # Optional Arguments
     optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Desired format of the output matrix.

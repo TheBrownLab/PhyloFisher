@@ -62,7 +62,10 @@ def delete_group_org(orgs_=None, groups=None):
 # TODO input as a file
 if __name__ == '__main__':
     formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
-
+    description = 'Inspects single gene trees for contamination.'
+    parser, optional, required = help_formatter.initialize_argparse(name='purge.py',
+                                                                    desc=description,
+                                                                    usage='forest.py [OPTIONS] -i <in_dir>')
     parser = argparse.ArgumentParser(prog='purge.py',
                                      description='Script for deleting orgs/taxonomic groups from the dataset',
                                      usage='purge.py [OPTIONS]',

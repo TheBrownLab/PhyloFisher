@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 import glob
 from collections import defaultdict
 import pandas as pd
@@ -255,7 +255,8 @@ if __name__ == '__main__':
                               """))
     optional.add_argument('--occupancy_with_paths', action='store_true',
                           help=textwrap.dedent("""\
-                          some description
+                          Outputs a CSV file with information regarding the route in which potential 
+                          orthologs were determined.
                           """))
 
     in_help = 'Path to fisher.py output directory'

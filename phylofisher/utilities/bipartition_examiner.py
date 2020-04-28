@@ -2,13 +2,11 @@
 import argparse
 import os
 import textwrap
-
-import phylofisher.help_formatter
 from ete3 import Tree
 from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
-from phylofisher import fisher, help_formatter
+from phylofisher import help_formatter
 
 plt.rcParams["figure.figsize"] = (10, 5)
 
@@ -76,11 +74,12 @@ def parse_bss():
     columns = []
     n = 0
     for line in open(args.bs_files):
+        line = line.strip()
         column = file_to_series(line.strip())
         if n == 0:
             column.name = 'Full dataset'
         else:
-            column.name = os.path.basename(args.bs_files)
+            column.name = os.path.basename(line)
             # column.name = f'Step {n}'
         columns.append(column)
         n += 1
@@ -95,13 +94,13 @@ def main():
     plt.legend(loc=0, prop={'size': 6})
     plt.xticks(range(len(df.index)), list(df.index))
     plt.tight_layout()
-    plt.savefig("test_out.pdf")
+    plt.savefig("test_0toN.pdf")
     df.to_csv("test_out.csv")
     return df
 
 
 if __name__ == "__main__":
-    description = 'Script for ortholog fishing.'
+    description = 'Calculates the observed occurrences of clades of interest in bootstrap trees.'
     parser, optional, required = help_formatter.initialize_argparse(name='bipartition_examiner.py',
                                                                     desc=description,
                                                                     usage='bipartition_examiner.py '

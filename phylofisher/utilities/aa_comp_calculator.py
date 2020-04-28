@@ -24,11 +24,17 @@ def make_plot():
 
 
 if __name__ == '__main__':
-    description = 'Script for ortholog fishing.'
+    description = 'Calculates amino acid composition of the supplied super matrix'
     parser, optional, required = help_formatter.initialize_argparse(name='aa_comp_calculator.py',
                                                                     desc=description,
                                                                     usage='aa_comp_calculator.py '
-                                                                          '[OPTIONS] -i /path/to/input/')
+                                                                          '[OPTIONS] -i <matrix>')
+
+    required.add_argument('-i', '--input', required=True, type=str, metavar='matrix',
+                          help=textwrap.dedent("""\
+                                  Path to input matrix for analysis.
+                                  """))
+
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     peptides = ['A', 'G', 'P', 'S', 'T', 'C', 'F', 'W', 'Y', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'N', 'D', 'E', 'Q']
