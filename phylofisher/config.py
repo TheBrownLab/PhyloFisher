@@ -33,6 +33,10 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Path to orthomcl if NOT in dataset_dir
                           """))
+    optional.add_argument('--tree_colors', metavar='<omcl_data>',
+                          help=textwrap.dedent("""\
+                              Path to alternative single genetree color configuration file.
+                              """))
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
                           Show this help message and exit.
@@ -44,6 +48,9 @@ if __name__ == '__main__':
 
     if not args.orthomcl:
         args.orthomcl = str(Path(args.dataset_folder, 'orthomcl'))
+
+    if not args.tree_colors:
+        args.tree_colors = str(Path(args.dataset_folder, 'tree_colors.csv'))
 
     with open('config.ini', 'w') as configfile:
         config['PATHS'] = {'dataset_folder': args.dataset_folder,

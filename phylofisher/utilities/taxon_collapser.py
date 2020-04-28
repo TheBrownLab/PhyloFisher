@@ -76,9 +76,9 @@ if __name__ == '__main__':
                                                                     desc=description,
                                                                     usage='taxon_collapser.py [OPTIONS] -i <taxa>')
 
-    in_help = ('Path to CSV formatted file containing taxa to be collapsed.'
+    in_help = ('Path to CSV formatted file containing taxa to be collapsed.\n'
                'Example Row: "CollapsedName,Taxon1,Taxon2,...,TaxonN')
-    args = help_formatter.get_args(parser, optional, required)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, out_dir=False, pre_suf=False)
 
     # Congig Parser
     config = configparser.ConfigParser()
