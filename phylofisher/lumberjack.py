@@ -6,12 +6,10 @@ import glob
 import string
 import random
 import textwrap
-
 from Bio import SeqIO
 import configparser
 from pathlib import Path
 from collections import defaultdict
-
 from phylofisher import help_formatter
 
 
@@ -159,7 +157,7 @@ def parse_table(table):
     for line in open(table):
         # for orthologs from the dataset
         tree_name, tax, status = line.split('\t')
-        status = status.strip()  # o,p,d (ortholog, paralog, delete(
+        status = status.strip()  # o,p,d (ortholog, paralog, delete)
         abbrev = tree_name.split('@')[-1]
         if tree_name.count('_') != 3 and '..' not in abbrev:
             record = seq_dict[abbrev]
@@ -200,7 +198,15 @@ def parse_table(table):
         if '..' in name:
             record = paralogs[name]
             if status == 'o':
-                # add sequence to orthologs
+                # for cases when ortholog has not survived trimming
+                if abbrev in orthologs:
+                    # prepare paralog name
+                    pname = paralog_name(abbrev, paralogs.keys())
+                    # chance status from paralog to ortholog
+                    paralogs[pname] = orthologs[abbrev]
+                    # record in orthologs will be replaced
+                    # with a new one in the next step
+                # add sequence to orthologs 
                 orthologs[abbrev] = record
                 # delete sequence from paralogs
                 del paralogs[name]
