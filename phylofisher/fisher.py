@@ -96,7 +96,7 @@ class SpecQuery:
         self.hmm_hits = hmm_hits
         self.seq = None
         self.infile_proteins = infile_proteins
-        self.organisms = [org for org in spec_queries.split(',')]
+        self.organisms = [org.strip() for org in spec_queries.split(',')]
 
     def get_specific_query(self):
         """This function returns seed blast sequence from selected specific queries(organisms).
@@ -280,7 +280,6 @@ def phylofisher(threads, max_hits, spec_queries=None):
 
     # return list of tuples (gene:[candidate names],..)
     candidates = get_candidates(threads, max_hits, gene_dict.values())
-
     # writes all candidates to for_diamond.fasta"
     with open('tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
@@ -352,6 +351,7 @@ def check_input():
     taxonomic_groups = set(tax_group.values())
     n = 1
     for line in open(input_metadata):
+        line = line.strip()
         if "File Name" not in line:
             n += 1
             metadata_input = line.split('\t')
@@ -545,7 +545,7 @@ def get_reciprocal_hits():
         sequence = sequence[:-4]
         if sequence not in proccesed:
             proccesed.add(sequence)
-            hit_gene = sline[1].split('@')[0]
+            hit_gene = sline[1]
             reciprocal[sequence] = hit_gene
     return reciprocal
 
@@ -568,7 +568,7 @@ if __name__ == '__main__':
                                                                     desc=description,
                                                                     usage='fisher.py [OPTIONS]')
 
-    optional.add_argument('-t', '--threads', type=int, metavar='N',
+    optional.add_argument('-t', '--threads', type=int, metavar='N', default=1,
                           help=textwrap.dedent("""\
                         Number of threads, where N is an integer.
                         Default: 1

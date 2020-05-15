@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import csv
 import os
-import sys
-import argparse
 import shutil
 import textwrap
 import subprocess
@@ -16,8 +14,8 @@ from functools import partial
 
 def bash_command(cmd):
     """Function to run bash commands in a shell"""
-    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash',
-                                  stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash')#,
+                                #  stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     if command_run == 0:
         return True
     else:
@@ -225,6 +223,8 @@ def prepare_analyses(checks, root):
             mkdir_and_cd(f'{args.output}/trees')
             shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}_{length}.tre',
                         f'{args.output}/trees/RAxML_bipartitions.{root}_{length}.tre')
+            shutil.copy(f'{args.output}/trimal/{root}.final',
+                        f'{args.output}/trees/{root}.final')
 
     return root, checks
 
