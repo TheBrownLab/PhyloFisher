@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import textwrap
 from ete3 import Tree
 from Bio import SeqIO
@@ -7,15 +8,16 @@ from phylofisher import help_formatter
 from phylofisher.utilities.fast_tax_removal import Leaves
 
 
-def fast_and_slow(matrix, format, portion, sorted_orgs):
+def fast_and_slow(matrix, portion, sorted_orgs):
     amount = round(len(sorted_orgs)*portion)
     slow = set(sorted_orgs[(len(sorted_orgs)-amount):])
     fast = set(sorted_orgs[:amount])
     print(len(sorted_orgs))
     print(len(slow))
     print(len(fast))
-    with open('slow.fas', 'w') as s, open(f'{args.output}/fast.fas', 'w') as f:
-        for record in SeqIO.parse(matrix, format):
+    with open(f'{args.output}/slow.fas', 'w') as s, open(f'{args.output}/fast.fas', 'w') as f:
+        slow_seqs, fast_seq = [], []
+        for record in SeqIO.parse(matrix, args.in_format):
             if record.name in slow:
                 s.write(f'>{record.name}\n{record.seq}\n')
             elif record.name in fast:
@@ -63,7 +65,8 @@ if __name__ == '__main__':
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
+    os.mkdir(args.output)
     tree = Tree(args.tree)
     leaves = Leaves(tree)
     sorted_taxa = leaves.org_speed()
-    fast_and_slow(args.matrix, args.in_format, args.portion, sorted_taxa)
+    fast_and_slow(args.matrix, args.portion, sorted_taxa)

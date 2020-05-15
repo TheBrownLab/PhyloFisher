@@ -45,7 +45,7 @@ def taxonomy_dict(metadata, input_metadata=None):
 
 def collect_names(files):
     """
-    Collect all short names. Collest information about 'path'
+    Collect all short names. Collest information about 'route'
     for newly added sequences (BBH, SBH, HMM).
     input: fasta files with genes (from fisher)
     return: set of sorted shortnames; dictionary with genes 
@@ -53,20 +53,20 @@ def collect_names(files):
     as keys and BBH or SBH or HMM as values
     """
     names = set()
-    paths = defaultdict(dict)
+    routes = defaultdict(dict)
     for file in files:
         gene_name = file.split('/')[-1].split('.')[0]
         for record in SeqIO.parse(file, 'fasta'):
             if record.name.count('_') >= 3:
                 name = record.name.split('_')[0]
-                path = record.name.split('_')[2]
-                paths[gene_name][name] = path
+                route = record.name.split('_')[2]
+                routes[gene_name][name] = route
             elif '_' in record.name:
                 name = record.name.split('_')[0]
             else:
                 name = record.name
             names.add(name)
-    return sorted(list(names)), paths
+    return sorted(list(names)), routes
 
 
 def get_gene_column(gene, names):
@@ -94,25 +94,25 @@ def make_table(folder):
     into pd.DataFrame
     input: fodler with genes in fasta format
     return: pd.DataFrame with genes; dictionary with information about
-    'paths' used for sequence selection (BBH, SBH, HMM)
+    'routes' used for sequence selection (BBH, SBH, HMM)
     """
     genes = [gene for gene in glob.glob(f'{folder}/*') if os.path.isfile(gene)]
-    names, paths = collect_names(genes)
+    names, routes = collect_names(genes)
     columns = []
     for gene in genes:
         columns.append(get_gene_column(gene, names))
     df = pd.DataFrame(columns)
     df = df.transpose()
-    df = df.reindex(sorted(df.columns), axis=1)  # comment me mf
-    return df, paths
+    df = df.reindex(sorted(df.columns), axis=1)  # comment me
+    return df, routes
 
 
-def table_with_paths(df, paths):
-    """Create occupancy table and add information about paths used for sequence
+def table_with_routes(df, routes):
+    """Create occupancy table and add information about routes used for sequence
     selection (BBH, SBH, HMM) to input dataframe
     input: pd.DataFrame with information about all genes (present(>0)/absent(0)) 
-    for all organisms, dictionary with paths for all sequences
-    output: modifiend input dataframe with information about path
+    for all organisms, dictionary with routes for all sequences
+    output: modifiend input dataframe with information about route
     """
     # TODO: refractor me please
     full_names = []
@@ -133,12 +133,12 @@ def table_with_paths(df, paths):
 
     df.to_csv(f'{output_fold}/occupancy.csv')
 
-    # Adds paths to df
+    # Adds routes to df
     for gene in df.columns:
         df[gene] = df[gene].apply(str)
         for org in df[gene].index:
-            if org in paths[gene]:
-                df.at[org, gene] = f'{df[gene][org]}_{paths[gene][org]}'
+            if org in routes[gene]:
+                df.at[org, gene] = f'{df[gene][org]}_{routes[gene][org]}'
     return df
 
 
@@ -156,10 +156,10 @@ def paralog_orgs():
     return paralogs
 
 
-def stats_orgs_path(table):
+def stats_orgs_route(table):
     """
     Create csv file with basic summary about analyzed dataset with information
-     about used 'paths' (BBH, SBH, HMM) and paralogs.
+     about used 'routes' (BBH, SBH, HMM) and paralogs.
     input: dataframe
     return: None
     """
@@ -181,8 +181,8 @@ def stats_orgs_path(table):
         sbh['HMM'] = 0
         for val in res.loc[org].values[2:]:
             if '_' in val:
-                path = val.split('_')[1]
-                sbh[path] += 1
+                route = val.split('_')[1]
+                sbh[route] += 1
         para_ava = 'none'
         if org in paralogs:
             para_ava = 'yes'
@@ -204,7 +204,7 @@ def stats_orgs_path(table):
 def stats_orgs(table):
     """
     Create csv file with basic summary about analyzed dataset without information
-    about 'paths' and paralogs.
+    about 'routes' and paralogs.
     input: dataframe
     return: None
     """
@@ -253,7 +253,7 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Enable paralog selection
                               """))
-    optional.add_argument('--occupancy_with_paths', action='store_true',
+    optional.add_argument('--occupancy_with_routes', action='store_true',
                           help=textwrap.dedent("""\
                           Outputs a CSV file with information regarding the route in which potential 
                           orthologs were determined.
@@ -277,13 +277,15 @@ if __name__ == '__main__':
         os.mkdir(output_fold)
 
     t_dict, fnames = taxonomy_dict(args.metadata, args.input_metadata)
-    tab, paths = make_table(args.input)
-    res = table_with_paths(tab, paths)
+    tab, routes = make_table(args.input)
+    res = table_with_routes(tab, routes)
 
-    if args.occupancy_with_paths:
-        res.to_csv(f'{output_fold}/occupancy_with_paths.csv')
+    print(res)
+
+    if args.occupancy_with_routes:
+        res.to_csv(f'{output_fold}/occupancy_with_routes.csv')
     if args.paralog_selection:
-        stats_orgs_path(res)
+        stats_orgs_route(res)
     else:
         stats_orgs(res)
     stats_gene(res)

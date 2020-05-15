@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 import os
+import textwrap
+
 from ete3 import Tree
 from statistics import mean
 from Bio import SeqIO
-import argparse
+
+from phylofisher import help_formatter
 
 
 class Leaves:
@@ -62,16 +65,52 @@ class Matrix:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Fast taxon removal', usage="fast_tax_removal.py [OPTIONS]")
-    parser.add_argument('-t', '--tree', required=True)
-    parser.add_argument('-m', '--matrix', required=True)
-    parser.add_argument('-f', '--format', default='fasta', help='format of your matrix [default: fasta]')
-    parser.add_argument('-o', '--output_folder')
-    parser.add_argument('-i', '--iterations', required=True, type=int)
-    parser.add_argument('-c', '--chunk_size', default=1, type=int)
-    args = parser.parse_args()
+    description = 'Removes the fastest evolving taxa, based on branch length.'
+    parser, optional, required = help_formatter.initialize_argparse(name='fast_tax_removal.py',
+                                                                    desc=description,
+                                                                    usage='fast_tax_removal.py [OPTIONS] '
+                                                                          '-t <tree> '
+                                                                          '-m <matrix> '
+                                                                          '-i <num_of_iterations>')
+    # Required Arguments
+    required.add_argument('-m', '--matrix', required=True, type=str, metavar='matrix',
+                          help=textwrap.dedent("""\
+                                          Path to input matrix.
+                                          """))
+    required.add_argument('-t', '--tree', required=True, type=str, metavar='tree',
+                          help=textwrap.dedent("""\
+                                              Path to input tree.
+                                              """))
+    required.add_argument('-i', '--iterations', metavar='N', type=int, required=True,
+                          help=textwrap.dedent("""\
+                                              Number of iterations
+                                              """))
+
+    # Optional Arguments
+    optional.add_argument('-in_format', metavar='<format>', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                                          Input matrix format if not FASTA.
+                                          Options: fasta, phylip (names truncated at 10 characters), 
+                                          phylip-relaxed (names are not truncated), or nexus.
+                                          Default: fasta
+                                          """))
+    # optional.add_argument('-out_format', metavar='<format>', type=str, default='fasta',
+    #                       help=textwrap.dedent("""\
+    #                                   Desired output format.
+    #                                   Options: fasta, phylip (names truncated at 10 characters),
+    #                                   phylip-relaxed (names are not truncated), or nexus.
+    #                                   Default: fasta
+    #                                   """))
+
+    optional.add_argument('-c', '--chunk_size', metavar='N', type=int, default=1,
+                          help=textwrap.dedent("""\
+                                                  Number of iterations
+                                                  Default: 1
+                                                  """))
+
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     tree = Tree(args.tree)
     x = Leaves(tree)
-    m = Matrix(args.matrix, args.format, x.org_speed())
+    m = Matrix(args.matrix, args.in_format, x.org_speed())
     m.generate_subset(args.output_folder, args.iterations, args.chunk_size)
