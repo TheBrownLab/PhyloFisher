@@ -5,10 +5,9 @@ import random
 import string
 import subprocess
 import shutil
-import argparse
+import sys
 import textwrap
 from glob import glob
-from tempfile import NamedTemporaryFile
 from collections import defaultdict, Counter
 from Bio import SeqIO
 import re
@@ -16,52 +15,33 @@ import re
 from phylofisher import help_formatter
 
 
-def check_ortho_taxa():
-    tempfile = NamedTemporaryFile(mode='w', delete=False)
-    # Creates set of taxa in orthologs dir
+def get_ortho_taxa():
+    """
+    Returns unique set of taxa in orthologs dir
+    """
     unique_orgs_orthos = set()
-    files = os.listdir('./orthologs')
+    files = glob('orthologs/*.fas')
     for file in files:
-        file = os.path.join('./orthologs', file)
-        with open(file, 'r') as infile, tempfile:
-            for line in infile:
-                line = line.strip()
-                if line.startswith('>'):
-                    name = line[1:]
-                    # Replaces @'s and ..'s in FASTA headers with _'s
-                    if '@' in name:
-                        name = name.replace('@', '_')
-                    if '..' in name:
-                        name = name.replace('..', '_')
-                    tempfile.write(f'>{name}\n')
-                else:
-                    tempfile.write(line + '\n')
-                unique_orgs_orthos.add(name)
-        # Overwrite old file with new file with new headers
-        shutil.move(tempfile.name, file)
+        with open(file, 'r') as infile:
+            records = SeqIO.parse(infile, 'fasta')
+            for record in records:
+                unique_orgs_orthos.add(record.name)
 
-        return unique_orgs_orthos
+    return unique_orgs_orthos
 
 
-def check_meta_taxa():
-    # Creates set of taxa in metadata
-    tempfile = NamedTemporaryFile(mode='w', delete=False)
+def get_meta_taxa():
+    """
+    Returns unique set of taxa in metadata
+    """
     unique_orgs_meta = set()
-    with open('metadata.tsv', 'r') as csvfile, tempfile:
+    with open('metadata.tsv', 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
-        writer = csv.writer(tempfile, delimiter='\t')
         for row in reader:
-            if row[0] == 'Name in Dataset':
+            if row[0] == 'Unique ID':
                 continue
-            if '@' in row[0]:
-                row[0] = row[0].replace('@', '_')
-            if '..' in row[0]:
-                row[0] = row[0].replace('..', '_')
             unique_orgs_meta.add(row[0])
-            writer.writerow(row)
-    # Overwrite old file with new file with new headers
-    shutil.move(tempfile.name, 'metadata.tsv')
-
+    print(len(unique_orgs_meta))
     return unique_orgs_meta
 
 
@@ -72,8 +52,8 @@ def check_taxa():
 
     :return: None
     """
-    unique_orgs_orthos = check_ortho_taxa()
-    unique_orgs_meta = check_meta_taxa()
+    unique_orgs_orthos = get_ortho_taxa()
+    unique_orgs_meta = get_meta_taxa()
 
     # Exits if there are differences and prints those differences
     if len(unique_orgs_meta - unique_orgs_orthos) > 0 or len(unique_orgs_orthos - unique_orgs_meta) > 0:
@@ -85,7 +65,7 @@ def check_taxa():
             print(f'Taxa in orthlog dir but not in metadata:')
             for org in (unique_orgs_orthos - unique_orgs_meta):
                 print(org)
-        os.sys.exit()
+        sys.exit()
 
 
 def id_generator(size=5, chars=string.digits):
@@ -106,32 +86,6 @@ def paralog_name(abbrev, keys):
         return pname
     else:
         paralog_name(abbrev, keys)
-
-
-def check_paralogs():
-    """
-    Checks formatting of headers in paralog files, and appends "..pNNNNN" to header if not already present
-    """
-    tempfile = NamedTemporaryFile(mode='w', delete=False)
-    # Creates set of taxa in orthologs dir
-    unique_orgs_orthos = set()
-    files = os.listdir('./paralogs')
-    id_set = set()
-
-    for file in files:
-        file = os.path.join('./paralogs', file)
-        with open(file, 'r') as infile, tempfile:
-            for line in infile:
-                if line.startswith('>'):
-                    name = line.strip()[1:]
-                    if re.search(r'\.\.p{5}\d', name):
-                        id_set.add(name[-5:])
-                    else:
-                        name = paralog_name(name, id_set)
-                        id_set.add(name[-5:])
-                    tempfile.write(f'{name}\n')
-                else:
-                    tempfile.write(line + '\n')
 
 
 def prepare_diamond_input():
@@ -199,21 +153,22 @@ def get_og_file(threshold):
     with open('orthomcl/gene_og', 'w') as res:
         for gene, ogs in gene_filtered_ogs.items():
             res.write(f'{gene}\t{",".join(ogs)}\n')
-    # os.remove('diamond.res')
-    # os.remove('for_diamond.fasta')
+    os.remove('diamond.res')
+    os.remove('for_diamond.fasta')
 
 
 def concat_gene_files():
     files = glob('*.fas')
+    print(files)
     print()
-    for file in files:
-        with open(file, 'r') as infile, open('datasetdb.fasta', 'w') as outfile:
-            for line in infile:
-                line = line.strip()
-                if line.startswith('>'):
-                    gene = ''.join(os.path.basename(file).split(".")[:-1])
-                    line = f'{line}@{gene}'
-                outfile.write(f'{line}\n')
+    with open('datasetdb.fasta', 'w') as outfile:
+        for file in files:
+            with open(file, 'r') as infile:
+                for line in infile:
+                    line = line.strip()
+                    if line.startswith('>'):
+                        line = f'>{os.path.basename(file)}'
+                    outfile.write(f'{line}\n')
 
 
 def datasetdb():
@@ -225,7 +180,7 @@ def datasetdb():
     os.chdir('../datasetdb')
     dmd_db = 'diamond makedb --in datasetdb.fasta -d datasetdb'
     subprocess.run(dmd_db, shell=True)
-    os.remove('datasetdb.fasta')
+    # os.remove('datasetdb.fasta')
     os.chdir('..')
 
 
@@ -266,8 +221,6 @@ def main(threads, no_og_file, threshold):
     # it if not
     if os.path.isdir('paralogs') is False:
         os.mkdir('paralogs')
-    else:
-        check_paralogs()
 
     datasetdb()  # creates datasetdb
 
