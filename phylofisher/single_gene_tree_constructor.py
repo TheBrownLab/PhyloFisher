@@ -39,12 +39,6 @@ def delete_gaps_stars(root):
             res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
 
 
-def add_length(root, length):
-    """Adds length to the file name"""
-    os.rename(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
-              f'{args.output}/RAxML/RAxML_bipartitions.{root}_{length}.tre')
-
-
 def x_to_dash(file):
     """Replaces X's in alignments with -'s"""
     file_name = f'{os.path.basename(file).split(".")[0]}.pre_bmge'
@@ -71,16 +65,15 @@ def good_length(trimmed_aln, threshold):
                 length = len(record.seq)
             coverage = len(str(record.seq).replace('-', '').replace('X', '')) / len(record.seq)
             if coverage > threshold:
-                res.write(f'>{record.description}_{round(coverage, 2)}\n{full_proteins[record.name]}\n')
+                res.write(f'>{record.description}\n{full_proteins[record.name]}\n')
             else:
                 print('deleted:', record.name, coverage)
-    return length
 
 
 def mk_checkpoint_tmp(files):
     if os.path.isfile(f'checkpoint.tmp') is False:
         with open(f'checkpoint.tmp', 'w') as outfile:
-            header = 'taxon,prequal,mafft1,divvier1,bmge,mafft2,divvier2,trimal,raxml,length\n'
+            header = 'taxon,prequal,mafft1,divvier1,bmge,mafft2,divvier2,trimal,raxml\n'
             outfile.write(header)
             for file in files:
                 outfile.write(f'{file}{9 * ",0"}\n')
@@ -99,11 +92,11 @@ def get_checkpoints():
     return checks
 
 
-def update_checkpoints(root, prog, length=None):
+def update_checkpoints(root, prog):
     filename = f'{args.output}/checkpoint.tmp'
     tempfile = NamedTemporaryFile(mode='w', delete=False)
 
-    fields = ['taxon', 'prequal', 'mafft1', 'divvier1', 'bmge', 'mafft2', 'divvier2', 'trimal', 'raxml', 'length']
+    fields = ['taxon', 'prequal', 'mafft1', 'divvier1', 'bmge', 'mafft2', 'divvier2', 'trimal', 'raxml']
 
     with open(filename, 'r') as csvfile, tempfile:
         reader = csv.DictReader(csvfile, fieldnames=fields)
@@ -111,14 +104,12 @@ def update_checkpoints(root, prog, length=None):
         # Writes header to the output file
         writer.writerow(next(reader))
         for row in reader:
-            if length:
-                row['length'] = length
             if row['taxon'] == str(root):
                 row[prog] = 1
             row = {'taxon': row['taxon'], 'prequal': row['prequal'], 'mafft1': row['mafft1'],
                    'divvier1': row['divvier1'], 'bmge': row['bmge'], 'mafft2': row['mafft2'],
-                   'divvier2': row['divvier2'], 'trimal': row['trimal'], 'raxml': row['raxml'],
-                   'length': row['length']}
+                   'divvier2': row['divvier2'], 'trimal': row['trimal'], 'raxml': row['raxml']
+                   }
             writer.writerow(row)
     shutil.move(tempfile.name, filename)
 
@@ -126,8 +117,6 @@ def update_checkpoints(root, prog, length=None):
 def prepare_analyses(checks, root):
     threads = int(args.threads / file_count)
     checks = checks[root]
-
-    length = int(checks[8])
 
     for i, check in enumerate(checks):
         # prequal
@@ -173,8 +162,8 @@ def prepare_analyses(checks, root):
             # BMGE
             status = bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
             if status:
-                length = good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
-                update_checkpoints(root, 'bmge', length=length)
+                good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
+                update_checkpoints(root, 'bmge')
             else:
                 break
 
@@ -218,13 +207,15 @@ def prepare_analyses(checks, root):
             else:
                 break
 
-        elif not args.no_tree and i == 8 and length > 0:
-            add_length(root, length)
+        elif not args.no_tree and i == 8:
+            # add_length(root, length)
             mkdir_and_cd(f'{args.output}/trees')
-            shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}_{length}.tre',
-                        f'{args.output}/trees/RAxML_bipartitions.{root}_{length}.tre')
+            shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
+                        f'{args.output}/trees/RAxML_bipartitions.{root}.tre')
             shutil.copy(f'{args.output}/trimal/{root}.final',
                         f'{args.output}/trees/{root}.final')
+            shutil.copy(f'{args.output}/length_filtration/bmge/{root}.bmge',
+                        f'{args.output}/trees/{root}.trimmed')
 
     return root, checks
 
