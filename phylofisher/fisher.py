@@ -570,23 +570,34 @@ if __name__ == '__main__':
 
     optional.add_argument('-t', '--threads', type=int, metavar='N', default=1,
                           help=textwrap.dedent("""\
-                        Number of threads, where N is an integer.
-                        Default: 1
-                        """))
-    optional.add_argument('-n', '--max_hits', type=int, metavar='N',
+                          Number of threads, where N is an integer.
+                          Default: 1
+                          """))
+    optional.add_argument('-n', '--max_hits', type=int, metavar='N', default=5,
                           help=textwrap.dedent("""\
-                        Max number of hits to check, where N is an interger. 
-                        Default: 5
-                        """))
+                          Max number of hits to check, where N is an interger.
+                          Default: 5
+                          """))
     optional.add_argument('--keep_tmp', action='store_true',
                           help=textwrap.dedent("""\
-                        Keep temporary files
-                        """))
+                          Keep temporary files
+                          """))
     optional.add_argument('--add', metavar='<inputfile>',
                           help=textwrap.dedent("""\
-                        Input file (different from original one in config.ini) only with new organisms.
-                        """))
+                          Input file (different from original one in config.ini) only with new organisms.
+                          Requires --add_to option.
+                          """))
+    optional.add_argument('--add_to', metavar='<fisher_out>',
+                          help=textwrap.dedent("""\
+                          Previous output of fisher.py to add new organisms from a new input metadata.
+                          Requires --add option.
+                          """))
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+
+    if args.add and not args.add_to:
+        parser.error("--add requires --add_to.")
+    elif args.add_to and not args.add:
+        parser.error("--add_to requires --add.")
 
     # dataset folder
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
@@ -597,6 +608,7 @@ if __name__ == '__main__':
     if args.add:
         # uses additional input metadata file
         input_metadata = os.path.abspath(args.add)
+        args.output = os.path.abspath(args.add_to)
     else:
         # reads input metadata file from config
         input_metadata = os.path.abspath(config['PATHS']['input_file'])
