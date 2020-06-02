@@ -221,7 +221,7 @@ def prepare_analyses(checks, root):
 
 
 if __name__ == '__main__':
-    description = 'description'
+    description = 'Aligns, trims, and builds single gene trees from unaligned gene files.'
     usage = 'single_gene_tree_constructor.py -i path/to/input/ [OPTIONS]'
     parser, optional, required = help_formatter.initialize_argparse(name='single_gene_tree_constructor.py',
                                                                     desc=description,
