@@ -21,6 +21,9 @@ plt.style.use('ggplot')
 
 
 def prepare_alignments(threads):
+    """
+    Prepare multiple sequence alignments from orthologs from the dataset.
+    """
     alignmnets_folder = str(Path(dfo, 'alignments'))
     if os.path.isdir(alignmnets_folder) == False:
         os.mkdir(alignmnets_folder)
@@ -32,6 +35,9 @@ def prepare_alignments(threads):
 
 
 def parse_query(alignment_file, queries_list):
+    """
+    Get query sequence (according to input queries) for a given gene. 
+    """
     gene = alignment_file.split('/')[-1].split('.')[0]
     ali_dict = {}
     n = 0
@@ -46,6 +52,9 @@ def parse_query(alignment_file, queries_list):
 
 
 def collect_queries(queries_list):
+    """
+    Collect query sequences which will be used for blast searches.
+    """
     with open('queries.fasta', 'w') as res:
         for file in glob(str(Path(dfo, f'alignments/*.aln'))):
             parsed_query = parse_query(file, queries_list)
@@ -54,6 +63,9 @@ def collect_queries(queries_list):
 
 
 def blastDB_tblastn(trans, threads, evalue):
+    """
+    Make blastdb and perform tblastn with queries from the dataset against given transcriptome.
+    """
     subprocess.call(f'makeblastdb -in {trans} -dbtype nucl',
                     shell=True)
     subprocess.call(f'tblastn -query queries.fasta -db {trans} -num_threads {threads} \
@@ -61,6 +73,9 @@ def blastDB_tblastn(trans, threads, evalue):
 
 
 def read_transcriptome(transcriptome):
+    """
+    Parse transcriptome as a dictionary.
+    """
     result_dict = {}
     for sequence in SeqIO.parse(transcriptome, 'fasta'):
         result_dict[sequence.name] = sequence.seq
@@ -68,6 +83,10 @@ def read_transcriptome(transcriptome):
 
 
 def alignment_parsing(alignment_file, query_n):
+    """
+    Read multiple sequence aligment and keep information about alignment
+    and true positions for all positions for a givne query sequence.
+    """
     alignment = AlignIO.read(alignment_file, 'fasta')
     position_dict = defaultdict(list)
     aligment_position = 1
@@ -82,6 +101,18 @@ def alignment_parsing(alignment_file, query_n):
 
 
 def collect_counts(transcriptome, conservation_lvl):
+    """
+    For every blast record (every gene) check all good quality positions fron alignments
+    (avoid first 5 and last 5 amino acids from the alignment; check only
+    positions with less than 3 mismatches in their close proximity [-3:+4]) 
+    Query position opposite to good qulity position from transcriptome is investigated in
+    multiple sequence alignment (prepared only from orthologs from the dataset). In a case,
+    when some amino acid is conserved in more then conservation_lvl (70% by default) organims,
+    information about conserved amino acid is stored for a corresponding codon in investigated
+    transcriptome.
+    return: dict of codons and corresponding conserved amino acids dict[UAG] = [Q,Q,Q,E,Q,Q] 
+    """
+
     transcriptome_dict = {}
     for sequence in SeqIO.parse(transcriptome, 'fasta'):
         transcriptome_dict[sequence.name] = sequence.seq
@@ -108,7 +139,7 @@ def collect_counts(transcriptome, conservation_lvl):
                 hit_seq = str(hsp.sbjct)
                 query_seq = str(hsp.query)
                 middline = str(hsp.match)
-                positions = [i + 5 for i in range(len(hit_seq[5:-6]))]
+                positions = [i + 5 for i in range(len(hit_seq[5:-5]))]
                 for position in positions:
                     if "-" not in query_seq[position - 3:position + 4]:
                         if int(middline[position - 3:position + 4].count(' ')) < 3:
@@ -137,13 +168,16 @@ def collect_counts(transcriptome, conservation_lvl):
     return result_dict
 
 
-def genecode_plot(res_list_dict, all_codons):
+def genecode_plot(res_list_dict, all_codons, transcriptome):
+    """
+    Prepare bar plot for all codons which seem to differ from the standard  genetic code.
+    """
     std_code = CodonTable.unambiguous_dna_by_id[1].forward_table
     std_code['TAG'] = "*"
     std_code['TAA'] = "*"
     std_code['TGA'] = "*"
 
-    with PdfPages('result.pdf') as pdf:
+    with PdfPages(transcriptome + '.pdf') as pdf:
         AA_ = 'RHKDESTNQCGPAVILMFYW*'
 
         for codon, res_list in res_list_dict.items():
@@ -191,7 +225,9 @@ def main(args):
     blastDB_tblastn(transcriptome, args.threads, args.blast_evalue)
     print(f'{"=" * 20}\nCollecting information from conserved positions ...\n{"=" * 20}\n')
     stats = collect_counts(transcriptome, args.conserved)
-    genecode_plot(stats, args.all_codons)
+    genecode_plot(stats, args.all_codons, transcriptome)
+    if not args.keep_tmp:
+
 
 
 if __name__ == '__main__':
@@ -236,6 +272,11 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
             Plot conserved positions for all codons.
             """))
+
+    optional.add_argument('--keep_tmp', action='store_true',
+                          help=textwrap.dedent("""\
+                          Keep temporary files
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
