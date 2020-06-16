@@ -17,3 +17,5 @@ dist_est: $(OBJS)
 .f.o:
 	$(F77) $(FFLAGS) $($*-FFLAGS) -c $< -o $@
 
+clean :
+	-rm *.o dist_est
