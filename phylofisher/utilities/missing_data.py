@@ -2,8 +2,12 @@
 import argparse
 import os
 import shutil
+import sys
 import textwrap
 from collections import defaultdict
+from pathlib import Path
+import configparser
+
 from Bio import SeqIO
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -22,10 +26,10 @@ def parse_metadata():
     """
     groups = defaultdict(set)
     all_orgs = []
-    for line in open(args.metadata):
+    for line in open(metadata):
         if line.strip():
             if "Full Name" not in line:
-                org, _, group, subtax, _, _, _ = line.split('\t')
+                org, _, group, subtax, _, _ = line.split('\t')
                 groups[group].add(org)
                 groups[subtax].add(org)
                 all_orgs.append(org)
@@ -65,43 +69,51 @@ def parse_aligns():
     Output: dictionary with genes a keys and SeqIO iterator as values
     """
     files = [os.path.join(args.input, x) for x in os.listdir(args.input) if x.endswith(args.suffix)]
-    all_gene_records = {}
+    all_taxa_records = {}
     for file in files:
         gene = os.path.basename(file).split('.')[0]
-        records = SeqIO.parse(open(file, 'r'), 'fasta')
-        all_gene_records[gene] = records
+        with open(file, 'r') as infile:
+            for line in infile:
+                line = line.strip()
+                if line.startswith('>'):
+                    taxon = line[1:]
+                    if len(taxon.split('_')) == 4:
+                        taxon = taxon.split('_')[0]
 
-    return all_gene_records
+                    if taxon not in all_taxa_records.keys():
+                        all_taxa_records[taxon] = [gene]
+                    else:
+                        all_taxa_records[taxon].append(gene)
+
+    to_df = []
+    for taxon in all_taxa_records:
+        for gene in all_taxa_records[taxon]:
+            to_df.append([taxon, gene])
+
+    my_df = pd.DataFrame(to_df, columns=['Taxa', 'Gene'])
+    bin_mat = pd.crosstab(my_df.Taxa, my_df.Gene)
+
+    return bin_mat
 
 
 def completeness():
     """
     Comptutes completeness of genes based on either all taxa or a set of taxa provided by user
     """
+    matrix = parse_aligns()
     if args.taxa:
         possible_orgs = parse_taxa_list()
     else:
         _, possible_orgs = parse_metadata()
 
-    gene_count = defaultdict(int)
-    gene_comp = defaultdict(float)
-    gene_records = parse_aligns()
-    my_orgs = set()
+    taxa_count, gene_count = matrix.shape
+    gene_comp = matrix.sum().divide(other=taxa_count)
+    taxa_comp = matrix.sum(axis=1).divide(other=gene_count)
 
-    for gene in gene_records:
-        for record in gene_records[gene]:
-            if record.id in possible_orgs:
-                gene_count[gene] += 1
-                my_orgs.add(record.id)
-
-    for gene in gene_count:
-        gene_comp[gene] = gene_count[gene] / len(my_orgs)
-
-    df = pd.DataFrame.from_dict(gene_comp, orient='index', columns=["% complete"])
-    return df, my_orgs
+    return gene_comp, taxa_comp
 
 
-def make_plot(df, plot_name, taxa_count):
+def make_gene_plot(df, plot_name, taxa_count):
     """
     Creates a plot of gene completeness. Plot is a bar chart with genes sorted from highest to lowest completeness on
         the x-axis and percent complete on the y-axis. Completeness is calculated as percent of taxa the gene is present
@@ -146,7 +158,8 @@ def make_plot(df, plot_name, taxa_count):
         if i == 0:
             label_str = f'Completeness ≥ {round(x * 100)}% ({threshold_counts[colors_threshold[x]]} Genes)'
         else:
-            label_str = f'{round(x * 100)}% ≤ Completeness < {round((x + 0.1) * 100)}% ({threshold_counts[colors_threshold[x]]} Genes)'
+            label_str = (f'{round(x * 100)}% ≤ Completeness < {round((x + 0.1) * 100)}%'
+                         f' ({threshold_counts[colors_threshold[x]]} Genes)')
         legend_data.append(mpatches.Patch(color=colors_threshold[x],
                                           label=label_str))
 
@@ -199,9 +212,9 @@ def genes_to_keep(df):
 
 
 def subsetter(df):
-    if os.path.exists(args.output):
-        shutil.rmtree(args.output)
-    os.makedirs(args.output)
+    if os.path.exists(subset_dir):
+        shutil.rmtree(subset_dir)
+    os.makedirs(subset_dir)
 
     genes = genes_to_keep(df)
     files = [os.path.join(args.input, x) for x in os.listdir(args.input) if x.endswith(args.suffix)]
@@ -209,44 +222,64 @@ def subsetter(df):
         for file in files:
             if gene == os.path.basename(file).split('.')[0]:
                 src = file
-                dest = f'{args.output}/{os.path.basename(file)}'
+                dest = f'{subset_dir}/{os.path.basename(file)}'
                 shutil.copy(src, dest)
 
 
 if __name__ == '__main__':
-    description = 'Script for ortholog fishing.'
+    description = 'Subsets gene based on gene completeness.'
     parser, optional, required = help_formatter.initialize_argparse(name='missing_data.py',
                                                                     desc=description,
                                                                     usage='missing_data.py '
-                                                                          '[OPTIONS] -i <input> -m <metadata> '
-                                                                          '{-n <gene_number> | -c <percent_complete>}')
+                                                                          '[OPTIONS] -i <input>')
 
-    # Mutually Exclusive Arguments
-    optional.add_argument('-n', '--gene_number', type=int, metavar='<N>',
-                          help=textwrap.dedent("""\
-                                  Number of genes for analysis
-                                  """))
-    optional.add_argument('-c', '--percent_complete', type=float, metavar='<N>',
-                          help=textwrap.dedent("""\
-                                  Threshold for percent missing
-                                  """))
     # Optional Arguments
-
     optional.add_argument('-t', '--taxa', metavar='<taxa.tsv>',
                           help=textwrap.dedent("""\
-                                  TSV file of taxa to be considered for completeness.
-                                  Default is all taxa
-                                  """))
-    optional.add_argument('-p', '--plot', metavar='taxa_completeness.pdf',
+                          TSV file of taxa to be considered for completeness.
+                          Default is all taxa
+                          """))
+    optional.add_argument('--subset', action='store_true',
                           help=textwrap.dedent("""\
-                                  Plot missing data statistics.
-                                  Default: out.pdf
-                                  """))
+                          Subset input genes
+                          """))
+    optional.add_argument('-n', '--gene_number', type=int, metavar='<N>',
+                          help=textwrap.dedent("""\
+                          Number of genes in subset.
+                          This will be ignored if not used with --subset.
+                          Cannot be used with percent_complete.
+                          """))
+    optional.add_argument('-c', '--percent_complete', type=float, metavar='<N>',
+                          help=textwrap.dedent("""\
+                          Threshold for percent missing when subsetting.
+                          This will be ignored if not used with --subset.
+                          Cannot be used with gene_number.
+                          """))
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+    args = help_formatter.get_args(parser, optional, required)
+
+    if args.subset and args.gene_number and args.percent_complete:
+        parser.error("--subset requires either --gene_number or --percent_complete NOT both.")
+    elif args.subset and (not args.gene_number or not args.percent_complete):
+        parser.error("--subset requires either --gene_number or --percent_complete.")
+
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    metadata = f'{dfo}/metadata.tsv'
+
+    if os.path.isdir(args.output) is False:
+        os.mkdir(args.output)
 
     completeness_df, taxa = completeness()
-    if args.plot:
-        make_plot(completeness_df, args.plot, len(taxa))
 
-    subsetter(df=completeness_df)
+    # plot_name = f'{args.output}/out'
+    #
+    # make_gene_plot(completeness_df, plot_name, len(taxa))
+    #
+    # if args.subset:
+    #     if args.gene_number:
+    #         subset_dir = f'{args.output}/subset_n{args.gene_number}'
+    #     else:
+    #         subset_dir = f'{args.output}/subset_c{args.percent_complete}'
+    #     subsetter(df=completeness_df)
