@@ -541,7 +541,7 @@ def get_reciprocal_hits():
     for line in open('tmp/dataset_diamond.res'):
         sline = line.split("\t")
         full_name = sline[0]
-        sequence, gene = full_name.split('@')
+        sequence, gene = full_name.split('@') # do we need this line??
         sequence = sequence[:-4]
         if sequence not in proccesed:
             proccesed.add(sequence)

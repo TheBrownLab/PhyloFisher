@@ -1,6 +1,7 @@
 .idea/
 PhyloFisher.egg-info/
 build/
+paper/
 dist/
 phylofisher/__pycache__/
 phylofisher/utilities/__pycache__/
