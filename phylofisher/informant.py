@@ -249,9 +249,9 @@ if __name__ == '__main__':
                                                                     usage='informant.py -i input_folder [OPTIONS]')
 
     # Optional Arguments
-    optional.add_argument('--paralog_selection', action='store_true',
+    optional.add_argument('--orthologs_only', action='store_true',
                           help=textwrap.dedent("""\
-                          Enable paralog selection
+                          Paralogs will NOT be considered.
                               """))
     optional.add_argument('--occupancy_with_routes', action='store_true',
                           help=textwrap.dedent("""\
@@ -284,8 +284,8 @@ if __name__ == '__main__':
 
     if args.occupancy_with_routes:
         res.to_csv(f'{output_fold}/occupancy_with_routes.csv')
-    if args.paralog_selection:
-        stats_orgs_route(res)
-    else:
+    if args.orthologs_only:
         stats_orgs(res)
+    else:
+        stats_orgs_route(res)
     stats_gene(res)
