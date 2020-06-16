@@ -1,6 +1,6 @@
 package:
   name: phylofisher
-  version: 0.1
+  version: 0.1.14
 
 source:
   path: ../../
@@ -16,25 +16,27 @@ requirements:
     - setuptools
 
   run:
+    # Python Deps
     - python=3.7
-    - trimal
-    - raxml
-    - biopython
-    - hmmer
-    - pyqt
-    - ete3
-    - diamond
-    - pandas
-    - matplotlib
-    - fasttree
-    - blast
-    - cd-hit
-    - mafft
-    - divvier
-    - bmge
-    - prequal
-    - dist_est
+    - biopython=1.76
+    - pyqt=5.9.2
+    - ete3=3.1.1
+    - pandas=1.0.1
+    - matplotlib=3.1.3
+    # NON-Python Deps
+    - trimal=1.4.1
+    - raxml=8.2.12
+    - hmmer=3.3
+    - diamond=0.9.30
+    - fasttree=2.1.10
+    - blast=2.9.0
+    - cd-hit=4.8.1
+    - mafft=7.455
+    - divvier=1.01
+    - bmge=1.12
+    - prequal=1.02
+    - dist_est=1.1
 
 about:
-  summary: This is a simple meta-package
+  summary: PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic datasets that consist of protein sequences from eukaryotic organisms.
   license: MIT
