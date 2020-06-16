@@ -1,0 +1,1139 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>phylofisher package &#8212; PhyloFisher 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phylofisher.utilities package" href="phylofisher.utilities.html" />
+    <link rel="prev" title="phylofisher" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phylofisher-package">
+<h1>phylofisher package<a class="headerlink" href="#phylofisher-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="phylofisher.utilities.html">phylofisher.utilities package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.SR4_class_recoder">phylofisher.utilities.SR4_class_recoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.aa_comp_calculator">phylofisher.utilities.aa_comp_calculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.bipartition_examiner">phylofisher.utilities.bipartition_examiner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.fast_site_removal">phylofisher.utilities.fast_site_removal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.fast_tax_removal">phylofisher.utilities.fast_tax_removal module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.genetic_code">phylofisher.utilities.genetic_code module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.heterotachy">phylofisher.utilities.heterotachy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.missing_data">phylofisher.utilities.missing_data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.random_sample_iteration">phylofisher.utilities.random_sample_iteration module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities.taxon_collapser">phylofisher.utilities.taxon_collapser module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phylofisher.utilities.html#module-phylofisher.utilities">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phylofisher.build_dataset">
+<span id="phylofisher-build-dataset-module"></span><h2>phylofisher.build_dataset module<a class="headerlink" href="#module-phylofisher.build_dataset" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.build_dataset.check_taxa">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">check_taxa</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.check_taxa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks to see if all taxa in metadata is in ortholog dir and vice-versa. If there are differences the script exits
+here and prints the discrepancies. Also replaces &#64;’s and ..’s with _’s if present in the UniqueID</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.concat_gene_files">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">concat_gene_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.concat_gene_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.datasetdb">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">datasetdb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.datasetdb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.diamond">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">diamond</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.diamond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses for_diamond.fasta to diamond orthomcl.diamonddb</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.get_meta_taxa">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">get_meta_taxa</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.get_meta_taxa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unique set of taxa in metadata</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.get_og_file">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">get_og_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threshold</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.get_og_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.get_ortho_taxa">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">get_ortho_taxa</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.get_ortho_taxa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unique set of taxa in orthologs dir</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.id_generator">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">id_generator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">chars</span><span class="o">=</span><span class="default_value">'0123456789'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.id_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Generate random number with 5 digits.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.main">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threads</span></em>, <em class="sig-param"><span class="n">no_og_file</span></em>, <em class="sig-param"><span class="n">threshold</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.main" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threads</strong> – number of threads</p></li>
+<li><p><strong>make_og_file</strong> – Boolean</p></li>
+<li><p><strong>threshold</strong> – float 0-1</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.make_profiles">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">make_profiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threads</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.make_profiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares hmm profiles from all fasta files with orthologs
+from orthologs folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threads</strong> – number of threads</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.paralog_name">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">paralog_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">abbrev</span></em>, <em class="sig-param"><span class="n">keys</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.paralog_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Prepare paralog name (short name + 5 random digits).
+Recursive function.
+example: Homosap..12345
+input: short name of an organism, names of already existing paralogs
+for a given organism
+return: unique paralog name</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.parse_diamond_output">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">parse_diamond_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.parse_diamond_output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.build_dataset.prepare_diamond_input">
+<code class="sig-prename descclassname">phylofisher.build_dataset.</code><code class="sig-name descname">prepare_diamond_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.build_dataset.prepare_diamond_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares seqs for diamond in a way that it connects
+information about gene before sequence name.
+Example: Allomacr from ADK2.fas will be named
+<a class="reference external" href="mailto:ADK2&#37;&#52;&#48;Allomacr">ADK2<span>&#64;</span>Allomacr</a> at the for_diamond.fasta file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.config">
+<span id="phylofisher-config-module"></span><h2>phylofisher.config module<a class="headerlink" href="#module-phylofisher.config" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phylofisher.fisher">
+<span id="phylofisher-fisher-module"></span><h2>phylofisher.fisher module<a class="headerlink" href="#module-phylofisher.fisher" title="Permalink to this headline">¶</a></h2>
+<p>Script for finding candidate orthologous sequences
+input: predicted proteins, input metadata
+output: fasta files with predicted candidate orthologous sequences</p>
+<dl class="py class">
+<dt id="phylofisher.fisher.Hit">
+<em class="property">class </em><code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">Hit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">seq</span></em>, <em class="sig-param"><span class="n">query</span></em>, <em class="sig-param"><span class="n">hmm_hits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.Hit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents candidate hit.</p>
+<p>attributes:
+- query: refers to a gene
+- <a href="#id5"><span class="problematic" id="id6">path_</span></a>: refers to ‘SBH’ - specific query best hit</p>
+<blockquote>
+<div><dl class="simple">
+<dt>‘BBH’ - best blast hit (doesnt cluster with</dt><dd><p>expected taxonomical group)</p>
+</dd>
+</dl>
+<p>‘HMM’ - selected just according to Hmmsearch</p>
+</div></blockquote>
+<ul>
+<li><dl>
+<dt>quality: q1,q2…qn refers to position in blast/hmmsearch</dt><dd><p>quality also contains ‘r’ or ‘n’ after number
+which mean reciprocal and nonreciprocal best blast hit
+example: q1r means best blast/hmmer hit (depends on <a href="#id7"><span class="problematic" id="id8">path_</span></a>)</p>
+<blockquote>
+<div><p>which is also reciprocal best blast hit to query
+gene in our database</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py method">
+<dt id="phylofisher.fisher.Hit.in_hmm_hits">
+<code class="sig-name descname">in_hmm_hits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.Hit.in_hmm_hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controls if hit in also in hmmer hits</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="phylofisher.fisher.Query">
+<em class="property">class </em><code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">Query</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query</span></em>, <em class="sig-param"><span class="n">hmm_hits</span></em>, <em class="sig-param"><span class="n">infile_proteins</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.Query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents phylogeneticaly not specific query (only hmmsearch)</p>
+<p>attributes:
+- query: refers to a gene
+- squery: always False, not a sprcific query (fix it)</p>
+<dl class="py method">
+<dt id="phylofisher.fisher.Query.hits">
+<code class="sig-name descname">hits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.Query.hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>parse all hmmerhits as Hit objets
+result is a generator producing one hit at a time</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="phylofisher.fisher.SpecQuery">
+<em class="property">class </em><code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">SpecQuery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query</span></em>, <em class="sig-param"><span class="n">spec_queries</span></em>, <em class="sig-param"><span class="n">hmm_hits</span></em>, <em class="sig-param"><span class="n">infile_proteins</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.SpecQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents phylogeneticaly specific query.</p>
+<p>attributes:
+- query: refers to a gene
+- organisms: organisms from which blast queries should be selected.</p>
+<dl class="py method">
+<dt id="phylofisher.fisher.SpecQuery.get_specific_query">
+<code class="sig-name descname">get_specific_query</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.SpecQuery.get_specific_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns seed blast sequence from selected specific queries(organisms).
+When target gene is not present in the first organism (first in the list) it
+will check next one.
+Returns: - org name and set seed sequence for blast as self.seq
+if gene is present in self.organisms or None</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="phylofisher.fisher.SpecQuery.hits">
+<code class="sig-name descname">hits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.SpecQuery.hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator function which return Hit objects prioritized by blast search
+when some specific query is present or prioritized by hmmsearch</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="phylofisher.fisher.SpecQuery.spec_query_blast">
+<code class="sig-name descname">spec_query_blast</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.SpecQuery.spec_query_blast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Blast against sample with sequence selected according to spec queries.
+Returns: list with ordered best blast hits.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.additions_to_input">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">additions_to_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.additions_to_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends additional input to original input metadata</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.bac_gog_db">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">bac_gog_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.bac_gog_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses bacterial names and gene: orthogroup/df from orthomcl.</p>
+<p>returns tuple with ls of [bacterial names] and {gene: orthogtoup/df} dir</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.best_hits">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">best_hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_hits</span></em>, <em class="sig-param"><span class="n">gene</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.best_hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects candidates(hits) up to max_hits.
+Candidates have to be in hmm_hits</p>
+<p>returns: tuple with gene name and list with candidates names</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.check_input">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">check_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.check_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks input metadata file for possible mistakes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.cluster_rename_sequences">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">cluster_rename_sequences</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.cluster_rename_sequences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clusters sequences in input fasta file for given organism
+and rename every sequence with shortname_number</p>
+<p>returns: abs path to the file with clustered and renamed sequences</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.correct_phylo_group">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">correct_phylo_group</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">sample_taxomomy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.correct_phylo_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.diamond">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">diamond</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.diamond" title="Permalink to this definition">¶</a></dt>
+<dd><p>executes diamond against orthomcl and datasetdb database</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.fasttree">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">fasttree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checked_hits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.fasttree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.get_candidates">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">get_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threads</span></em>, <em class="sig-param"><span class="n">max_hits</span></em>, <em class="sig-param"><span class="n">queries</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.get_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><p>pararellized best_hits function
+return list of tuples (gene:[candidate names],..)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.get_gene_dict">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">get_gene_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threads</span></em>, <em class="sig-param"><span class="n">infile_proteins</span></em>, <em class="sig-param"><span class="n">spec_queries</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.get_gene_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function prepare SpeqQeury or Query for all genes.
+Query type depends if spec_queries are specified in input metadata
+for a given organism.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.get_hmm_profiles">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">get_hmm_profiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.get_hmm_profiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses gene names.</p>
+<p>Returns: list with gene names</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.get_infile_proteins">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">get_infile_proteins</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.get_infile_proteins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses infile proteins.</p>
+<p>returns: dict {prot_name:seq}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.get_reciprocal_hits">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">get_reciprocal_hits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.get_reciprocal_hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if candidate is reciprocal best blast hit with gene</p>
+<p>returns: list with reciprocal hits</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.hmmer">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">hmmer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.hmmer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs hmmsearch with a given gene.</p>
+<p>returns: tuple with (gene_name, list of hmm hits [hmm1, hmm2 … hmmn]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.is_aa_seq">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">is_aa_seq</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.is_aa_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>check input gene files to make sure they are amino acid sequences and not nucletotide sequences</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.length_check">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">length_check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trimmed_aln</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.length_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns set of names of sequenes which have meaningful part
+(without X or -) longer than 30% of trimmed alignment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.makeblastdb">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">makeblastdb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.makeblastdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares blast database from sample input file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.makedirs">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">makedirs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.makedirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates output dictionaries tmp and fasta</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.new_best_hits">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">new_best_hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">candidate_hits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.new_best_hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Final function. Prepares fasta files with result sequences.
+In case of _SBH path also checks phylogenetic posisiton of hits
+by fasttree function</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.parallel_new_best_hits">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">parallel_new_best_hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene_hits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.parallel_new_best_hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just pararallel run of new_best_candidates</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.parse_diamond_output">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">parse_diamond_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.parse_diamond_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>checks if best hit from database is not bacterial or
+from wrong orthogroups</p>
+<p>returns: names of filtered hits with info about gene</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.phylofisher">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">phylofisher</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threads</span></em>, <em class="sig-param"><span class="n">max_hits</span></em>, <em class="sig-param"><span class="n">spec_queries</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.phylofisher" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.prepare_good_hits">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">prepare_good_hits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.prepare_good_hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares all hits for filtration. It filters everything which is
+not in correct hits (wrongs orthogroups or bacterial best diamond
+hit from orthomcl database)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fisher.taxonomy_dict">
+<code class="sig-prename descclassname">phylofisher.fisher.</code><code class="sig-name descname">taxonomy_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fisher.taxonomy_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses taxonomical group for all organisms from metadata.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.fishing_net">
+<span id="phylofisher-fishing-net-module"></span><h2>phylofisher.fishing_net module<a class="headerlink" href="#module-phylofisher.fishing_net" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.fishing_net.fasta_filtr">
+<code class="sig-prename descclassname">phylofisher.fishing_net.</code><code class="sig-name descname">fasta_filtr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">o_to_ex</span></em>, <em class="sig-param"><span class="n">paralogs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fishing_net.fasta_filtr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter fasta sequences with genes. Exludes organisms which should be 
+excluded (o_to_ex)
+input: fasta file with genes, set with orgs to exlude, paralogs=True/None
+result: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fishing_net.main">
+<code class="sig-prename descclassname">phylofisher.fishing_net.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fishing_net.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fishing_net.parse_genes">
+<code class="sig-prename descclassname">phylofisher.fishing_net.</code><code class="sig-name descname">parse_genes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene_file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fishing_net.parse_genes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select gene to exclude: where sgt column is not ‘yes’ 
+input: csv file with genes
+return: set of genes which should be exluded</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.fishing_net.parse_orgs">
+<code class="sig-prename descclassname">phylofisher.fishing_net.</code><code class="sig-name descname">parse_orgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">org_file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.fishing_net.parse_orgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse csv table for organisms selection
+input: csv file with organisms
+return: set of organisms to exclude, set of organisms
+for which we want to select paralogs</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.forest">
+<span id="phylofisher-forest-module"></span><h2>phylofisher.forest module<a class="headerlink" href="#module-phylofisher.forest" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.forest.backpropagate_contamination">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">backpropagate_contamination</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree_file</span></em>, <em class="sig-param"><span class="n">cont_names</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.backpropagate_contamination" title="Permalink to this definition">¶</a></dt>
+<dd><p>Changes status in all csv result tables for all proven contaminations
+to ‘d’ as delete.
+input: tree file, set of proven contaminations (same name format as in csv tables)
+result: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.collect_contaminations">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">collect_contaminations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree_file</span></em>, <em class="sig-param"><span class="n">cont_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.collect_contaminations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect name of all sequences where position on tree corresponds to expected place 
+for a contamination.
+input: tree file, contamination dict from parse_contaminations fucntion
+result: set of proven contaminations, set of proven contamination (same names as in csv result tables)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.collect_major_taxa">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">collect_major_taxa</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nonredundant_clades_</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.collect_major_taxa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect information about major taxonomic group for all nonreduntant clades
+and connect this information with all organisms in that clade. This function
+prepares data for plot_major_taxa function.
+input: set of nonredundant clades
+return: dictionary with orgs as keys and list of taxonomic groups (major tax groups
+from clades with a given organism) as values</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.configure_colors">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">configure_colors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.configure_colors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.expected_neighborhood">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">expected_neighborhood</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent</span></em>, <em class="sig-param"><span class="n">cont_key_rank</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.expected_neighborhood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively check if ornanisms around target has some taxonomical group 
+(not added in this run of fisher) and evaluete if target has expected 
+neighbourhood.
+input: parent node, (key, rank) =&gt; example: (Alveolata, group) or (Gonianon, org)
+output: True/False</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.format_leaves">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">format_leaves</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backpropagation</span></em>, <em class="sig-param"><span class="n">contaminations</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">node_style</span></em>, <em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">top_ranked</span></em>, <em class="sig-param"><span class="n">len_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.format_leaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function formats the leaves for the svg file and writes to tsv file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.format_nodes">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">format_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">node_style</span></em>, <em class="sig-param"><span class="n">sus_clades</span></em>, <em class="sig-param"><span class="n">t</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.format_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function visually formats the nodes in the svg file based on the nodes’ support values and whether or not
+the clade is suspicous</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.get_best_candidates">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">get_best_candidates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree_file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.get_best_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check best candidates after trimming.
+example: if q1 doesn’t survived -&gt; q2 is ranked as best candidate == ortholog
+input: tree file
+output: set of best candidate sequences</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.get_build_len">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">get_build_len</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name_</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.get_build_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.nonredundant">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">nonredundant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result_clades</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.nonredundant" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.org_in_add">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">org_in_add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backpropagation</span></em>, <em class="sig-param"><span class="n">contaminations</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">org</span></em>, <em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">top_ranked</span></em>, <em class="sig-param"><span class="n">len_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.org_in_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>for organisms that are in additions</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.ortho_from_meta">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">ortho_from_meta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backpropagation</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">node_style</span></em>, <em class="sig-param"><span class="n">org</span></em>, <em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">len_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.ortho_from_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>for orthologs from dataset</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.para_from_meta">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">para_from_meta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backpropagation</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">org</span></em>, <em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">len_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.para_from_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>for paralogs from metadata</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.parallel_susp_clades">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">parallel_susp_clades</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trees</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.parallel_susp_clades" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parallelizes the function suspicious_clades()</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.parse_contaminations">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">parse_contaminations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.parse_contaminations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse contamination file.
+example:
+==============================
+Pirisoci    Alveolata       group
+DiplDSTH    GoniavonGEN     org
+Fucucera    Ochrophyta      subtax
+==============================
+input: tab separated file with contaminations
+result: dictionary with organism as key and tuple with taxonomy</p>
+<blockquote>
+<div><p>and rank</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.parse_metadata">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">parse_metadata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metadata</span></em>, <em class="sig-param"><span class="n">input_metadata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.parse_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse metadata from dataset and input_metadata (if provided)
+input:  metadata csv file, input metadata csv file (optional)
+return: dictionary with combined metadata, dictionary with taxonomy: color</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.plot_major_taxa">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">plot_major_taxa</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">orgs_taxa</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.plot_major_taxa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot major taxonomic groups from clades (with a given org) for all organisms.
+input: result from collect_major_taxa function (dictionary with list as keys)
+return: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.suspicious_clades">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">suspicious_clades</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.suspicious_clades" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find suspicious clades (more than 70 bs and more than 2 tax groups)
+input: phylogenetic tree
+output: tuple of tree name and list of suspicious clades</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forest.tree_to_tsvg">
+<code class="sig-prename descclassname">phylofisher.forest.</code><code class="sig-name descname">tree_to_tsvg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tree_file</span></em>, <em class="sig-param"><span class="n">contaminations</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">backpropagation</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forest.tree_to_tsvg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.forge">
+<span id="phylofisher-forge-module"></span><h2>phylofisher.forge module<a class="headerlink" href="#module-phylofisher.forge" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.forge.bash">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">bash</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmd</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.bash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forge.delete_gaps_stars">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">delete_gaps_stars</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene</span></em>, <em class="sig-param"><span class="n">root</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.delete_gaps_stars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes -‘s and <a href="#id1"><span class="problematic" id="id2">*</span></a>’s from alignments</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forge.mk_and_cd_dir">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">mk_and_cd_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mydir</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.mk_and_cd_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forge.parallelize">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">parallelize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">files</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.parallelize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forge.parse_names">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">parse_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_folder</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.parse_names" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_folder</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forge.stats">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">stats</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">total_len</span></em>, <em class="sig-param"><span class="n">out_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.stats" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>total_len</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.forge.trim_and_align">
+<code class="sig-prename descclassname">phylofisher.forge.</code><code class="sig-name descname">trim_and_align</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.forge.trim_and_align" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.help_formatter">
+<span id="phylofisher-help-formatter-module"></span><h2>phylofisher.help_formatter module<a class="headerlink" href="#module-phylofisher.help_formatter" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="phylofisher.help_formatter.CustomHelpFormatter">
+<em class="property">class </em><code class="sig-prename descclassname">phylofisher.help_formatter.</code><code class="sig-name descname">CustomHelpFormatter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prog</span></em>, <em class="sig-param"><span class="n">indent_increment</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">max_help_position</span><span class="o">=</span><span class="default_value">24</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.help_formatter.CustomHelpFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">argparse.HelpFormatter</span></code></p>
+<p>This class changes the way the help ouput is displayed</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="phylofisher.help_formatter.MyHelpFormatter">
+<em class="property">class </em><code class="sig-prename descclassname">phylofisher.help_formatter.</code><code class="sig-name descname">MyHelpFormatter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prog</span></em>, <em class="sig-param"><span class="n">indent_increment</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">max_help_position</span><span class="o">=</span><span class="default_value">24</span></em>, <em class="sig-param"><span class="n">width</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.help_formatter.MyHelpFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phylofisher.help_formatter.CustomHelpFormatter" title="phylofisher.help_formatter.CustomHelpFormatter"><code class="xref py py-class docutils literal notranslate"><span class="pre">phylofisher.help_formatter.CustomHelpFormatter</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">argparse.RawTextHelpFormatter</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.help_formatter.add_global_arguments">
+<code class="sig-prename descclassname">phylofisher.help_formatter.</code><code class="sig-name descname">add_global_arguments</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parser</span></em>, <em class="sig-param"><span class="n">optional</span></em>, <em class="sig-param"><span class="n">required</span></em>, <em class="sig-param"><span class="n">in_help</span></em>, <em class="sig-param"><span class="n">out_help</span></em>, <em class="sig-param"><span class="n">inp</span></em>, <em class="sig-param"><span class="n">pre_suf</span></em>, <em class="sig-param"><span class="n">out_dir</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.help_formatter.add_global_arguments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to add argparse arguments used in all scripts</p>
+<dl class="simple">
+<dt>input: argparse group class instace “optional”</dt><dd><p>argparse group class instace “required”
+in_help = help messge output for input
+out_help = help messge output for output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.help_formatter.get_args">
+<code class="sig-prename descclassname">phylofisher.help_formatter.</code><code class="sig-name descname">get_args</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parser</span></em>, <em class="sig-param"><span class="n">optional</span></em>, <em class="sig-param"><span class="n">required</span></em>, <em class="sig-param"><span class="n">pre_suf</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">inp_dir</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">out_dir</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">in_help</span><span class="o">=</span><span class="default_value">'Path to input directory'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.help_formatter.get_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.help_formatter.initialize_argparse">
+<code class="sig-prename descclassname">phylofisher.help_formatter.</code><code class="sig-name descname">initialize_argparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">desc</span></em>, <em class="sig-param"><span class="n">usage</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.help_formatter.initialize_argparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function initialized argparse</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.informant">
+<span id="phylofisher-informant-module"></span><h2>phylofisher.informant module<a class="headerlink" href="#module-phylofisher.informant" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.informant.collect_names">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">collect_names</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">files</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.collect_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect all short names. Collest information about ‘route’
+for newly added sequences (BBH, SBH, HMM).
+input: fasta files with genes (from fisher)
+return: set of sorted shortnames; dictionary with genes 
+as a keys and deeper level dictionaries with shortnames of organisms 
+as keys and BBH or SBH or HMM as values</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.get_gene_column">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">get_gene_column</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene</span></em>, <em class="sig-param"><span class="n">names</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.get_gene_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect information about number of gene variants for all organisms.
+input: fasta file for a given gene
+return:  pd.Series with information about present(&gt;0)/absence(0) of a gene
+for all organisms. 
+example: Albugo: 3, Naegr: 0, …</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.make_table">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">make_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">folder</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.make_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect information about all genes as pd.Series and organize them
+into pd.DataFrame
+input: fodler with genes in fasta format
+return: pd.DataFrame with genes; dictionary with information about
+‘routes’ used for sequence selection (BBH, SBH, HMM)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.paralog_orgs">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">paralog_orgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.paralog_orgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect all shortnames for organisms with at least one paralog
+in the dataset.
+input: None
+return: set of short names of organisms with at leat one paralog</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.stats_gene">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">stats_gene</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.stats_gene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write basic summary for all genes to a file
+input: dataframe
+return: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.stats_orgs">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">stats_orgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.stats_orgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create csv file with basic summary about analyzed dataset without information
+about ‘routes’ and paralogs.
+input: dataframe
+return: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.stats_orgs_route">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">stats_orgs_route</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.stats_orgs_route" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Create csv file with basic summary about analyzed dataset with information</dt><dd><p>about used ‘routes’ (BBH, SBH, HMM) and paralogs.</p>
+</dd>
+</dl>
+<p>input: dataframe
+return: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.table_with_routes">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">table_with_routes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span></em>, <em class="sig-param"><span class="n">routes</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.table_with_routes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create occupancy table and add information about routes used for sequence
+selection (BBH, SBH, HMM) to input dataframe
+input: pd.DataFrame with information about all genes (present(&gt;0)/absent(0)) 
+for all organisms, dictionary with routes for all sequences
+output: modifiend input dataframe with information about route</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.informant.taxonomy_dict">
+<code class="sig-prename descclassname">phylofisher.informant.</code><code class="sig-name descname">taxonomy_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metadata</span></em>, <em class="sig-param"><span class="n">input_metadata</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.informant.taxonomy_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read metadata from dataset and input_metadata.
+input: metadata file, input metadata file (optional)
+return: dictionary with taxon: group; dictionary with
+full names</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.install_deps">
+<span id="phylofisher-install-deps-module"></span><h2>phylofisher.install_deps module<a class="headerlink" href="#module-phylofisher.install_deps" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.install_deps.bash">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">bash</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmd</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.bash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.download">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">download</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.download" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.extract">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">extract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.extract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_blast">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_blast</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_blast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_bmge">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_bmge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_bmge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_cd_hit">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_cd_hit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_cd_hit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_diamond">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_diamond</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_diamond" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_dist_est">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_dist_est</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_dist_est" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_divvier">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_divvier</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_divvier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_fasttree">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_fasttree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_fasttree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_hmmer">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_hmmer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_hmmer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_mafft">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_mafft</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_mafft" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_prequal">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_prequal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_prequal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_raxml">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_raxml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_raxml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.get_trimal">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">get_trimal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.get_trimal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.install_deps.is_in_path">
+<code class="sig-prename descclassname">phylofisher.install_deps.</code><code class="sig-name descname">is_in_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmd</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.install_deps.is_in_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks to see if command provided is in PATH already. If it is return True, if not returns False</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.lumberjack">
+<span id="phylofisher-lumberjack-module"></span><h2>phylofisher.lumberjack module<a class="headerlink" href="#module-phylofisher.lumberjack" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.lumberjack.add_to_meta">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">add_to_meta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">abbrev</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.add_to_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Transfer input metadata for a given organism
+to dataset metadata.
+input:  short name of organism
+return: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.collect_seqs">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">collect_seqs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.collect_seqs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect all sequences for a given gene from fasta folder (fisher result)
+and store them in a dictionary.
+input: gene name
+return: dictionary of all seqs for a given gene</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.dataset_orgs">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">dataset_orgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.dataset_orgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Collect all short names from dataset metadata table.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.get_fisher_dir">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">get_fisher_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.get_fisher_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the latest fisher output directory if there are more that one in the cwd. If only one return that one.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.id_generator">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">id_generator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">chars</span><span class="o">=</span><span class="default_value">'0123456789'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.id_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Generate random number with 5 digits.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.main">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function. Run new_database on all parsed trees (tsv files)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.new_database">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">new_database</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.new_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make changes in the PhyloFisher dataset according to information from
+parsed single gene tree.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.paralog_name">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">paralog_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">abbrev</span></em>, <em class="sig-param"><span class="n">keys</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.paralog_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Prepare paralog name (short name + 5 random digits).
+Recursive function.
+example: Homosap..12345
+input: short name of an organism, names of already existing paralogs
+for a given organism
+return: unique paralog name</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.parse_input">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">parse_input</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_metadata</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.parse_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Parse input metadata.
+input: input metadata csv
+return: dictionary with info about input metadata</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.parse_table">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">parse_table</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.parse_table" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Collect information what has to be changed in</dt><dd><p>the PhyloFisher dataset (for a given gene)
+according to information from
+parsed single gene tree.</p>
+</dd>
+</dl>
+<p>input: tsv table of one gene
+return: dictionaries of new orthologs and paralogs</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.lumberjack.taxa_to_exclude">
+<code class="sig-prename descclassname">phylofisher.lumberjack.</code><code class="sig-name descname">taxa_to_exclude</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.lumberjack.taxa_to_exclude" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.purge">
+<span id="phylofisher-purge-module"></span><h2>phylofisher.purge module<a class="headerlink" href="#module-phylofisher.purge" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.purge.delete_group_org">
+<code class="sig-prename descclassname">phylofisher.purge.</code><code class="sig-name descname">delete_group_org</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">orgs_</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">groups</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.purge.delete_group_org" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.purge.delete_homologs">
+<code class="sig-prename descclassname">phylofisher.purge.</code><code class="sig-name descname">delete_homologs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">org_set</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.purge.delete_homologs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.purge.fasta_cleaner">
+<code class="sig-prename descclassname">phylofisher.purge.</code><code class="sig-name descname">fasta_cleaner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">org_set</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.purge.fasta_cleaner" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.purge.parse_metadata">
+<code class="sig-prename descclassname">phylofisher.purge.</code><code class="sig-name descname">parse_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.purge.parse_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher.single_gene_tree_constructor">
+<span id="phylofisher-single-gene-tree-constructor-module"></span><h2>phylofisher.single_gene_tree_constructor module<a class="headerlink" href="#module-phylofisher.single_gene_tree_constructor" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.bash_command">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">bash_command</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cmd</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.bash_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to run bash commands in a shell</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.delete_gaps_stars">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">delete_gaps_stars</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.delete_gaps_stars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes -‘s and <a href="#id3"><span class="problematic" id="id4">*</span></a>’s from alignments</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.get_checkpoints">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">get_checkpoints</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.get_checkpoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.good_length">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">good_length</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trimmed_aln</span></em>, <em class="sig-param"><span class="n">threshold</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.good_length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.mk_checkpoint_tmp">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">mk_checkpoint_tmp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">files</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.mk_checkpoint_tmp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.mkdir_and_cd">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">mkdir_and_cd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.mkdir_and_cd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.prepare_analyses">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">prepare_analyses</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">checks</span></em>, <em class="sig-param"><span class="n">root</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.prepare_analyses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.read_full_proteins">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">read_full_proteins</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">core</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.read_full_proteins" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.update_checkpoints">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">update_checkpoints</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">prog</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.update_checkpoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="phylofisher.single_gene_tree_constructor.x_to_dash">
+<code class="sig-prename descclassname">phylofisher.single_gene_tree_constructor.</code><code class="sig-name descname">x_to_dash</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#phylofisher.single_gene_tree_constructor.x_to_dash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces X’s in alignments with -‘s</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phylofisher">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phylofisher" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhyloFisher</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">phylofisher</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">phylofisher package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">phylofisher</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">phylofisher</a></li>
+      <li>Next: <a href="phylofisher.utilities.html" title="next chapter">phylofisher.utilities package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Alexander K. Tice, David Žihala, Tomáš Pánek, Robert E. Jones, Eric Salomaki, Fabien Burki, Marek Eliáš, Laura Eme, Serafim Nenarokov, Andrew J. Roger, Jürgen Strassert, Martin Kolísko, Matthew W. Brown.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phylofisher.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
