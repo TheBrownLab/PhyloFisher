@@ -86,7 +86,7 @@ def initialize_argparse(name, desc, usage):
                                      epilog=textwrap.dedent("""\
                                          additional information:
                                             Version: 0.1
-                                            GitHub: https://github.com/DavidZihala/PhyloFisher
+                                            GitHub: https://github.com/TheBrownLab/PhyloFisher
                                             Cite: 
                                             """))
 
