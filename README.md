@@ -1,7 +1,7 @@
-![PhyloFIsher](docs/_static/fisher.png)
+![PhyloFIsher](fisher.png)
 
 Jump to:
-   - [Installation](#Installation-via-Conda)
+   - [Installation](#Installation)
    - [Usage](#Usage)
    - [Custom Dataset Prep](#Custom-dataset-preparation)
 
@@ -9,7 +9,7 @@ Jump to:
 
 # Installation
 
-###via conda (Recommended)
+### via conda (Recommended)
 1. Install Anaconda:<br/>
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 2. Prepare a conda virtual environment:<br/>
@@ -27,11 +27,16 @@ Notes:
 - After you finish using PhyloFisher, use `conda deactivate` to deactivate the `fisher` conda virtual enviornment.
 <br/>
 
-###via pip
+### via pip
 1. Install PhyoFisher:<br/>
 `pip install phylofisher`
-2. Install Non-Python Dependencies:<br/>
-`install_deps.py [OPTIONS]`
+2. Add the following line to your .bashrc or .bash_profile:<br/>
+`export PATH="$HOME/bin:$PATH"`
+3. Reload your .bashrc or .bash_profile<br/>
+`source <.bashrc | .bash_profile>`<br/>
+4. Install Non-Python Dependencies:<br/>
+Linux: `install_deps.py`
+macOS: `install_deps.py -gxx <path/to/g++>`
 
 Notes:
 - For OSX users, cd-hit requires gcc for compilation (to use Homebrew, see https://brewformulas.org/gcc).  
@@ -54,7 +59,7 @@ Notes:
     - Apply your selection:<br/>
     - Usage: `fishing_net.py [OPTIONS] -i fasta/ -o <folder_with_selected_seqs>`<br/>
 5. **single_gene_tree_constructor.py**
-    - Trimming and single gene tree computations:<br/>
+    - Length filtration, trimming and single gene tree computations:<br/>
     - Usage: `trimming.py [OPTIONS] -i <folder_with_fasta_files>`<br/>
 6. **forest.py**
     - Tree visualization:<br/>
@@ -71,23 +76,24 @@ Notes:
 
 ### Utilities
 * **bipartition_examiner.py**
-    * Description
+    * Calculates the observed occurrences of clades of interest in bootstrap trees.
     * Usage: `bipartition_examiner.py [OPTIONS] -i /path/to/input/`<br/>
 * **fast_site_removal.py**
-    * Description
-    * Usage: `usage goes here`<br/>
+    * Removes the fastest evolving sites within the phylogenomic supermatrix in a stepwise fashion.
+    * Usage: `fast_site_removal.py [OPTIONS] -i /path/to/input/`<br/>
 * **aa_comp_calculator.py**
     * Calculates amino acid compostition of the supplied super matrix
     * Usage: `aa_comp_calculator.py [OPTIONS] -i <matrix>`<br/>
 * **fast_tax_removal.py**
-    * Description
-    * Usage: `usage goes here`<br/>
+    * Removes the fastest evolving taxa, based on branch length.
+    * Usage: `fast_tax_removal.py [OPTIONS] -t <tree> -m <matrix> -i <num_of_iterations>`<br/>
 * **genetic_code_check.py**
     * Script for fast genetic code analysis.
     * Usage: `genetic_code.py [OPTIONS] -i, --input file.fas -q, --queries Allomacr,Mantplas,...`<br/>
-* **heteroevoloving_sites.py**
-    * Description
-    * Usage: `usage goes here`<br/>
+* **heterotachy.py**
+    * Removes the most heterotachous sites within a phylogenomic supermatrix in a stepwise fashion,
+     leading to a user defined set of new matrices with these sites removed.
+    * Usage: `heterotachy.py -t path/to/tree -m path/to/matrix [OPTIONS]`<br/>
 * **SR4_class_recoder.py**
     * Recodes input matrix based on SR4 amino acid classifications.
     * Usage: `SR4_class_recoder.py [OPTIONS] -i <matrix>`<br/>
