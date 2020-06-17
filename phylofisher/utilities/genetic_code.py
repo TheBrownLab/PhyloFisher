@@ -25,7 +25,7 @@ def prepare_alignments(threads):
     Prepare multiple sequence alignments from orthologs from the dataset.
     """
     alignmnets_folder = str(Path(dfo, 'alignments'))
-    if os.path.isdir(alignmnets_folder) == False:
+    if not os.path.isdir(alignmnets_folder):
         os.mkdir(alignmnets_folder)
     for file in glob(str(Path(dfo, f'orthologs/*.fas'))):
         cmd = f'mafft --auto --reorder --anysymbol --thread {threads} \
@@ -189,7 +189,7 @@ def genecode_plot(res_list_dict, all_codons, transcriptome):
                     most_freq = (count, i)
                 result[i] = res_list.count(i)
                 res = pd.Series(result)
-            if all_codons == True:
+            if all_codons:
                 if (codon in std_code) and (most_freq[1] != std_code[codon]):
                     print(
                         f"Suspicious codon:{codon.replace('T', 'U')} doens't seem to match The standart genetic code: {std_code[codon]}")
@@ -211,7 +211,7 @@ def genecode_plot(res_list_dict, all_codons, transcriptome):
                     plt.close()
 
 
-def main(args):
+def main():
     if args.prepare_alignments:
         prepare_alignments(args.threads)
     transcriptome = args.input
@@ -226,8 +226,6 @@ def main(args):
     print(f'{"=" * 20}\nCollecting information from conserved positions ...\n{"=" * 20}\n')
     stats = collect_counts(transcriptome, args.conserved)
     genecode_plot(stats, args.all_codons, transcriptome)
-    if not args.keep_tmp:
-
 
 
 if __name__ == '__main__':
@@ -240,39 +238,34 @@ if __name__ == '__main__':
     # Required Arguments
     required.add_argument('-i', '--input', required=True, type=str, metavar='file.fas',
                           help=textwrap.dedent("""\
-                              Fasta file with nucleotide sequences.
-                              """))
+                          Fasta file with nucleotide sequences.
+                          """))
     required.add_argument('-q', '--queries', required=True, type=str, metavar='Allomacr,Mantplas,...',
                           help=textwrap.dedent("""\
-                              Comma separated short names of organisms which should be used as queries.
-                              """))
+                          Comma separated short names of organisms which should be used as queries.
+                          """))
     # Optional Arguments
     optional.add_argument('-t', '--threads', type=int, metavar='N', default=1,
                           help=textwrap.dedent("""\
-                    Number of threads, where N is an integer.
-                    Default: 1
-                    """))
-
+                          Number of threads, where N is an integer.
+                          Default: 1
+                          """))
     optional.add_argument('--prepare_alignments', action='store_true',
                           help=textwrap.dedent("""\
-                Prepare alignments for genetic code analysis.
-                """))
-
+                          Prepare alignments for genetic code analysis.
+                          """))
     optional.add_argument('-c', '--conserved', type=float, metavar='0-1', default=0.7,
                           help=textwrap.dedent("""\
-            Conservation level. 0-1.
-            """))
-
+                          Conservation level. 0-1.
+                          """))
     optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X', default='1e-30',
                           help=textwrap.dedent("""\
-            Evalue for blast searches. Default: 1e-30.
-            """))
-
+                          Evalue for blast searches. Default: 1e-30.
+                          """))
     optional.add_argument('-a', '--all_codons', action='store_true', default=False,
                           help=textwrap.dedent("""\
-            Plot conserved positions for all codons.
-            """))
-
+                          Plot conserved positions for all codons.
+                          """))
     optional.add_argument('--keep_tmp', action='store_true',
                           help=textwrap.dedent("""\
                           Keep temporary files
@@ -284,4 +277,4 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
 
-    main(args)
+    main()
