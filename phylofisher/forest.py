@@ -6,11 +6,13 @@ from collections import defaultdict, Counter
 import configparser
 from multiprocessing import Pool
 
+import matplotlib
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from pathlib import Path
 from phylofisher import help_formatter
+from Bio import SeqIO
 
 plt.style.use('ggplot')
 
@@ -102,8 +104,8 @@ def get_best_candidates(tree_file):
     top_rank = defaultdict(dict)
     for node in t.traverse('preorder'):
         if node.is_leaf():
-            if node.name.count('_') == 4:
-                org, __, _, rank, _ = node.name.split('_')
+            if node.name.count('_') == 3:
+                org, __, _, rank = node.name.split('_')
                 rank = int(rank[1:-1])
                 if org not in top_rank:
                     top_rank[org]['rank'] = rank
@@ -206,20 +208,53 @@ def collect_contaminations(tree_file, cont_dict):
     return contaminations, cont_table_names
 
 
+def get_build_len(name_):
+    if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
+        with open(f'{args.input}/{name_}.final', 'r') as build, open(f'{args.input}/{name_}.trimmed', 'r') as trimmed:
+            trimmed_len = 0
+            len_dict = {}
+            for record in SeqIO.parse(trimmed, 'fasta'):
+                if len(record.seq) > trimmed_len:
+                    trimmed_len = len(record.seq)
+                len_dict[record.description] = len(str(record.seq).replace('-', '').replace('X', ''))
+
+            build_len = 0
+            for record in SeqIO.parse(build, 'fasta'):
+                if len(record.seq) > build_len:
+                    build_len = len(record.seq)
+        return build_len, len_dict, trimmed_len
+
+    else:
+        with open(f'{args.input}/{name_}.final', 'r') as infile:
+            build_len = 0
+            len_dict = {}
+            for record in SeqIO.parse(infile, 'fasta'):
+                if len(record.seq) > build_len:
+                    build_len = len(record.seq)
+                len_dict[record.description] = len(str(record.seq).replace('-', '').replace('X', ''))
+        return build_len, len_dict
+
+
 def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
     if contaminations is None:
         contaminations = set()
     tree_base = str(os.path.basename(tree_file))
-    if args.prefix:
-        tree_base = tree_base.replace(args.prefix, '')
-    if args.suffix:
-        tree_base = tree_base.replace(args.suffix, '')
 
-    output_base = f"{tree_base.split('.')[1].split('_')[0]}"
-    if not backpropagation:
-        table = open(f"{output_folder}/{output_base.split('_')[0]}.tsv", 'w')
+    name_ = tree_base.split('.')[1]
+
+    if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
+        build_len, len_dict, trimmed_len = get_build_len(name_)
+        len_info = f'Final Align Len: {build_len}, Trimmed Align Len: {trimmed_len}'
     else:
-        table = open(f"{output_folder}/{output_base.split('_')[0]}.tsv", 'r')
+        build_len, len_dict = get_build_len(name_)
+        len_info = f'Final Align Len: {build_len}'
+
+    len_dict = {k: round(v / build_len, 2) for k, v in len_dict.items()}
+
+    if not backpropagation:
+        table = open(f"{output_folder}/{name_.split('_')[0]}.tsv", 'w')
+    else:
+        table = open(f"{output_folder}/{name_.split('_')[0]}.tsv", 'r')
 
     top_ranked = get_best_candidates(tree_file)
     t = Tree(tree_file)
@@ -243,18 +278,17 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
                 node.set_style(node_style)
             else:
                 # All leaves
-                format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked)
+                format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked, len_dict)
                 node.set_style(node_style)
 
-    name_, trim_len = tree_base.split('.')[1].split('_')
-    title_face = TextFace(f'<{name_}  trim_aln_len: {trim_len}, {sus_clades} suspicious clades>', bold=True)
+    title_face = TextFace(f'<{name_}  {len_info}, {sus_clades} suspicious clades>', bold=True)
     ts.title.add_face(title_face, column=1)
-    t.render(f'{output_folder}/{output_base}_tree.svg', tree_style=ts)
+    t.render(f'{output_folder}/{name_}_tree.svg', tree_style=ts, )
     if not backpropagation:  # what what what?
         table.close()
 
 
-def format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked):
+def format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked, len_dict):
     """This function formats the leaves for the svg file and writes to tsv file"""
 
     # This parts is about leaves
@@ -262,70 +296,69 @@ def format_leaves(backpropagation, contaminations, node, node_style, table, top_
     node.add_face(empty_face, column=2, position="aligned")
     node.add_face(empty_face, column=3, position="aligned")
     org = node.name
-    if org.count('_') == 4:  # if org in additions
-        org_in_add(backpropagation, contaminations, node, org, table, top_ranked)
+    if org.count('_') == 3:  # if org in additions
+        org_in_add(backpropagation, contaminations, node, org, table, top_ranked, len_dict)
 
     elif '..' in org:
-        para_from_meta(backpropagation, node, org, table)
+        para_from_meta(backpropagation, node, org, table, len_dict)
 
     else:
-        ortho_from_meta(backpropagation, node, node_style, org, table)
+        ortho_from_meta(backpropagation, node, node_style, org, table, len_dict)
 
 
-def org_in_add(backpropagation, contaminations, node, org, table, top_ranked):
+def org_in_add(backpropagation, contaminations, node, org, table, top_ranked, len_dict):
     """for organisms that are in additions"""
-    quality = f'{org.split("_")[-3]}_{org.split("_")[-2]}_{org.split("_")[-1]}'
-    org = node.name.split('_')[0]
-    group = metadata[org]['group']
+    quality = f'{org.split("_")[-2]}_{org.split("_")[-1]}_{len_dict[org]}'
+    org = node.name
+    unique_id = org.split('_')[0]
+    group = metadata[unique_id]['group']
     if group in tax_col:
-        tax_name = TextFace(f'[{group} {metadata[org]["subtax"]}]', fgcolor=tax_col[group], bold=True)
+        tax_name = TextFace(f'[{group} {metadata[unique_id]["subtax"]}]', fgcolor=tax_col[group], bold=True)
     else:
-        tax_name = TextFace(f'[{group} {metadata[org]["subtax"]}]', bold=True)
+        tax_name = TextFace(f'[{group} {metadata[unique_id]["subtax"]}]', bold=True)
     node.add_face(tax_name, column=1, position="aligned")
     if node.name in contaminations:
         # Seqs to delete
         if not backpropagation:
-            table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\td\n')
-        delf = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', fgcolor='red')
+            table.write(f'{metadata[unique_id]["full"]}_{quality}@{unique_id}\t{group}\td\n')
+        delf = TextFace(f'{metadata[unique_id]["full"]}_{quality}@{unique_id}', fgcolor='red')
         node.name = ''
         node.add_face(delf, column=0)
     elif node.name in top_ranked:
         # top ranked guys
-        tname = TextFace(f'{metadata[org]["full"]}_{quality}@{org}', bold=True)
+        tname = TextFace(f'{metadata[unique_id]["full"]}_{quality}@{unique_id}', bold=True)
         if not backpropagation:
-            table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\to\n')
+            table.write(f'{metadata[unique_id]["full"]}_{quality}@{unique_id}\t{group}\to\n')
         node.name = ''
         node.add_face(tname, column=0, position='branch-right')
     else:
         if not backpropagation:
-            table.write(f'{metadata[org]["full"]}_{quality}@{org}\t{group}\tp\n')
-        node.name = f'{metadata[org]["full"]}_{quality}@{org}'
+            table.write(f'{metadata[unique_id]["full"]}_{quality}@{unique_id}\t{group}\tp\n')
+        node.name = f'{metadata[unique_id]["full"]}_{quality}@{unique_id}'
 
 
-def para_from_meta(backpropagation, node, org, table):
+def para_from_meta(backpropagation, node, org, table, len_dict):
     """for paralogs from metadata"""
-    para, length = org.split('_')
-    org = para.split('..')[0]
-    group = f"{metadata[org]['group']}"
-    paraf = TextFace(f'{metadata[org]["full"]}_{length}@{para}', fgcolor='blue')
+    unique_id = org.split('..')[0]
+    group = f"{metadata[unique_id]['group']}"
+    paraf = TextFace(f'{metadata[unique_id]["full"]}_{len_dict[org]}@{org}', fgcolor='blue')
     node.name = ''
     node.add_face(paraf, column=0)
     if not backpropagation:
-        table.write(f'{metadata[org]["full"]}_{length}@{para}\t{group}\tp\n')
-    gface = TextFace(f'[{group} {metadata[org]["subtax"]}]')
+        table.write(f'{metadata[unique_id]["full"]}_{len_dict[org]}@{org}\t{group}\tp\n')
+    gface = TextFace(f'[{group} {metadata[unique_id]["subtax"]}]')
     node.add_face(gface, column=1, position="aligned")
 
 
-def ortho_from_meta(backpropagation, node, node_style, org, table):
+def ortho_from_meta(backpropagation, node, node_style, org, table, len_dict):
     """for orthologs from dataset"""
-    org, length = org.split('_')
     group = f"{metadata[org]['group']}"
     gface = TextFace(f'[{group} {metadata[org]["subtax"]}]')  # TODO do not touch me pleeeease
     color = metadata[org]['col']
     node_style["bgcolor"] = color
     if not backpropagation:
-        table.write(f'{metadata[org]["full"]}_{length}@{org}\t{group}\to\n')
-    node.name = f'{metadata[org]["full"]}_{length}@{org}'
+        table.write(f'{metadata[org]["full"]}_{len_dict[org]}@{org}\t{group}\to\n')
+    node.name = f'{metadata[org]["full"]}_{len_dict[org]}@{org}'
     node.add_face(gface, column=1, position="aligned")
 
 
@@ -493,12 +526,12 @@ if __name__ == '__main__':
     optional.add_argument('-b', '--backpropagate', action='store_true',
                           help=textwrap.dedent("""\
                           Remove contaminations through backpropagation."""))
-    optional.add_argument('-t', '--threads', metavar='<N>',
+    optional.add_argument('-t', '--threads', metavar='<N>', type=int,
                           help=textwrap.dedent("""\
                           Number of threads to be used, where N is an integer. 
                           Default: N=1"""))
 
-    args = help_formatter.get_args(parser, optional, required)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False)
 
     trees_folder = args.input
     output_folder = args.output
@@ -513,7 +546,7 @@ if __name__ == '__main__':
     if not args.backpropagate:
         os.mkdir(output_folder)
 
-    trees = glob.glob(f"{trees_folder}/{args.prefix}*{args.suffix}")
+    trees = glob.glob(f"{trees_folder}/*.tre")
 
     number_of_genes = len(trees)
     metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)
@@ -523,17 +556,25 @@ if __name__ == '__main__':
         suspicious = parallel_susp_clades(trees)
         suspicious = sorted(suspicious)
 
-        with open('suspicious.txt', 'w') as res:
-            for file, clades in suspicious:
-                if clades:
-                    res.write(f'{file}\n========================\n')
-                    for clade_ in clades:
-                        res.write(f'{clade_}\n')
-                    res.write(f'\n\n\n')
-        result_clades = [clades[1] for clades in suspicious]
-        nonredundant_clades = nonredundant(result_clades)
-        orgs_taxa = collect_major_taxa(nonredundant_clades)
-        plot_major_taxa(orgs_taxa)
+        make_txt = False
+        for x, y in suspicious:
+            if y:
+                make_txt = True
+
+        if make_txt:
+            with open('suspicious.txt', 'w') as res:
+                for file, clades in suspicious:
+                    if clades:
+                        res.write(f'{file}\n========================\n')
+                        for clade_ in clades:
+                            res.write(f'{clade_}\n')
+                        res.write(f'\n\n\n')
+            result_clades = [clades[1] for clades in suspicious]
+            nonredundant_clades = nonredundant(result_clades)
+            orgs_taxa = collect_major_taxa(nonredundant_clades)
+
+        # Commented out due to issues with the function
+        # plot_major_taxa(orgs_taxa)
 
     if args.contaminations:
         cont_dict = parse_contaminations(args.contaminations)
