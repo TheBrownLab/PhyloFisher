@@ -167,7 +167,7 @@ def concat_gene_files():
                 for line in infile:
                     line = line.strip()
                     if line.startswith('>'):
-                        line = f'>{os.path.basename(file)}'
+                        line = f'>{file.split(".")[0]}'
                     outfile.write(f'{line}\n')
 
 
