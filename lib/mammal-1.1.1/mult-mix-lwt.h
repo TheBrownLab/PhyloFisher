@@ -32,3 +32,4 @@ int mult_mix_lwt(FILE *seqfile, int nclass, double *lwt, double C, int plusF,
 		 int itmax, double *dlnl_tol, double *dp_tol, int pr,
 		 double *fr,
 		 double *w, double *lnl, double *lnlo, double *dp);
+double logsum(double a, double b);

@@ -1382,7 +1382,9 @@ char **treecs(int ntaxa, char *tstr, char names[][11], double *utreec,
   int *ul; /* utreec labels */
   int *ls,*le,*is_leaf,k,i,ss,K,j,ssn,ir,il;
   char **ilabels,tname[11];
-  double *el; 
+  double *el;
+
+  int tdo;
 
   el = (double *) malloc((size_t) ntaxa*sizeof(double));
   ds = (int *) malloc((size_t) 2*ntaxa*sizeof(int));
@@ -1393,11 +1395,13 @@ char **treecs(int ntaxa, char *tstr, char names[][11], double *utreec,
   ul = (int *) malloc((size_t) ntaxa*sizeof(int));
   ilabels = (char **)malloc((size_t) (ntaxa-2)*sizeof(char *));
 
+
   /* if(has_names) */
   /*   for(i = 0; i < ntaxa; i++) underscore2blank(names[i]); */
 
   for(i = 0; i < ntaxa; i++) el[i]=0;
-  
+
+  /* the initial dlist is the entire tree */
   *ds=0; *de=0; *is_leaf=0;
   while(tstr[*de] != '\0')(*de)++;
   while(tstr[*de] != ')') (*de)--; /* root label and edge ignored */
@@ -1406,7 +1410,8 @@ char **treecs(int ntaxa, char *tstr, char names[][11], double *utreec,
   cil=2*ntaxa-3;
   while (cj >= 0){/* Main loop */
 
-    /* obtain all root subtrees of the current dlist and update dlists */
+    /* obtain all dlists within the current dlist and update dlists */
+    /* dlists indicated by ds[i], de[i], upper and lower char pos in tstr */
     ss=ds[cd]+1;
     K=0;
     while(ss <= de[cd]-1){
@@ -1421,14 +1426,14 @@ char **treecs(int ntaxa, char *tstr, char names[][11], double *utreec,
       K++;
     }
 
-    /* attach ulabels to subtrees */
-    for(i = 0; i < K-2; i++){
+    /* attach utreec labels, ul, to subtrees */
+    for(i = 0; i < K-2; i++){ /* need to create labels for bifurcations */
       ilabels[cil-ntaxa]=(char *)malloc(sizeof(char));
       ilabels[cil-ntaxa][0]='\0';
       cil--;
     }
     for(i=0; i < K; i++){
-      if (!is_leaf[i]){
+      if (!is_leaf[i]){ 
 	ilabels[cil-ntaxa]=(char *)malloc((le[i]-ls[i]+2)*sizeof(char));
 	memcpy(ilabels[cil-ntaxa],&tstr[ls[i]],(le[i]-ls[i]+1)*sizeof(char));
 	ilabels[cil-ntaxa][le[i]+1-ls[i]]='\0';
@@ -1456,20 +1461,27 @@ char **treecs(int ntaxa, char *tstr, char names[][11], double *utreec,
 	  printf("treecs: unable to find %s among taxa\n",tname); exit(0);}
 	ul[i]=j;
       } 
-    }/* end of attach ulabels ... */
+    }/* end of attach utreec labels ... */
+
+    /* for(k=cd; k<td; k++){ */
+    /*   for(j = ds[k]; j <= de[k]; j++) putchar(tstr[j]); printf("\n"); */
+    /* } */
     
     /* printf("current subtree %i\n",ntaxa+cj); */
     /* for(j = ds[cd]; j <= de[cd]; j++) putchar(tstr[j]); printf("\n"); */
     /* printf("number of subtrees: %i\n",K); */
-    /* for(i=0; i < K; i++){ */
+    /* labels for subtrees in ul. Last label corresponds to last dlist.
+     * Next one to the second last but this will not be second last ul
+     * unless it was not a taxa ...*/
+    /* tdo=td-1;  */
+    /* for(i=K-1; i >= 0 ; i--){ */
     /*   printf("%i %f ",ul[i],el[i]); */
     /*   if(!is_leaf[i]){ */
     /* 	for(j = ds[tdo]; j <= de[tdo]; j++) putchar(tstr[j]); */
-    /* 	tdo++; */
+    /* 	tdo--; */
     /*   } */
     /*   printf("\n"); */
     /* } */
-    /* tdo=td; */
 
     /* adjust labels of existing internal edges for multifurcation */
     if(K>2)
@@ -1497,6 +1509,7 @@ char **treecs(int ntaxa, char *tstr, char names[][11], double *utreec,
     /* for(i=cj+1; i<ntaxa-1; i++) */
     /*   printf("%i %i %i %f %f\n",i+ntaxa,(int) utreec[i*4],(int) utreec[1+i*4], */
     /* 	     utreec[2+i*4],utreec[3+i*4]); */
+    /* printf("\n"); */
 
   } /* end of Main loop */
   /* pr_utreec(stdout,ntaxa,utreec); */
