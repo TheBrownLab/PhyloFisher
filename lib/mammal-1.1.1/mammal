@@ -39,7 +39,9 @@ CalculateWeightsE <- function(seqfile,normalize=FALSE,clean=TRUE,DNA=FALSE,
   ntaxa <- scan(seqfile,quiet=TRUE,n=1)
   ## cat(cmdline,"\n")
   system(cmdline)
-  Sigma <- matrix(scan("tmp.Sigma",quiet=TRUE),ncol=ntaxa)
+  Sigma <- scan("tmp.Sigma",quiet=TRUE)
+  if(Sigma[1]==-1) stop(paste0("The ",Sigma[2]+1,"th and ",Sigma[3]+1,"th sequences had no sites in common when calculating the likelihood weights.\nEither delete one of these sequences or don't use likelihood weighting (option -l)\n"))
+  Sigma <- matrix(Sigma,ncol=ntaxa)
   l <- OptimizeWeights(Sigma)
   if(clean) file.remove("tmp.Sigma")
   if(normalize){

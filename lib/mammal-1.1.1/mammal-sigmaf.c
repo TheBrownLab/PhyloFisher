@@ -228,6 +228,7 @@ double *estimate_sigma(FILE *seqfile, int *ntaxa){
 	  np++;
 	  if(seq[h+s*nsite]==seq[h+t*nsite]) frp[seq[h+s*nsite]] += 1.0;
 	}
+      if(np==0){printf("-1 %i %i\n",s,t); exit(1);}
       for(j=0; j<20; j++) Sigma[s+t*(*ntaxa)] += (frp[j]/np);
     }
 
