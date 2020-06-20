@@ -341,29 +341,73 @@ int mult_mix_lwt(FILE *seqfile, int nclass, double *lwt, double C, int plusF,
     
     for(i=0; i<nsite; i++){
 
+      /* Old version calculated marginal likelihood and posterior directly. 
+       * New version  of 2020-06-18 calculates log(marg) and log(post) */
       if(!is_const[i]){
-	for(marg=0.0, c=0; c<nclass_var; c++){
-	  for(post[c]=wo[c], j=0; j<nchar; j++)
-	    post[c] *= xpownb(fro[j+c*nchar],dn[j+i*nchar]);
-	  marg += post[c];
+	/* for(marg=0.0, c=0; c<nclass_var; c++){ */
+	/*   for(post[c]=wo[c], j=0; j<nchar; j++){ */
+	/*     post[c] *= xpownb(fro[j+c*nchar],dn[j+i*nchar]); */
+	/*   } */
+	/*   marg += post[c]; */
+	/* } */
+	/* if(invar) post[nclass-1]=0.0; */
+	for(marg=1.0, c=0; c<nclass_var; c++){
+	  post[c]=(wo[c]<=0.0)?1.0:log(wo[c]);
+	  for(j=0; j<nchar; j++){
+	    if(dn[j+i*nchar]>0){
+	      if(fro[j+c*nchar]<=0.0)
+		post[c]=1.0;
+	      else
+		post[c] += dn[j+i*nchar]*log(fro[j+c*nchar]);
+	    }
+	    if(post[c]>0.5) break;
+	  }
+	  marg = logsum(marg,post[c]);
 	}
-	if(invar) post[nclass-1]=0.0;
+	if(invar) post[nclass-1]=1.0;
       }
       
       if(is_const[i]){
-	for(marg=0.0, c=0; c<nclass_var; c++){
-	  post[c] = wo[c]*xpownb(fro[aa[i]+c*nchar],dntot[i]);
-	  marg += post[c];
+	/* for(marg=0.0, c=0; c<nclass_var; c++){ */
+	/*   post[c] = wo[c]*xpownb(fro[aa[i]+c*nchar],dntot[i]); */
+	/*   marg += post[c]; */
+	/* } */
+	/* if(invar){ */
+	/*   post[nclass-1]=wo[nclass-1]*fro[aa[i]+(nclass-1)*nchar]; */
+	/*   marg += post[nclass-1]; */
+	/* } */
+	for(marg=1.0, c=0; c<nclass_var; c++){
+	  post[c]=(wo[c]<=0.0)?1.0:log(wo[c]);
+	  if(dntot[i]>0){
+	    if(fro[aa[i]+c*nchar]<=0.0)
+	      post[c]=1.0;
+	    else
+	      post[c] += dntot[i]*fro[aa[i]+c*nchar];
+	  }
+	  marg = logsum(marg,post[c]);
 	}
 	if(invar){
-	  post[nclass-1]=wo[nclass-1]*fro[aa[i]+(nclass-1)*nchar];
-	  marg += post[nclass-1];
+	  /* post[nclass-1]=wo[nclass-1]*fro[aa[i]+(nclass-1)*nchar]; */
+	  /* marg += post[nclass-1]; */
+	  if(wo[nclass-1]>0 && fro[aa[i]+(nclass-1)*nchar]>0)
+	    post[nclass-1] = log(wo[nclass-1]) +
+	      log(fro[aa[i]+(nclass-1)*nchar]);
+	  else
+	    post[nclass-1] = 1.0;
+	  marg = logsum(marg,post[nclass-1]);
 	}
       }
 
-      *lnl += log(marg);
+      /* *lnl += log(marg); */
+      *lnl += marg;
+      /* printf("%i %.16e %.16e\n",i,*lnl,marg); */
       for(c=0; c<nclass; c++){
-	post[c] /= marg;
+	/* post[c] /= marg; */
+	/* w[c] += post[c]; */
+	if(post[c]>0.5)
+	  post[c]=0.0;
+	else
+	  post[c] = exp(post[c]-marg);
 	w[c] += post[c];
       }
 
@@ -406,4 +450,15 @@ int mult_mix_lwt(FILE *seqfile, int nclass, double *lwt, double C, int plusF,
   }
 
   return(iter);
+}
+double logsum(double a, double b){
+  /* a or b = 1 corresponds to -infty (i.e exp(a)=0) */
+  double avb,anb;
+  if(a>0.5 && b>0.5) return(1.0);
+  if(a>0.5 && b<0.5) return(b);
+  if(a<0.5 && b>0.5) return(a);
+  
+  avb=(a>b)?a:b;
+  anb=(a<b)?a:b;
+  return(avb + log(1.0+exp(anb-avb)));
 }
