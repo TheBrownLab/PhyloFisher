@@ -64,29 +64,6 @@ def parse_input(input_metadata):
     return input_info
 
 
-def get_fisher_dir():
-    """
-    Returns the latest fisher output directory if there are more that one in the cwd. If only one return that one.
-    """
-    posbl_folds = [fold for fold in os.listdir('.') if os.path.isdir(fold) and fold.startswith('fisher_out')]
-    cal_dict = dict((v, k) for k, v in enumerate(calendar.month_abbr))
-    # if only one fisher output use that one
-    if len(posbl_folds) == 1:
-        fisher_dir = posbl_folds[0]
-    # if there are multiple fisher output directories use the latest
-    else:
-        # Gets the month day and year from fisher output dir
-        month, day, year = posbl_folds.pop(0).split('_')[-1].split('.')
-        date = datetime.date(year, cal_dict[month], day)
-        for fold in posbl_folds:
-            month1, day1, year1 = fold.split('_')[-1].split('.')
-            date1 = datetime.date(year, cal_dict[month], day)
-            if date1 > date:
-                month, day, year = month1, day1, year1
-        fisher_dir = f'fisher_out_{month}.{day}.{year}'
-    return fisher_dir
-
-
 def collect_seqs(gene):
     """Collect all sequences for a given gene from fasta folder (fisher result)
     and store them in a dictionary.
@@ -94,7 +71,6 @@ def collect_seqs(gene):
     return: dictionary of all seqs for a given gene
     """
     seq_dict = {}
-    fisher_dir = get_fisher_dir()
     for record in SeqIO.parse(f'{fisher_dir}/{gene}.fas', 'fasta'):
         if record.name.count('_') == 3:
             abbrev, _, _, quality = record.name.split('_')
@@ -135,7 +111,7 @@ def parse_table(table):
      return: dictionaries of new orthologs and paralogs"""
 
     # gene name
-    gene = table.split('/')[-1].split('.')[0]
+    gene = table.split('/')[-1].split('_')[0]
     # path to orthologs in the dataset folder
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
     # path to paralogs in the dataset folder
@@ -224,6 +200,8 @@ def add_to_meta(abbrev):
     return: None
     """
     with open(metadata, 'a') as res:
+        print(abbrev)
+        print(input_info[abbrev])
         full = input_info[abbrev]['full_name']
         tax = input_info[abbrev]['tax']
         subtax = input_info[abbrev]['subtax']
@@ -263,7 +241,7 @@ def new_database(table):
 
 def main():
     """Main function. Run new_database on all parsed trees (tsv files)"""
-    for table in glob.glob(f'{args.input}/*.tsv'):
+    for table in glob.glob(f'{args.input}/*_parsed.tsv'):
         new_database(table)
 
 
@@ -273,16 +251,23 @@ if __name__ == '__main__':
                                                                     desc=desc,
                                                                     usage="lumberjack.py -i <in_dir>")
 
+    required.add_argument('-fi', '--fisher_dir', type=str, metavar='<fisher_dir>', required=True,
+                          help=textwrap.dedent("""\
+                          Path to fisher output directory to use for dataset addition.
+                          """))
+
     optional.add_argument('--to_exclude', type=str, metavar='to_exclude.txt',
                           help=textwrap.dedent("""\
-                              Path to .txt file containing taxa to exclude from 
-                              dataset addition with one taxon per line.
-                              Example:
-                                Taxon1
-                                Taxon2
-                                  """))
+                          Path to .txt file containing taxa to exclude from 
+                          dataset addition with one taxon per line.
+                          Example:
+                            Taxon1
+                            Taxon2
+                            """))
 
     args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False)
+
+    fisher_dir = args.fisher_dir
 
     config = configparser.ConfigParser()
     config.read('config.ini')
