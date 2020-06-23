@@ -111,7 +111,7 @@ def parse_table(table):
      return: dictionaries of new orthologs and paralogs"""
 
     # gene name
-    gene = table.split('/')[-1].split('_')[0]
+    gene = table.split('/')[-1].split('_parsed')[0]
     # path to orthologs in the dataset folder
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
     # path to paralogs in the dataset folder
@@ -214,7 +214,7 @@ def new_database(table):
     """Make changes in the PhyloFisher dataset according to information from
      parsed single gene tree."""
 
-    gene = table.split('/')[-1].split('.')[0]
+    gene = table.split('/')[-1].split('_parsed')[0]
     # Orthologs for a given gene
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
     # Paralogs for a given gene
