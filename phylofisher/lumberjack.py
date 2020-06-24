@@ -200,8 +200,6 @@ def add_to_meta(abbrev):
     return: None
     """
     with open(metadata, 'a') as res:
-        print(abbrev)
-        print(input_info[abbrev])
         full = input_info[abbrev]['full_name']
         tax = input_info[abbrev]['tax']
         subtax = input_info[abbrev]['subtax']
