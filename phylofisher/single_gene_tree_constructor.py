@@ -147,7 +147,7 @@ def prepare_analyses(checks, root):
             mkdir_and_cd(f'{args.output}/length_filtration')
             mkdir_and_cd(f'{args.output}/length_filtration/divvier')
             # Divvier - length filtration
-            status = bash_command(f'divvier -mincol 4 -divvygap {args.output}/length_filtration/mafft/{root}.aln')
+            status = bash_command(f'divvier -mincol 4 -partial {args.output}/length_filtration/mafft/{root}.aln')
             if status:
                 shutil.move(f'../mafft/{root}.aln.divvy.fas', f'./{root}.aln.divvy.fas')
                 update_checkpoints(root, 'divvier1')
@@ -181,7 +181,7 @@ def prepare_analyses(checks, root):
         # divvier2
         elif i == 5 and check == '0':
             mkdir_and_cd(f'{args.output}/divvier')
-            status = bash_command(f'divvier -mincol 4 -divvygap {args.output}/mafft/{root}.aln2')
+            status = bash_command(f'divvier -mincol 4 -partial {args.output}/mafft/{root}.aln2')
             if status:
                 shutil.move(f'../mafft/{root}.aln2.divvy.fas', f'./{root}.aln2.divvy.fas')
                 update_checkpoints(root, 'divvier2')
