@@ -117,6 +117,12 @@ if __name__ == "__main__":
                                   groups
                                   """))
 
+    # Optional Arguments
+    optional.add_argument('-on', '--output_name', type=str, metavar='out', default='out',
+                          help=textwrap.dedent("""\
+                                      groups
+                                      """))
+
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     queries = parse_groups(args.groups)
