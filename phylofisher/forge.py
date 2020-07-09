@@ -1,21 +1,20 @@
 #!/usr/bin/env python
+import csv
 import os
+import shutil
+import subprocess
 import sys
 import textwrap
-import shutil
-from functools import partial
+from collections import defaultdict
 from glob import glob
-import subprocess
 from multiprocessing import Pool
 
-from phylofisher import help_formatter
-from phylofisher import single_gene_tree_constructor
 from Bio import SeqIO
+from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
-from collections import defaultdict
-import csv
+
+from phylofisher import help_formatter
 
 
 def bash(cmd):
@@ -43,7 +42,6 @@ def delete_gaps_stars(gene, root):
 
     with open(file_name, 'w') as res:
         SeqIO.write(records, res, 'fasta')
-
 
 
 def trim_and_align(gene):
@@ -103,6 +101,7 @@ def parse_names(input_folder):
 
 def stats(total_len, out_dict):
     """
+    subset_tools.py [OPTIONS] -i <input_dir> -m <metadata> {-n <gene_number> | -c <percent_complete>}
 
     :param total_len:
     :return:
@@ -162,13 +161,10 @@ if __name__ == '__main__':
         os.mkdir(args.output)
 
     files, orgs = parse_names(args.input)
-    print(files)
     if args.concatenation_only is False:
         os.chdir(args.output)
         parallelize(files)
         files = sorted(glob(f'{args.output}/trimal/*'))
-
-    print(files)
 
     total_len = 0
     res_dict = defaultdict(str)
@@ -184,8 +180,6 @@ if __name__ == '__main__':
             else:
                 myformat = 'phylip-relaxed'
             for record in SeqIO.parse(file, myformat):
-                print(file)
-                print(record.seq)
                 length = len(record.seq)
                 seq_dict[record.id.split('_')[0]] = str(record.seq)
             start_len = total_len + 1
@@ -197,12 +191,11 @@ if __name__ == '__main__':
                 else:
                     res_dict[org] += ('-' * length)
 
-    print(res_dict)
     # Accepted out formats with respective suffix
-    out_dict = {'fasta': 'fas',
-                'phylip': 'phy',
+    out_dict = {'fasta':          'fas',
+                'phylip':         'phy',
                 'phylip-relaxed': 'phy',
-                'nexus': 'nex'}
+                'nexus':          'nex'}
 
     # Creates SeqRecord iterator
     records = []
