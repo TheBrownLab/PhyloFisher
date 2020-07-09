@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import os
+import random
+import string
 import subprocess
 import sys
 import textwrap
-import string
-import random
-from Bio import SeqIO
+
 import pandas as pd
+from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -33,7 +34,7 @@ def fake_phylip(matrix):
     pseudonames_rev = {}
     result = ''
     with open('TEMP.phy', 'w') as res:
-        for record in SeqIO.parse(matrix, 'fasta'):
+        for record in SeqIO.parse(matrix, 'phylip-relaxed'):
             seqs += 1
             if not length:
                 length = len(record.seq)
@@ -55,7 +56,7 @@ def fake_tree(treefile, pseudonames):
 
 
 def control_file():
-    ctl = """treefile = TEMP.tre * treefile"
+    ctl = """treefile = TEMP.tre * treefile
 seqfile = TEMP.phy * sequence data
 
 nchar = 20             * amino acid data
@@ -108,7 +109,7 @@ def main():
         run_dist()
 
     matrix_dict = {}
-    for record in SeqIO.parse(args.matrix, 'fasta'):
+    for record in SeqIO.parse(args.matrix, 'phylip-relaxed'):
         matrix_dict[record.name] = pd.Series(list(record.seq))
 
     sorted_rates = parse_rates()
@@ -127,8 +128,8 @@ def main():
             write_seqs(res, records)
 
         iter += 1
-    os.remove('../TEMP.phy')
-    os.remove('../TEMP.tre')
+    # os.remove('../TEMP.phy')
+    # os.remove('../TEMP.tre')
 
 
 if __name__ == "__main__":
