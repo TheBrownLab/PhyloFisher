@@ -1,25 +1,25 @@
 #!/usr/bin/env python
+import configparser
 import glob
 import os
 import textwrap
 from collections import defaultdict, Counter
-import configparser
 from multiprocessing import Pool
-
-import matplotlib
-from ete3 import Tree, TreeStyle, NodeStyle, TextFace
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 from pathlib import Path
-from phylofisher import help_formatter
+
+import matplotlib.pyplot as plt
 from Bio import SeqIO
+from ete3 import Tree, TreeStyle, NodeStyle, TextFace
+from matplotlib.backends.backend_pdf import PdfPages
+
+from phylofisher import help_formatter
 
 plt.style.use('ggplot')
 
 
 def configure_colors():
     color_dict = dict()
-    with open('tree_colors.csv', 'r') as infile:
+    with open(color_conf, 'r') as infile:
         infile.readline()
         for line in infile:
             line = line.strip()
@@ -245,11 +245,13 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
     if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
         build_len, len_dict, trimmed_len = get_build_len(name_)
         len_info = f'Final Align Len: {build_len}, Trimmed Align Len: {trimmed_len}'
+        len_dict = {k: round(v / trimmed_len, 2) for k, v in len_dict.items()}
     else:
         build_len, len_dict = get_build_len(name_)
         len_info = f'Final Align Len: {build_len}'
+        len_dict = {k: round(v / build_len, 2) for k, v in len_dict.items()}
 
-    len_dict = {k: round(v / build_len, 2) for k, v in len_dict.items()}
+
 
     if not backpropagation:
         table = open(f"{output_folder}/{name_.split('_')[0]}.tsv", 'w')
@@ -540,6 +542,7 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
     args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
+    color_conf = str(Path(config['PATHS']['color_conf']).resolve())
 
     args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
 
