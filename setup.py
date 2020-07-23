@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='0.1.14',
+    version='0.1.19',
     packages=find_packages(),
     scripts=['phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -14,8 +14,10 @@ setup(
              'phylofisher/purge.py',
              'phylofisher/build_dataset.py',
              'phylofisher/install_deps.py',
-             'phylofisher/single_gene_tree_constructor.py',
-             'phylofisher/missing_data.py',
+             'phylofisher/select_taxa.py',
+             'phylofisher/select_orthologs.py',
+             'phylofisher/sgt_constructor.py',
+             'phylofisher/prep_final_dataset.py',
              'phylofisher/utilities/fast_site_removal.py',
              'phylofisher/utilities/mammal_modeler.py',
              'phylofisher/utilities/bipartition_examiner.py',
@@ -25,7 +27,9 @@ setup(
              'phylofisher/utilities/taxon_collapser.py',
              'phylofisher/utilities/genetic_code.py',
              'phylofisher/utilities/heterotachy.py',
-             'phylofisher/utilities/random_sample_iteration.py'
+             'phylofisher/utilities/random_sample_iteration.py',
+             'phylofisher/utilities/astral_runner.py',
+             'phylofisher/utilities/rtc_binner.py'
              ],
     python_requires='>=3.7',
     install_requires=['biopython==1.76',
@@ -33,7 +37,8 @@ setup(
                       'ete3==3.1.1',
                       'pandas==1.0.3',
                       'matplotlib==3.1.3',
-                      'scipy'
+                      'scipy==1.4.1',
+                      'numpy==1.18.1'
                       ],
     url='https://github.com/TheBrownLab/PhyloFisher',
     license='MIT',
