@@ -1,6 +1,6 @@
 package:
   name: phylofisher
-  version: 0.1.16
+  version: 0.1.19
 
 source:
   path: ../../
@@ -28,7 +28,7 @@ requirements:
     - trimal=1.4.1
     - raxml=8.2.12
     - hmmer=3.3
-    - diamond=0.9.30
+    - diamond=0.9.36
     - fasttree=2.1.10
     - blast=2.9.0
     - cd-hit=4.8.1
@@ -37,6 +37,7 @@ requirements:
     - bmge=1.12
     - prequal=1.02
     - dist_est=1.1
+    - astral=5.7.3
 
 about:
   summary: PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic datasets that consist of protein sequences from eukaryotic organisms.
