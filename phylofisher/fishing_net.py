@@ -16,13 +16,12 @@ def parse_genes(gene_file):
         next(lines)
         for line in lines:
             gene, _, _, sgt = line.split(',')
-            sgt = sgt.strip()
-            if sgt.lower() != 'yes':
+            if sgt.strip().lower() != 'yes':
                 to_exlude.add(gene)
     return to_exlude
 
 
-def parse_orgs(org_file):
+def parse_orgs(org_file, new_data=False):
     """Parse csv table for organisms selection
     input: csv file with organisms
     return: set of organisms to exclude, set of organisms
@@ -30,23 +29,25 @@ def parse_orgs(org_file):
     to_exlude = set()
     paralogs = set()
     with open(org_file) as lines:
-        header = next(lines)
-        if header.count(',') == 10:
-            # only with paralog selection option
-            sgt_idx = 9
-        else:
-            sgt_idx = 6
+        lines.readline()
         for line in lines:
-            org = line.split(',')[0]
-            sgt = line.split(',')[sgt_idx].strip()
-            if sgt.lower() != 'yes':
+            if new_data:
+                org, _, _, _, _, _, _, _, sgt = line.split(',')
+            else:
+                org, _, _, _, _, sgt, para = line.split(',')
+
+            if sgt.strip().lower() != 'yes':
                 to_exlude.add(org)
-            if header.count(',') == 10:
-                # only with paralog selection option
-                if line.split(',')[sgt_idx + 1].strip().lower() == "yes":
+
+            if not new_data:
+                if para.strip().lower() == 'yes':
                     if org not in to_exlude:
                         paralogs.add(org)
-    return to_exlude, paralogs
+
+        if new_data:
+            return to_exlude
+        else:
+            return to_exlude, paralogs
 
 
 def fasta_filtr(file, o_to_ex, paralogs=None):
@@ -68,12 +69,18 @@ def fasta_filtr(file, o_to_ex, paralogs=None):
 
 
 def main():
-    gene_file = str(Path(args.input, 'informant_stats/genes_stats.csv'))
-    orgs_file = str(Path(args.input, 'informant_stats/orgs_stats.csv'))
+    gene_file = str(Path(args.input, 'informant_stats/gene_stats.csv'))
+    new_orgs_file = str(Path(args.input, 'informant_stats/new_taxa_stats.csv'))
+    db_orgs_file = str(Path(args.input, 'informant_stats/db_taxa_stats.csv'))
     # genes to exclude
     g_to_ex = parse_genes(gene_file)
     # organisms to exlude
-    o_to_ex, paralogs = parse_orgs(orgs_file)
+    new_o_to_ex = parse_orgs(new_orgs_file, new_data=True)
+    db_o_to_ex, paralogs = parse_orgs(db_orgs_file)
+    o_to_ex = new_o_to_ex | db_o_to_ex
+
+    print(paralogs)
+
     # only genes which are not in g_to_ex
     filtered_genes = []
     for file in [file for file in os.listdir(args.input) if file.endswith(f".fas")]:
@@ -81,12 +88,7 @@ def main():
             filtered_genes.append(file)
 
     for file in filtered_genes:
-        if args.orthologs is True:
-            # Option to only include orthologs
-            fasta_filtr(os.path.basename(file), o_to_ex)
-        else:
-            # Default: Inclueds orthologs and paralogs
-            fasta_filtr(os.path.basename(file), o_to_ex, paralogs)
+        fasta_filtr(os.path.basename(file), o_to_ex, paralogs)
 
 
 if __name__ == '__main__':
@@ -95,19 +97,12 @@ if __name__ == '__main__':
                                                                     usage='fishing_net.py [OPTIONS] '
                                                                           '-i <input> ')
 
-    # Add Arguments Specific to this script
-    # Optional
-    optional.add_argument('--orthologs', action='store_true',
-                          help=textwrap.dedent("""\
-                              Only for ortholog selection. Without information
-                              about used path."""))
-
     in_help = "Path to output directory of fisher.py containing the output of informant.py"
     args = help_formatter.get_args(parser, optional, required, in_help=in_help, pre_suf=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
     if args.input[-1] == '/':
         args.input = args.input[:-1]
