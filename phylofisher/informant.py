@@ -9,38 +9,7 @@ from pathlib import Path
 import os
 import sys
 import textwrap
-from phylofisher import help_formatter
-
-
-def taxonomy_dict(metadata, input_metadata=None):
-    """
-    Read metadata from dataset and input_metadata.
-    input: metadata file, input metadata file (optional)
-    return: dictionary with taxon: group; dictionary with
-    full names 
-    """
-    tax_g = {}
-    full_names = {}
-    for line_ in open(metadata):
-        line_ = line_.strip()
-        if 'Full Name' not in line_:
-            sline = line_.split('\t')
-            tax = sline[0].strip()
-            group = sline[2].strip()
-            full_name = sline[1].strip()
-            tax_g[tax] = group
-            full_names[tax] = full_name
-    if input_metadata:
-        for line in open(input_metadata):
-            line = line.strip()
-            if 'Long name' not in line:
-                metadata_input = line.split('\t')
-                tax = metadata_input[2].strip()
-                group = metadata_input[3].strip()
-                full_name = metadata_input[6].strip()
-                tax_g[tax] = group
-                full_names[tax] = full_name
-    return tax_g, full_names
+from phylofisher import help_formatter, subset_tools
 
 
 def collect_names(files):
@@ -96,7 +65,7 @@ def make_table(folder):
     return: pd.DataFrame with genes; dictionary with information about
     'routes' used for sequence selection (BBH, SBH, HMM)
     """
-    genes = [gene for gene in glob.glob(f'{folder}/*') if os.path.isfile(gene)]
+    genes = [gene for gene in glob.glob(f'{folder}/*.fas') if os.path.isfile(gene)]
     names, routes = collect_names(genes)
     columns = []
     for gene in genes:
@@ -112,24 +81,22 @@ def table_with_routes(df, routes):
     selection (BBH, SBH, HMM) to input dataframe
     input: pd.DataFrame with information about all genes (present(>0)/absent(0)) 
     for all organisms, dictionary with routes for all sequences
-    output: modifiend input dataframe with information about route
+    output: modified input dataframe with information about route
     """
-    # TODO: refractor me please
     full_names = []
-    tax_list = []
-    for org in df.index:
-        try:
-            org_tax = t_dict[org]
-        except KeyError:
-            org_tax = "Unknown"  # why mf?
-        tax_list.append(org_tax)
-        full_names.append(fnames[org])
+    high_tax_list = []
+    low_tax_list = []
+    for org in in_taxa_dict.keys():
+        group, subtax, long_name = in_taxa_dict[org]
+        high_tax_list.append(group)
+        low_tax_list.append(subtax)
+        full_names.append(long_name)
 
-    tax_col = pd.Series(tax_list, df.index)
-    df.insert(loc=0, column='Taxonomy', value=tax_col)
-
-    fname_col = pd.Series(full_names, df.index)
-    df.insert(loc=0, column='full_name', value=fname_col)
+    df = df.loc[in_taxa_dict.keys()]
+    df.index.name = 'Unique ID'
+    df.insert(loc=0, column='Lower Taxonomy', value=low_tax_list)
+    df.insert(loc=0, column='Higher Taxonomy', value=high_tax_list)
+    df.insert(loc=0, column='Full Name', value=full_names)
 
     df.to_csv(f'{output_fold}/occupancy.csv')
 
@@ -139,14 +106,17 @@ def table_with_routes(df, routes):
         for org in df[gene].index:
             if org in routes[gene]:
                 df.at[org, gene] = f'{df[gene][org]}_{routes[gene][org]}'
+
+    df.to_csv(f'{output_fold}/occupancy_with_routes.csv')
+
     return df
 
 
-def paralog_orgs():
-    """Collect all shortnames for organisms with at least one paralog
+def check_paralogs():
+    """Collect all Unique IDs for organisms with at least one paralog
     in the dataset.
     input: None
-    return: set of short names of organisms with at leat one paralog
+    return: set of short names of organisms with at least one paralog
     """
     paralogs = set()
     paralog_fold = os.path.dirname(args.metadata)
@@ -156,52 +126,25 @@ def paralog_orgs():
     return paralogs
 
 
-def stats_orgs_route(table):
+def get_routes():
     """
-    Create csv file with basic summary about analyzed dataset with information
-     about used 'routes' (BBH, SBH, HMM) and paralogs.
-    input: dataframe
-    return: None
+
+    :return:
     """
-    paralogs = paralog_orgs()
-    rows = []
-    for org in table.index:
-        genes_tot = len(table.columns) - 2  # because org name is the index
-        try:
-            # subtracting genes with value == 0
-            genes = genes_tot - table.loc[org].value_counts()['0']
-        except KeyError:
-            # why mf? Probably no '0'
-            genes = genes_tot
-        missing = genes_tot - genes
-        missing_perc = (missing / genes_tot) * 100
-        sbh = {}
-        sbh['SBH'] = 0
-        sbh['BBH'] = 0
-        sbh['HMM'] = 0
+    my_routes = dict()
+    for org in in_taxa_dict.keys():
+        sbh = {'SBH': 0, 'BBH': 0, 'HMM': 0}
         for val in res.loc[org].values[2:]:
             if '_' in val:
-                route = val.split('_')[1]
-                sbh[route] += 1
-        para_ava = 'none'
-        if org in paralogs:
-            para_ava = 'yes'
-        rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc, sbh['SBH'], sbh['BBH'],
-                               sbh['HMM'], 'yes', para_ava],
-                              index=["full name", "taxonomy", "#Genes", "#Missing", '%Missing', "#SBH",
-                                     "#BBH", "#HMM", "SGT", "paralogs"],
-                              name=org))
-    df = pd.DataFrame(rows)
-    df["#Genes"] = df['#Genes'].astype(int)
-    df["#Missing"] = df['#Missing'].astype(int)
-    df["%Missing"] = df['%Missing'].round(2)
-    df["#SBH"] = df["#SBH"].astype(int)
-    df["#BBH"] = df["#BBH"].astype(int)
-    df["#HMM"] = df["#HMM"].astype(int)
-    df.to_csv(f'{output_fold}/orgs_stats.csv')
+                count, route = val.split('_')
+                sbh[route] += int(count)
+
+        my_routes[org] = [sbh['SBH'], sbh['BBH'], sbh['HMM']]
+
+    return my_routes
 
 
-def stats_orgs(table):
+def stats_orgs(df, new_data=False):
     """
     Create csv file with basic summary about analyzed dataset without information
     about 'routes' and paralogs.
@@ -209,66 +152,102 @@ def stats_orgs(table):
     return: None
     """
     rows = []
-    for org in table.index:
-        genes_tot = len(table.columns) - 2
-        try:
-            genes = genes_tot - table.loc[org].value_counts()['0']
-        except KeyError:
-            genes = genes_tot
-        missing = genes_tot - genes
-        missing_perc = (missing / genes_tot) * 100
-        rows.append(pd.Series([fnames[org], t_dict[org], genes, missing, missing_perc, "yes"],
-                              index=["Full Name", "Taxonomy", "# of Genes", "# Missing", '% Missing', "Build SGT?"],
-                              name=org))
-    df = pd.DataFrame(rows)
+
+    if new_data:
+        df = df[df.index.isin(in_taxa_dict.keys())]
+    else:
+        df = df[df.index.isin(db_taxa_dict.keys())]
+
+    df = df.sum(axis=1).to_frame()
+
+    if new_data:
+        df = df.rename(columns={0: f"Sequences Collected"})
+    else:
+        df = df.rename(columns={0: f"Genes out of {len(matrix.columns)}"})
+
+    # Fill in taxonomic information
+    if new_data:
+        list_of_dicts = [{key: value[i] for key, value in in_taxa_dict.items()} for i in range(3)]
+    else:
+        list_of_dicts = [{key: value[i] for key, value in db_taxa_dict.items()} for i in range(3)]
+    df['Long Name'] = df.index.map(list_of_dicts[2])
+    df['Higher Taxonomy'] = df.index.map(list_of_dicts[0])
+    df['Lower Taxonomy'] = df.index.map(list_of_dicts[1])
+
+    # Rearrange Columns to Put Genes after taxa stats
+    cols = df.columns.tolist()
+    cols = cols[1:] + cols[:1]
+    df = df[cols]
+
+    if new_data:
+        routes_dict = get_routes()
+        list_of_routes_dicts = [{key: value[i] for key, value in routes_dict.items()} for i in range(3)]
+        df["#SBH"] = df.index.map(list_of_routes_dicts[0])
+        df["#BBH"] = df.index.map(list_of_routes_dicts[1])
+        df["#HMM"] = df.index.map(list_of_routes_dicts[2])
+        out_filename = 'new_taxa_stats.csv'
+    else:
+        out_filename = 'db_taxa_stats.csv'
+
+    # Fill in columns for including in SGT construction. By default all are yes
+    has_paralogs = check_paralogs()
+    if new_data:
+        sgt_dict = {org: 'yes' for org in in_taxa_dict.keys()}
+    else:
+        sgt_dict = {org: 'yes' for org in db_taxa_dict.keys()}
+    df['SGT'] = df.index.map(sgt_dict)
+
+    # Fill in column for paralogs. If no paralogs entry is 'none'.
+    # If there are paralogs entry is 'yes'. If there are paralogs, but --ortholog_only is given entry is 'no'.
+    if new_data:
+        pass
+    else:
+        paralogs_dict = {org: ('yes' if org in has_paralogs and not args.orthologs_only
+                               else 'no' if org in has_paralogs and args.orthologs_only else 'none')
+                         for org in db_taxa_dict}
+        df['Paralogs'] = df.index.map(paralogs_dict)
+
     df = df.rename_axis('Unique ID')
-    df["# of Genes"] = df['# of Genes'].astype(int)
-    df["# Missing"] = df['# Missing'].astype(int)
-    df["% Missing"] = df['% Missing'].round(2)
-    df.to_csv(f'{output_fold}/orgs_stats.csv')
+    df.to_csv(f'{output_fold}/{out_filename}')
 
 
-def stats_gene(table):
+def stats_gene(df):
     """Write basic summary for all genes to a file
     input: dataframe
     return: None
     """
-    columns = table.iloc[:, 2:]
-    tab_len = len(table)
-    with open(f'{output_fold}/genes_stats.csv', 'w') as res:
-        res.write(f'gene,total,total[%],SGT\n')
-        for i in columns:
-            orgs = tab_len - table[i].value_counts()[0]
-            orgs_perc = (orgs / tab_len) * 100
-            res.write(f"{i},{orgs},{orgs_perc.round(2)},yes\n")
+    # res.write(f'Gene,Total,total[%],SGT\n')
+    taxa_count = len(df)
+    df = df.sum().to_frame()
+    df = df.rename(columns={0: 'Number of Taxa'})
+    df[f'Percent of Total Taxa (out of {taxa_count})'] = round((df['Number of Taxa'] / taxa_count) * 100, 2)
+    df = df.rename_axis('Gene Name')
+    df = df.sort_values(by=['Number of Taxa'], ascending=False)
+    df['SGT'] = ['yes'] * len(df)
+    df.to_csv(f'{output_fold}/gene_stats.csv')
 
 
 if __name__ == '__main__':
+    description = 'Produce preliminary statistics about newly input data.'
     parser, optional, required = help_formatter.initialize_argparse(name='informant.py',
-                                                                    desc='some description',
+                                                                    desc=description,
                                                                     usage='informant.py -i input_folder [OPTIONS]')
 
     # Optional Arguments
     optional.add_argument('--orthologs_only', action='store_true',
                           help=textwrap.dedent("""\
-                          Paralogs will NOT be considered.
+                          Paralogs will NOT be included from any taxa in the starting
+                           database in downstream single gene tree construction.
                               """))
-    optional.add_argument('--occupancy_with_routes', action='store_true',
-                          help=textwrap.dedent("""\
-                          Outputs a CSV file with information regarding the route in which potential 
-                          orthologs were determined.
-                          """))
 
     in_help = 'Path to fisher.py output directory'
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help, out_dir=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
     args.metadata = os.path.join(dfo, 'metadata.tsv')
-
-    # args.input_folder = os.path.join(dfo, 'orthologs')
 
     output_fold = os.path.basename(os.path.normpath(args.input)) + '/informant_stats'
     if os.path.isdir(output_fold):
@@ -276,16 +255,14 @@ if __name__ == '__main__':
     else:
         os.mkdir(output_fold)
 
-    t_dict, fnames = taxonomy_dict(args.metadata, args.input_metadata)
-    tab, routes = make_table(args.input)
-    res = table_with_routes(tab, routes)
+    db_taxa_dict = subset_tools.parse_metadata(args.metadata)
+    in_taxa_dict = subset_tools.parse_metadata(args.input_metadata, input_meta=True)
+    all_taxa_dict = {**db_taxa_dict, **in_taxa_dict}
 
-    print(res)
+    matrix, routes = make_table(args.input)
 
-    if args.occupancy_with_routes:
-        res.to_csv(f'{output_fold}/occupancy_with_routes.csv')
-    if args.orthologs_only:
-        stats_orgs(res)
-    else:
-        stats_orgs_route(res)
-    stats_gene(res)
+    res = table_with_routes(matrix, routes)
+
+    stats_orgs(matrix)
+    stats_orgs(matrix, new_data=True)
+    stats_gene(matrix)
