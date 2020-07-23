@@ -6,3 +6,4 @@ dist/
 phylofisher/__pycache__/
 phylofisher/utilities/__pycache__/
 phylofisher.egg-info/
+lib/parasorter/
