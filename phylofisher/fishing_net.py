@@ -76,7 +76,7 @@ def main():
     o_to_ex, paralogs = parse_orgs(orgs_file)
     # only genes which are not in g_to_ex
     filtered_genes = []
-    for file in [file for file in os.listdir(args.input) if file.endswith(f"{args.suffix}.fas")]:
+    for file in [file for file in os.listdir(args.input) if file.endswith(f".fas")]:
         if file.split('.')[0] not in g_to_ex:
             filtered_genes.append(file)
 
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                               about used path."""))
 
     in_help = "Path to output directory of fisher.py containing the output of informant.py"
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, pre_suf=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
