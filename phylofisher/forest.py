@@ -240,6 +240,7 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
         contaminations = set()
     tree_base = str(os.path.basename(tree_file))
 
+    # what if they will use somethig different than Raxml? We should make some if statement here maybe.
     name_ = tree_base.split('.')[1]
 
     if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
