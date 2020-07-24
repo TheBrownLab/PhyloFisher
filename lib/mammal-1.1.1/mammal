@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 bindir <- ""
-cseries.dir <- ""
+cseries.dir <- "~/.mammal"
 ##------------------------------------------------------------------------------
 HclustCenters <- function(x,nclass=21,dmethod="manhattan",
                           linkage="average",hclust.type="hclust"){

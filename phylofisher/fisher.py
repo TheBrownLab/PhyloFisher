@@ -6,22 +6,22 @@ input: predicted proteins, input metadata
 output: fasta files with predicted candidate orthologous sequences
 """
 
+import configparser
 import os
-import shutil
+import subprocess
 import sys
 import textwrap
-from collections import defaultdict
-import subprocess
-import argparse
-from multiprocessing import Pool
-from functools import partial
-from pathlib import Path
-import configparser
 import warnings
+from collections import defaultdict
+from functools import partial
+from multiprocessing import Pool
+from pathlib import Path
 from shutil import copyfile, rmtree
+
+from Bio import BiopythonExperimentalWarning
 from Bio import SeqIO
 from ete3 import Tree
-from Bio import BiopythonExperimentalWarning
+
 from phylofisher import help_formatter
 
 with warnings.catch_warnings():
@@ -321,7 +321,7 @@ def cluster_rename_sequences():
     abs_path = os.path.abspath(f'tmp/{sample_name}/clustered_renamed.fasta')
 
     # prepares file tsv files which keep information about old name: new name
-    with open('original_names.tsv', 'a') as f:
+    with open(f'{args.output}/original_names.tsv', 'a') as f:
         for new_name, or_name in original_names.items():
             f.write(f'{or_name}\t{new_name}\n')
     return abs_path
@@ -504,7 +504,7 @@ def new_best_hits(candidate_hits):
                         d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
                     else:
                         d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
-                        with open('nonreciprocal_hits.txt', 'a') as nonrep:
+                        with open(f'{args.output}/nonreciprocal_hits.txt', 'a') as nonrep:
                             nonrep.write(
                                 f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
                             print(f'nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')

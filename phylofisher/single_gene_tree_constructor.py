@@ -2,14 +2,15 @@
 import csv
 import os
 import shutil
-import textwrap
 import subprocess
+import textwrap
+from functools import partial
+from multiprocessing import Pool
 from tempfile import NamedTemporaryFile
 
 from Bio import SeqIO
-from multiprocessing import Pool
+
 from phylofisher import help_formatter
-from functools import partial
 
 
 def bash_command(cmd):
@@ -115,7 +116,10 @@ def update_checkpoints(root, prog):
 
 
 def prepare_analyses(checks, root):
-    threads = int(args.threads / file_count)
+    if (args.threads / file_count) > 1:
+        threads = int(args.threads / file_count)
+    else:
+        threads = 1
     checks = checks[root]
 
     for i, check in enumerate(checks):
@@ -150,6 +154,7 @@ def prepare_analyses(checks, root):
             status = bash_command(f'divvier -mincol 4 -partial {args.output}/length_filtration/mafft/{root}.aln')
             if status:
                 shutil.move(f'../mafft/{root}.aln.divvy.fas', f'./{root}.aln.divvy.fas')
+                shutil.move(f'../mafft/{root}.aln.PP', f'./{root}.aln.PP')
                 update_checkpoints(root, 'divvier1')
             else:
                 break
@@ -184,6 +189,7 @@ def prepare_analyses(checks, root):
             status = bash_command(f'divvier -mincol 4 -partial {args.output}/mafft/{root}.aln2')
             if status:
                 shutil.move(f'../mafft/{root}.aln2.divvy.fas', f'./{root}.aln2.divvy.fas')
+                shutil.move(f'../mafft/{root}.aln2.PP', f'./{root}.aln2.PP')
                 update_checkpoints(root, 'divvier2')
             else:
                 break

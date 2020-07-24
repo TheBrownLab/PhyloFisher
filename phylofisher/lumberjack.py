@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-import calendar
-import datetime
-import os
-import glob
-import string
-import random
-import textwrap
-from Bio import SeqIO
 import configparser
-from pathlib import Path
+import glob
+import os
+import random
+import string
+import textwrap
 from collections import defaultdict
+from pathlib import Path
+
+from Bio import SeqIO
+
 from phylofisher import help_formatter
 
 
@@ -201,8 +201,8 @@ def add_to_meta(abbrev):
     """
     with open(metadata, 'a') as res:
         full = input_info[abbrev]['full_name']
-        tax = input_info[abbrev]['tax']
-        subtax = input_info[abbrev]['subtax']
+        tax = input_info[abbrev]['tax'].replace('*', '')
+        subtax = input_info[abbrev]['subtax'].replace('*', '')
         data_type = input_info[abbrev]['data_type']
         notes = input_info[abbrev]['notes']
         res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}\t{data_type}\t{notes}\n')
@@ -237,8 +237,20 @@ def new_database(table):
             res.write(f'>{name}\n{record.seq}\n')
 
 
+def backup():
+    """
+    Backs up dataset/orthologs/ and dataset/paralogs/ before applying decisions
+    :return:
+    """
+    # TODO: Finish this Function
+    pass
+
+
 def main():
-    """Main function. Run new_database on all parsed trees (tsv files)"""
+    """
+    Main function. Run new_database on all parsed trees (tsv files)
+    :return:
+    """
     for table in glob.glob(f'{args.input}/*_parsed.tsv'):
         new_database(table)
 

@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 import glob
-import os
-import shutil
-import textwrap
-import numpy
 import math
+import os
 import random
+import shutil
 import tarfile
+import textwrap
+
+import numpy
 import pandas as pd
+
 from phylofisher import help_formatter
 
 
@@ -49,7 +51,7 @@ def subsample(percent, genes, output):
         for file in sample:
             shutil.copy(file, f'{output}/tmp')
         # Runs forge to create super matrices of subsampled gene sets
-        os.system(f'forge.py -i {output}/tmp -o {output}/replicate_{i + 1} -f {args.out_format.lower()}')
+        os.system(f'forge.py -i {output}/tmp -o {output}/replicate_{i + 1} -of {args.out_format.lower()} -c')
         shutil.rmtree(f'{output}/tmp')
 
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import configparser
 import argparse
+import configparser
 import textwrap
 from pathlib import Path
-import phylofisher.help_formatter
 
+import phylofisher.help_formatter
 
 if __name__ == '__main__':
     formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
@@ -35,7 +35,7 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('--tree_colors', metavar='<omcl_data>',
                           help=textwrap.dedent("""\
-                              Path to alternative single genetree color configuration file.
+                              Path to alternative single gene tree color configuration file.
                               """))
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
@@ -55,5 +55,6 @@ if __name__ == '__main__':
     with open('config.ini', 'w') as configfile:
         config['PATHS'] = {'dataset_folder': args.dataset_folder,
                            'input_file': args.input_file,
-                           'orthomcl': args.orthomcl}
+                           'orthomcl': args.orthomcl,
+                           'color_conf': args.tree_colors}
         config.write(configfile)

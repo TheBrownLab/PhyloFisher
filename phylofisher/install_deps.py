@@ -2,12 +2,11 @@
 
 import os
 import platform
-import sys
 import shutil
+import subprocess
 import tarfile
 import textwrap
 import urllib.request
-import subprocess
 from zipfile import ZipFile
 
 from phylofisher import help_formatter
@@ -37,27 +36,16 @@ def download(url):
 
 
 def extract(fname):
-    if fname.endswith("tar.gz") or fname.endswith('.tgz'):
-        tar = tarfile.open(fname, "r:gz")
-        tar.extractall()
-        tar.close()
-        os.remove(fname)
-    elif fname.endswith("tar"):
-        tar = tarfile.open(fname, "r:")
-        tar.extractall()
-        tar.close()
-        os.remove(fname)
-    elif fname.endswith("zip"):
-        zipped = ZipFile(fname, 'r')
-        zipped.extractall()
-        zipped.close()
-        os.remove(fname)
+    tar = tarfile.open(fname, "r:gz")
+    tar.extractall()
+    tar.close()
+    os.remove(fname)
 
 
 def get_trimal():
     os.chdir(fisher_dir)
     if is_in_path('trimal') is False:
-        url = 'http://trimal.cgenomics.org/_media/trimal.v1.2rev59.tar.gz'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/trimal-1.2.tar.gz'
         extract(download(url))
         os.chdir(f'{fisher_dir}/trimAl/source/')
         bash('make')
@@ -75,12 +63,12 @@ def get_raxml():
     os.chdir(fisher_dir)
     if is_in_path('raxmlHPC-PTHREADS-AVX2') is False:
         # Download and extract RAxML
-        url = 'https://github.com/stamatak/standard-RAxML/archive/master.zip'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/standard-RAxML-8.2.12.tar.gz'
         extract(download(url))
-        os.chdir(f'{fisher_dir}/standard-RAxML-master/')
+        os.chdir(f'{fisher_dir}/standard-RAxML-8.2.12/')
         bash('make -f Makefile.AVX.PTHREADS.gcc')
         # Symlink executables to user bin
-        src = f'{fisher_dir}/standard-RAxML-master/raxmlHPC-PTHREADS-AVX'
+        src = f'{fisher_dir}/standard-RAxML-8.2.12/raxmlHPC-PTHREADS-AVX'
         des = f'{user_bin}/raxmlHPC-PTHREADS-AVX2'
         shutil.copy(src, des)
 
@@ -89,63 +77,63 @@ def get_hmmer():
     os.chdir(fisher_dir)
     if is_in_path('hmmsearch') is False:
         # Download and extract hmmer
-        url = 'http://eddylab.org/software/hmmer/hmmer.tar.gz'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/hmmer-3.3.tar.gz'
         extract(download(url))
 
         os.chdir(f'{fisher_dir}/hmmer-3.3/')
-        bash('./configure --prefix=$HOME && make install')
+        bash('./configure --prefix=$HOME/.local && make install')
 
 
 def get_diamond():
     os.chdir(fisher_dir)
     if is_in_path('diamond') is False:
         # Download and extract Diamond
-        if platform.system() == 'Darwin':
-            url = 'http://github.com/bbuchfink/diamond/releases/download/v0.9.31/diamond-linux64.tar.gz'
-        else:
-            url = 'http://github.com/bbuchfink/diamond/releases/download/v0.9.31/diamond-linux64.tar.gz'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/diamond-0.9.34.tar.gz'
         extract(download(url))
         shutil.copy(f'{fisher_dir}/diamond', f'{user_bin}/diamond')
+        os.remove(f'{fisher_dir}/diamond')
 
 
 def get_fasttree():
     os.chdir(fisher_dir)
     if is_in_path('fasttree') is False:
         # Download and extract Diamond
-        url = 'http://www.microbesonline.org/fasttree/FastTree.c'
-        download(url)
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/FastTree-2.1.11.tar.gz'
+        extract(download(url))
         bash('gcc -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm')
         shutil.copy(f'{fisher_dir}/FastTree', f'{user_bin}/fasttree')
-
+        os.remove(f'{fisher_dir}/FastTree-2.1.11.tar.gz')
+        os.remove(f'{fisher_dir}/FastTree.c')
+        
 
 def get_blast():
     os.chdir(fisher_dir)
     if is_in_path('blastn') is False:
-        linux_url = 'https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-linux.tar.gz'
-        mac_url = 'https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.0+-x64-macosx.tar.gz'
+        linux_url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/ncbi-blast-2.10.1-linux.tar.gz'
+        mac_url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/ncbi-blast-2.10.1-macosx.tar.gz'
         if platform.system() == 'Darwin':
             extract(download(mac_url))
         else:
             extract(download(linux_url))
 
-        src = f'{fisher_dir}/ncbi-blast-2.10.0+/bin/*'
+        src = f'{fisher_dir}/ncbi-blast-2.10.1+/bin/*'
         bash(f'cp {src} {user_bin}')
 
 
 def get_cd_hit():
     os.chdir(fisher_dir)
     if is_in_path('cd-hit') is False:
-        url = 'https://github.com/weizhongli/cdhit/archive/master.zip'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/cdhit-4.8.1.tar.gz'
         extract(download(url))
 
-        os.chdir(f'{fisher_dir}/cdhit-master')
+        os.chdir(f'{fisher_dir}/cdhit-4.8.1')
         if platform.system() == 'Darwin':
             bash(f'make clean && make CC={args.gxx}')
         else:
             bash('make clean && make')
         exes = ['cd-hit', 'cd-hit-est', 'cd-hit-2d', 'cd-hit-est-2d', 'cd-hit-div', 'cd-hit-454']
         for exe in exes:
-            src = f'{fisher_dir}/cdhit-master/{exe}'
+            src = f'{fisher_dir}/cdhit-4.8.1/{exe}'
             des = f'{user_bin}/{exe}'
             shutil.copy(src, des)
 
@@ -154,7 +142,7 @@ def get_mafft():
     os.chdir(fisher_dir)
     if is_in_path('mafft') is False:
         # Download and extract mafft
-        url = 'https://mafft.cbrc.jp/alignment/software/mafft-7.453-without-extensions-src.tgz'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/mafft-7.453.tar.gz'
         extract(download(url))
 
         os.chdir(f'{fisher_dir}/mafft-7.453-without-extensions/core')
@@ -174,11 +162,11 @@ def get_mafft():
 def get_divvier():
     os.chdir(fisher_dir)
     if is_in_path('divvier') is False:
-        url = 'https://github.com/simonwhelan/Divvier/archive/master.zip'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/Divvier-1.01.tar.gz'
         extract(download(url))
-        os.chdir(f'{fisher_dir}/Divvier-master')
+        os.chdir(f'{fisher_dir}/Divvier-1.01')
         bash('make clean && make')
-        src = f'{fisher_dir}/Divvier-master/divvier'
+        src = f'{fisher_dir}/Divvier-1.01/divvier'
         des = f'{user_bin}/divvier'
         shutil.copy(src, des)
 
@@ -186,11 +174,11 @@ def get_divvier():
 def get_prequal():
     os.chdir(fisher_dir)
     if is_in_path('prequal') is False:
-        url = 'https://github.com/simonwhelan/Prequal/archive/master.zip'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/prequal-1.02.tar.gz'
         extract(download(url))
-        os.chdir(f'{fisher_dir}/prequal-master')
+        os.chdir(f'{fisher_dir}/prequal-1.02')
         bash('make clean && make')
-        src = f'{fisher_dir}/prequal-master/prequal'
+        src = f'{fisher_dir}/prequal-1.02/prequal'
         des = f'{user_bin}/prequal'
         shutil.copy(src, des)
 
@@ -198,7 +186,7 @@ def get_prequal():
 def get_bmge():
     os.chdir(fisher_dir)
     if is_in_path('BMGE') is False:
-        url = 'ftp://ftp.pasteur.fr/pub/gensoft/projects/BMGE/BMGE-1.12.tar.gz'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/BMGE-1.12.tar.gz'
         bash(f'wget {url}')
         extract('BMGE-1.12.tar.gz')
         os.chdir('BMGE-1.12')
@@ -224,11 +212,11 @@ def get_bmge():
 def get_dist_est():
     os.chdir(fisher_dir)
     if is_in_path('dist_est') is False:
-        url = 'https://github.com/DavidZihala/PhyloFisher/raw/master/lib/dist_estv1.1.tar.gz'
+        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/dist_est-1.1.tar.gz'
         extract(download(url))
-        os.chdir(f'{fisher_dir}/dist_estv1.1')
+        os.chdir(f'{fisher_dir}/dist_est-1.1')
         bash('make clean && make')
-        src = f'{fisher_dir}/dist_estv1.1/dist_est'
+        src = f'{fisher_dir}/dist_est-1.1/dist_est'
         des = f'{user_bin}/dist_est'
         shutil.copy(src, des)
 
@@ -248,10 +236,18 @@ if __name__ == '__main__':
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
-    home = os.path.expanduser('~')
-    user_bin = f'{home}/bin'
-    fisher_dir = f'{home}/PhyloFisher_lib'
+    # home = os.path.expanduser('~')
+    home = os.getcwd()
 
+    user_bin = f'{home}/.local/bin'
+    fisher_dir = f'{home}/.local/lib/phylofisher'
+
+    # Check if necessary directy structure is already present.
+    # If not creates it
+    if os.path.isdir(f'{home}/.local') is False:
+        os.mkdir(f'{home}/.local')
+    if os.path.isdir(f'{home}/.local/lib') is False:
+        os.mkdir(f'{home}/.local/lib')
     if os.path.isdir(user_bin) is False:
         os.mkdir(user_bin)
     if os.path.isdir(fisher_dir) is False:
@@ -273,4 +269,4 @@ if __name__ == '__main__':
     get_divvier()
     get_prequal()
     get_bmge()
-    # get_dist_est()
+    get_dist_est()
