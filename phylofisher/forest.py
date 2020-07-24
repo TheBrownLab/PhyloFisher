@@ -240,6 +240,7 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
         contaminations = set()
     tree_base = str(os.path.basename(tree_file))
 
+    # what if they will use somethig different than Raxml? We should make some if statement here maybe.
     name_ = tree_base.split('.')[1]
 
     if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
@@ -498,11 +499,9 @@ def backpropagate_contamination(tree_file, cont_names):
     """
     tree_base = str(os.path.basename(tree_file))
     output_base = f"{tree_base.split('.')[1].split('_')[0]}"
-    if args.prefix:
-        tree_base = tree_base.replace(args.prefix, '')
-    if args.suffix:
-        tree_base = tree_base.replace(args.suffix, '')
     tree_base = tree_base.split("_")[0]
+
+    # change original tables before parsing
     original_table = open(f"{output_folder}/{output_base}.tsv", 'r').readlines()
     with open(f"{output_folder}/{output_base}.tsv", 'w') as res_:
         for line in original_table:
@@ -513,6 +512,20 @@ def backpropagate_contamination(tree_file, cont_names):
             if name in cont_names:
                 status = 'd'
             res_.write(f'{name}\t{tax}\t{status}\n')
+
+    # changed already parsed table (*_parsed.tsv) if it already exists
+    parsed_table_file = f"{output_folder}/{output_base}_parsed.tsv"
+    if os.path.isfile(parsed_table_file):
+            parsed_table = open(parsed_table_file, 'r').readlines()
+        with open(f"{output_folder}/{output_base}.tsv", 'w') as res_:
+            for line in parsed_table:
+                sline = line.split('\t')
+                name = sline[0]
+                tax = sline[1]
+                status = sline[2].strip()
+                if name in cont_names:
+                    status = 'd'
+                res_.write(f'{name}\t{tax}\t{status}\n')
 
 
 if __name__ == '__main__':
