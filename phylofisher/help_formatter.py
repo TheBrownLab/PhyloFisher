@@ -72,7 +72,7 @@ def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre
                                       """))
 
 
-def initialize_argparse(name, desc, usage):
+def initialize_argparse(name: object, desc: object, usage: object) -> object:
     """
     This function initialized argparse
     """

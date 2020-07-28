@@ -50,7 +50,7 @@ def subsample(percent, genes, output):
         # copy gene files into a tmp directory
         for file in sample:
             shutil.copy(file, f'{output}/tmp')
-        # Runs forge to create super matrices of subsampled gene sets
+        # Runs forge to create super matrix of subsampled gene sets
         os.system(f'forge.py -i {output}/tmp -o {output}/replicate_{i + 1} -of {args.out_format.lower()} -c')
         shutil.rmtree(f'{output}/tmp')
 

@@ -14,7 +14,7 @@ def make_astral_inputs():
     genes = [file.split('.')[1] for file in os.listdir(args.input) if 'RAxML_bipartitions.' in file]
     genes = set(genes)
     
-    with open(f'{args.output}/sgt_trees.tre', 'w') as tree_file, open(f'{args.output}/bs-files.txt', 'w') as bs_files:
+    with open(f'{args.output}/all_sgt.tre', 'w') as tree_file, open(f'{args.output}/bs_files.txt', 'w') as bs_files:
         for gene in genes:
             with open(f'{args.input}/RAxML_bipartitions.{gene}.{args.suffix}', "r") as infile:
                 for line in infile:
@@ -30,11 +30,11 @@ def run_astral():
     :return:
     """
     os.chdir(args.output)
-    subprocess.run(f'astral -i sgt_trees.tre -b bs-files.txt -o AstralBS.out', shell=True, executable='/bin/bash')
+    subprocess.run(f'astral -i all_sgt.tre -b bs_files.txt -o AstralBS.out', shell=True, executable='/bin/bash')
 
 
 if __name__ == '__main__':
-    description = 'Description'  # TODO: Get Description
+    description = 'Generates input files and infers a coalescent-based species tree'  # TODO: Get Description
     parser, optional, required = help_formatter.initialize_argparse(name='astral_runner.py',
                                                                     desc=description,
                                                                     usage='astral_runner.py '
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     #                               Default: phylip-relaxed
     #                               """))
 
-    in_help = 'Path to input directory containing gene files in FASTA format.'  # TODO: Correct this
+    in_help = 'Path to directory containing single gene trees and their corresponding bootstrap value files.'
     args = help_formatter.get_args(parser, optional, required, in_help=in_help)
     
     args.output = os.path.abspath(args.output)

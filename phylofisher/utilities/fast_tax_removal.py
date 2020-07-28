@@ -29,7 +29,7 @@ class Leaves:
             if name != leaf.name:
                 distances.append(leaf.get_distance(locations[name]))
         sorted_dist = sorted(distances, reverse=True)
-        return mean(sorted_dist[:10])
+        return mean(sorted_dist[:   10])
 
     def org_speed(self):
         mean_distances = []
@@ -113,4 +113,4 @@ if __name__ == '__main__':
     tree = Tree(args.tree)
     x = Leaves(tree)
     m = Matrix(args.matrix, args.in_format, x.org_speed())
-    m.generate_subset(args.output_folder, args.iterations, args.chunk_size)
+    m.generate_subset(args.output, args.iterations, args.chunk_size)

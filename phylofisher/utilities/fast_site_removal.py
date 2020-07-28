@@ -34,7 +34,7 @@ def fake_phylip(matrix):
     pseudonames_rev = {}
     result = ''
     with open('TEMP.phy', 'w') as res:
-        for record in SeqIO.parse(matrix, 'phylip-relaxed'):
+        for record in SeqIO.parse(matrix, 'fasta'):
             seqs += 1
             if not length:
                 length = len(record.seq)
@@ -109,13 +109,13 @@ def main():
         run_dist()
 
     matrix_dict = {}
-    for record in SeqIO.parse(args.matrix, 'phylip-relaxed'):
+    for record in SeqIO.parse(args.matrix, 'fasta'):
         matrix_dict[record.name] = pd.Series(list(record.seq))
 
     sorted_rates = parse_rates()
     iter = 0
-    os.mkdir(f'chunks_{args.chunk}')
-    os.chdir(f'chunks_{args.chunk}')
+    os.mkdir(f'{args.output}/chunks_{args.chunk}')
+    os.chdir(f'{args.output}/chunks_{args.chunk}')
     for chunk in range(args.chunk, len(sorted_rates), args.chunk):
         with open(f'chunk{iter}', 'w') as res:
             records = []
@@ -164,5 +164,7 @@ if __name__ == "__main__":
                               """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
-
+    
+    os.mkdir(args.output)
+    
     main()
