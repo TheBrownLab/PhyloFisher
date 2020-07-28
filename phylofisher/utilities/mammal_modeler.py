@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import subprocess
 import textwrap
 import string
 import random
@@ -51,26 +52,37 @@ def fake_tree(treefile, pseudonames):
         res.write(original)
 
 
+def run_mammal():
+    cmd = f'mammal -s TEMP_alph.phy -t TEMP_alph.tre -c {args.rate_classes} -l'
+    subprocess.run(cmd, executable='/bin/bash', shell=True)
+
+
+
 if __name__ == "__main__":
     description = 'Prepares supermatrix and tree for MAMMaL analysis'
     parser, optional, required = help_formatter.initialize_argparse(name='mammal_modeler.py',
                                                                     desc=description,
                                                                     usage='mammal_modeler.py '
-                                                                          '[OPTIONS] -tr <tree_file> -m <matrix>')
+                                                                          '[OPTIONS] -t <tree_file> -s <matrix>')
 
     # Required Arguments
-    required.add_argument('-m', '--matrix', required=True, type=str, metavar='<matrix>',
+    required.add_argument('-s', '--supermatrix', required=True, type=str, metavar='<matrix>',
                           help=textwrap.dedent("""\
-                              Path to matrix
+                              Path to supermatrix file.
                               """))
-    required.add_argument('-tr', '--tree', type=str, metavar='',
+    required.add_argument('-t', '--tree', type=str, metavar='<tree>',
                           help=textwrap.dedent("""\
-                              Path to tree
+                              Path to tree.
                               """))
     # Optional Arguments
-    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-c', '--rate_classes', metavar='<N>', type=int, default=60,
                           help=textwrap.dedent("""\
-                              Input format of matrix
+                              The number od rate classes for MAMMaL to infer.
+                              Default: 60
+                            """))
+    optional.add_argument('-at', '--alignment_type', metavar='<format>', type=str, default='phylip-relaxed',
+                          help=textwrap.dedent("""\
+                              Input format of the
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
                               or phylip-relaxed (names are not truncated)
                               Default: phylip-relaxed
