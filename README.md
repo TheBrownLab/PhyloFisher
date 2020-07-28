@@ -1,4 +1,4 @@
-![PhyloFIsher](fisher.png)
+![PhyloFIsher](docs/fisher.png)
 
 Jump to:
    - [Installation](#Installation)
@@ -46,30 +46,41 @@ Notes:
 **Insert Work Flow Figure Here**
 
 ### Main Workflow
+1. **Prepare Input Metadata**
 1. **config.py**
-    - config.py allows the user to set to configure the analyis directory <br/>
-    - Usage: `config.py [OPTIONS] -d <dataset_folder> -i <input_metadata.tsv>`<br/>
-2. **fisher.py**
-    - Run fisher.py for ortholog fishing:<br/>
+    - config.py allows the user to set to configure the analyis directory. <br/>
+    - Usage: `config.py [OPTIONS] -d <database_folder> -i <input_metadata.tsv>`<br/>
+1. **fisher.py**
+    - Run fisher.py for ortholog fishing.<br/>
     - Usage: `fisher.py [OPTIONS]`<br/>
-3. **informant.py**
-    - Prepare *_stats folder for organism and gene selection:<br/>
+1. **informant.py**
+    - Prepare *_stats folder for organism and gene selection.<br/>
     - Usage: `informant.py [OPTIONS] -i fasta/ --paralog_selection`<br/>
-4. **fishing_net.py**
-    - Apply your selection:<br/>
+1. **fishing_net.py**
+    - Apply your selection.<br/>
     - Usage: `fishing_net.py [OPTIONS] -i fasta/ -o <folder_with_selected_seqs>`<br/>
-5. **single_gene_tree_constructor.py**
-    - Length filtration, trimming and single gene tree computations:<br/>
+1. **single_gene_tree_constructor.py**
+    - Length filtration, trimming and single gene tree computations.<br/>
     - Usage: `trimming.py [OPTIONS] -i <folder_with_fasta_files>`<br/>
-6. **forest.py**
-    - Tree visualization:<br/>
+1. **forest.py**
+    - Tree visualization.<br/>
     - Usage: `forest.py [OPTIONS] --input <dir_containing_tress>`<br/>
-7. **forge.py**
-    - Build phylogenomic matrix (Concatenation):<br/>
+1. **lumberjack.py**
+    - Add new data to the starting dataset.<br/>
+    - Usage: `INSERT USAGE`
+1. **select_taxa.py** (OPTIONAL)
+    - Select a subset of taxa from the database for final phylogenomic analyses.<br/>
+    - Usage: `select_taxa.py [OPTIONS]`<br/>
+1. **select_orthologs.py** (OPTIONAL)
+    - Select a subset of orthologs from the database for final phylogenomic analyses.<br/>
+    - Usage: `select_orthologs.py [OPTIONS]`<br/>
+1. **prep_final_dataset.py**
+    - Collect taxa and genes for final phylogenomic analyses.<br/>
+    - Usage: `prep_final_dataset.py [OPTIONS]`<br/>
+1. **forge.py**
+    - Build phylogenomic matrix (Concatenation).<br/>
     - Usage: `forge.py [OPTIONS] --input <input_dir> `<br/>
-8. **lumberjack.py**
-    - Add new data to the dataset:<br/>
-    - Usage: `lumberjack.py [OPTIONS] --input <path/to/tsvs>` <br/>
+ 
 
 ***Use `<script>.py --help`  to see all options and their desctriptions.
 
@@ -97,10 +108,6 @@ Notes:
 * **SR4_class_recoder.py**
     * Recodes input matrix based on SR4 amino acid classifications.
     * Usage: `SR4_class_recoder.py [OPTIONS] -i <matrix>`<br/>
-* **missing_data.py**
-    * Subsets gene based on gene completeness.
-    * Usage: `missing_data.py [OPTIONS] -i <input_dir> -m <metadata> {-n <gene_number> |
-     -c <percent_complete>}`<br/>
 
 ***Use `<script>.py --help`  to see all options and their desctriptions.
  
