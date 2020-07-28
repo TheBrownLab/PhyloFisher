@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import configparser
 import os
 import textwrap
@@ -87,7 +89,7 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     metadata = f'{dfo}/metadata.tsv'
     orthologs_dir = f'{dfo}/orthologs/'
 

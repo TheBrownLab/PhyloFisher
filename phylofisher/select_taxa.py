@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import configparser
 import os
 import textwrap
@@ -5,24 +7,6 @@ from pathlib import Path
 import pandas as pd
 
 from phylofisher import help_formatter, subset_tools
-
-
-def parse_metadata():
-    """
-    Parses metadata.csv to get all org names in each group and subtax
-    Input: NONE
-    Output: (1) dictionary with groups/subtax as keys and sets of orgs in those groups/subtax as values
-            (2) list of all orgs in metadata
-    """
-    taxa_dict = {}
-    with open(metadata, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            if "Full Name" not in line:
-                org, _, group, subtax, _, _ = line.split('\t')
-                taxa_dict[org] = [group, subtax]
-
-    return taxa_dict
 
 
 def parse_user_inc_exc(input_file):
@@ -44,7 +28,7 @@ def make_subset_tsv():
 
     :return:
     """
-    taxa = parse_metadata()
+    taxa = subset_tools.parse_metadata(metadata)
     df = taxa_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
 
@@ -126,7 +110,7 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     metadata = f'{dfo}/metadata.tsv'
     orthologs_dir = f'{dfo}/orthologs/'
 
