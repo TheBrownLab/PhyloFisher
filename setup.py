@@ -29,7 +29,8 @@ setup(
              'phylofisher/utilities/heterotachy.py',
              'phylofisher/utilities/random_sample_iteration.py',
              'phylofisher/utilities/astral_runner.py',
-             'phylofisher/utilities/rtc_binner.py'
+             'phylofisher/utilities/rtc_binner.py',
+             'phylofisher/utilities/restore_backup.py'
              ],
     python_requires='>=3.7',
     install_requires=['biopython==1.76',
