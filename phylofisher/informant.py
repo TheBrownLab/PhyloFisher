@@ -91,8 +91,8 @@ def table_with_routes(df, routes):
         high_tax_list.append(group)
         low_tax_list.append(subtax)
         full_names.append(long_name)
-
-    df = df.loc[in_taxa_dict.keys()]
+    print(in_taxa_dict)
+    df = df[df.index.isin(in_taxa_dict.keys())]
     df.index.name = 'Unique ID'
     df.insert(loc=0, column='Lower Taxonomy', value=low_tax_list)
     df.insert(loc=0, column='Higher Taxonomy', value=high_tax_list)
