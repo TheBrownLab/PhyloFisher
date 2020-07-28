@@ -43,9 +43,30 @@ def parse_aligns(args, input_dir):
     return bin_mat
 
 
+def parse_metadata(metadata, input_meta=False):
+    """
+    Parses metadata.csv to get all org names in each group and subtax
+    Input: NONE
+    Output: (1) dictionary with groups/subtax as keys and sets of orgs in those groups/subtax as values
+            (2) list of all orgs in metadata
+    """
+    taxa_dict = {}
+    with open(metadata, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            if "Unique ID" not in line:
+                if input_meta:
+                    _, _, org, group, subtax, _, long_name, _, _ = line.split('\t')
+                else:
+                    org, long_name, group, subtax, _, _ = line.split('\t')
+                taxa_dict[org] = [group, subtax, long_name]
+
+    return taxa_dict
+
+
 def completeness(args, input_dir, genes=True):
     """
-    Comptutes completeness of genes based on either all taxa_comp_df or a set of taxa_comp_df provided by user
+    Computes completeness of genes based on either all taxa_comp_df or a set of taxa_comp_df provided by user
     """
 
     matrix = parse_aligns(args, input_dir)

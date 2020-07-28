@@ -80,9 +80,9 @@ def subset_taxa():
 
 if __name__ == '__main__':
     description = 'Subsets taxa and orthologs to be included in super matrix construction'
-    parser, optional, required = help_formatter.initialize_argparse(name='prep_for_matrix.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='prep_final_dataset.py',
                                                                     desc=description,
-                                                                    usage='prep_for_matrix.py '
+                                                                    usage='prep_final_dataset.py '
                                                                           '[OPTIONS]')
 
     # Optional Arguments
