@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     multi_input = os.path.abspath(config['PATHS']['input_file'])
 
     delete_group_org(args.orgs, args.tax_groups)

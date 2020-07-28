@@ -451,10 +451,10 @@ def fasttree(checked_hits):
     if args.all_paralogs:
         # keep all hits, even if SBH (good hits) hits exist
         all_hits = good_hits[:]
-            for hit in bb_hits:
-                if hit not in good_hits:
-                    hit.name = hit.name.replace('_SBH', '_BBH')
-                    all_hits.append(hit)
+        for hit in bb_hits:
+            if hit not in good_hits:
+                hit.name = hit.name.replace('_SBH', '_BBH')
+                all_hits.append(hit)
         return all_hits
     elif len(good_hits) > 0:
         return good_hits
@@ -479,6 +479,7 @@ def parse_diamond_output():
         hit, gene = full_name.split('@')
         if full_name not in proccesed:
             proccesed.add(full_name)
+            org = sline[1].split('|')[0]
             org = sline[1].split('|')[0]
             og = sline[1].split('|')[2].strip()
             if org not in bacterial and og in gene_og[gene]:
@@ -617,8 +618,8 @@ if __name__ == '__main__':
     elif args.add_to and not args.add:
         parser.error("--add_to requires --add.")
 
-    # dataset folder
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    # database folder
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
     # taxon: group for all orgs in metadata
     tax_group = taxonomy_dict()

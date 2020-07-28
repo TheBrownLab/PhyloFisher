@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # Congig Parser
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     metadata = str(os.path.join(dfo, 'metadata.tsv'))
 
     check_metadata()

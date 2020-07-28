@@ -4,25 +4,19 @@ import configparser
 import textwrap
 from pathlib import Path
 
-import phylofisher.help_formatter
+from phylofisher import help_formatter
 
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
-    parser = argparse.ArgumentParser(prog='forest.py',
-                                     description='Script for the analysis folder configuration.',
-                                     usage="config.py -d <dataset_folder> -i <input_file.tsv> [OPTIONS]",
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                     additional information:
-                                        stuff
-                                        """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    description = 'Script for the analysis folder configuration.'
+    usage = 'config.py -d <database_folder> -i <input_file.tsv> [OPTIONS]'
+    parser, optional, required = help_formatter.initialize_argparse(name='config.py',
+                                                                    desc=description,
+                                                                    usage=usage)
+
     # Required Arguments
-    required.add_argument('-d', '--dataset_folder', required=True, metavar='<dataset_dir>',
+    required.add_argument('-d', '--database_folder', required=True, metavar='<database_dir>',
                           help=textwrap.dedent("""\
-                          Path to directory containing dataset.
+                          Path to directory containing the PhyloFisher database.
                           """))
     required.add_argument('-i', '--input_file', required=True, metavar='<input.tsv>',
                           help=textwrap.dedent("""\
@@ -37,24 +31,19 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                               Path to alternative single gene tree color configuration file.
                               """))
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                          Show this help message and exit.
-                          """))
 
-    parser._action_groups.append(optional)
     config = configparser.ConfigParser()
-    args = parser.parse_args()
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
     if not args.orthomcl:
-        args.orthomcl = str(Path(args.dataset_folder, 'orthomcl'))
+        args.orthomcl = str(Path(args.database_folder, 'orthomcl'))
 
     if not args.tree_colors:
-        args.tree_colors = str(Path(args.dataset_folder, 'tree_colors.csv'))
+        args.tree_colors = str(Path(args.database_folder, 'tree_colors.csv'))
 
     with open('config.ini', 'w') as configfile:
-        config['PATHS'] = {'dataset_folder': args.dataset_folder,
-                           'input_file': args.input_file,
-                           'orthomcl': args.orthomcl,
-                           'color_conf': args.tree_colors}
+        config['PATHS'] = {'database_folder': args.database_folder,
+                           'input_file':     args.input_file,
+                           'orthomcl':       args.orthomcl,
+                           'color_conf':     args.tree_colors}
         config.write(configfile)

@@ -516,7 +516,7 @@ def backpropagate_contamination(tree_file, cont_names):
     # changed already parsed table (*_parsed.tsv) if it already exists
     parsed_table_file = f"{output_folder}/{output_base}_parsed.tsv"
     if os.path.isfile(parsed_table_file):
-            parsed_table = open(parsed_table_file, 'r').readlines()
+        parsed_table = open(parsed_table_file, 'r').readlines()
         with open(f"{output_folder}/{output_base}.tsv", 'w') as res_:
             for line in parsed_table:
                 sline = line.split('\t')
@@ -553,7 +553,7 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
     color_conf = str(Path(config['PATHS']['color_conf']).resolve())
 
