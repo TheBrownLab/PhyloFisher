@@ -153,7 +153,7 @@ def prepare_analyses(checks, root):
             # Divvier - length filtration
             status = bash_command(f'divvier -mincol 4 -partial {args.output}/length_filtration/mafft/{root}.aln')
             if status:
-                shutil.move(f'../mafft/{root}.aln.divvy.fas', f'./{root}.aln.divvy.fas')
+                shutil.move(f'../mafft/{root}.aln.partial.fas', f'./{root}.aln.divvy.fas')
                 shutil.move(f'../mafft/{root}.aln.PP', f'./{root}.aln.PP')
                 update_checkpoints(root, 'divvier1')
             else:
@@ -188,7 +188,7 @@ def prepare_analyses(checks, root):
             mkdir_and_cd(f'{args.output}/divvier')
             status = bash_command(f'divvier -mincol 4 -partial {args.output}/mafft/{root}.aln2')
             if status:
-                shutil.move(f'../mafft/{root}.aln2.divvy.fas', f'./{root}.aln2.divvy.fas')
+                shutil.move(f'../mafft/{root}.aln2.partial.fas', f'./{root}.aln2.divvy.fas')
                 shutil.move(f'../mafft/{root}.aln2.PP', f'./{root}.aln2.PP')
                 update_checkpoints(root, 'divvier2')
             else:
@@ -228,8 +228,8 @@ def prepare_analyses(checks, root):
 
 if __name__ == '__main__':
     description = 'Aligns, trims, and builds single gene trees from unaligned gene files.'
-    usage = 'single_gene_tree_constructor.py -i path/to/input/ [OPTIONS]'
-    parser, optional, required = help_formatter.initialize_argparse(name='single_gene_tree_constructor.py',
+    usage = 'sgt_constructor.py -i path/to/input/ [OPTIONS]'
+    parser, optional, required = help_formatter.initialize_argparse(name='sgt_constructor.py',
                                                                     desc=description,
                                                                     usage=usage)
 
