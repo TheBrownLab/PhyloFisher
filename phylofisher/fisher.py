@@ -94,7 +94,7 @@ class SpecQuery:
     def __init__(self, query, spec_queries, hmm_hits, infile_proteins):
         self.query = query
         self.hmm_hits = hmm_hits
-        self.seq = None
+        self.seqs = []
         self.infile_proteins = infile_proteins
         self.organisms = [org.strip() for org in spec_queries.split(',')]
 
@@ -102,15 +102,19 @@ class SpecQuery:
         """This function returns seed blast sequence from selected specific queries(organisms).
         When target gene is not present in the first organism (first in the list) it
         will check next one.
-        Returns: - org name and set seed sequence for blast as self.seq
+        Returns: - True if at_least_one organism has a specific query gene
+         and set seed sequences for blast as self.seqs
         if gene is present in self.organisms or None"""
+        at_least_one = False
         gene_dict = {}
         for record in SeqIO.parse(str(Path(dfo, f'orthologs/{self.query}.fas')), 'fasta'):
             gene_dict[record.name] = str(record.seq)
         for org in self.organisms:
             if org in gene_dict:
-                self.seq = gene_dict[org]
-                return org
+                self.seqs.append(gene_dict[org])
+                at_least_one = True
+        return at_least_one
+
 
     def spec_query_blast(self):
         """Blast against sample with sequence selected according to spec queries.
@@ -119,7 +123,9 @@ class SpecQuery:
         qfile = f'tmp/{sample_name}/{self.query}.fas'
         bout = f'tmp/{sample_name}/{self.query}.blastout'
         with open(qfile, 'w') as f:
-            f.write(f'>{self.query}\n{self.seq.replace("-", "")}')
+            n = 0 # just for uniq names of spec query sequences
+            for query_sequence in self.seqs:
+                f.write(f'>{n}\n{query_sequence.replace("-", "")}\n')
 
         cmd = f'blastp -evalue 1e-10 -query {qfile} -db {db} -out {bout} -outfmt "6 qseqid sseqid evalue"'
         subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -434,15 +440,23 @@ def fasttree(checked_hits):
     subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
     tree = Tree(tree_file)
     correct_len = length_check(trim)
-    good_hits = []
-    bb_hits = []
+    good_hits = [] # SBH hits
+    bb_hits = [] # all hits
     for hit in checked_hits:
         if hit.name in correct_len:
             bb_hits.append(hit)
             hit_node = tree.search_nodes(name=hit.name)[0]
             if correct_phylo_group(hit_node.up, input_taxonomy[org]) is True:
                 good_hits.append(hit)
-    if len(good_hits) > 0:
+    if args.all_paralogs:
+        # keep all hits, even if SBH (good hits) hits exist
+        all_hits = good_hits[:]
+            for hit in bb_hits:
+                if hit not in good_hits:
+                    hit.name = hit.name.replace('_SBH', '_BBH')
+                    all_hits.append(hit)
+        return all_hits
+    elif len(good_hits) > 0:
         return good_hits
     elif len(bb_hits) > 0:
         for hit in bb_hits:
@@ -581,6 +595,10 @@ if __name__ == '__main__':
     optional.add_argument('--keep_tmp', action='store_true',
                           help=textwrap.dedent("""\
                           Keep temporary files
+                          """))
+    optional.add_argument('--all_paralogs', action='store_true',
+                          help=textwrap.dedent("""\
+                          Keep all paralogs while using specific queires.
                           """))
     optional.add_argument('--add', metavar='<inputfile>',
                           help=textwrap.dedent("""\
