@@ -440,15 +440,23 @@ def fasttree(checked_hits):
     subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
     tree = Tree(tree_file)
     correct_len = length_check(trim)
-    good_hits = []
-    bb_hits = []
+    good_hits = [] # SBH hits
+    bb_hits = [] # all hits
     for hit in checked_hits:
         if hit.name in correct_len:
             bb_hits.append(hit)
             hit_node = tree.search_nodes(name=hit.name)[0]
             if correct_phylo_group(hit_node.up, input_taxonomy[org]) is True:
-                good_hits.append(hit) 
-    if len(good_hits) > 0:
+                good_hits.append(hit)
+    if args.all_paralogs:
+        # keep all hits, even if SBH (good hits) hits exist
+        all_hits = good_hits[:]
+            for hit in bb_hits:
+                if hit not in good_hits:
+                    hit.name = hit.name.replace('_SBH', '_BBH')
+                    all_hits.append(hit)
+        return all_hits
+    elif len(good_hits) > 0:
         return good_hits
     elif len(bb_hits) > 0:
         for hit in bb_hits:
@@ -587,6 +595,10 @@ if __name__ == '__main__':
     optional.add_argument('--keep_tmp', action='store_true',
                           help=textwrap.dedent("""\
                           Keep temporary files
+                          """))
+    optional.add_argument('--all_paralogs', action='store_true',
+                          help=textwrap.dedent("""\
+                          Keep all paralogs while using specific queires.
                           """))
     optional.add_argument('--add', metavar='<inputfile>',
                           help=textwrap.dedent("""\
