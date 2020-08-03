@@ -165,7 +165,7 @@ def prepare_analyses(checks, root):
             # outputs pre_bmge
             x_to_dash(f'{args.output}/length_filtration/divvier/{root}.aln.divvy.fas')
             # BMGE
-            status = bash_command(f'BMGE -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
+            status = bash_command(f'bmge -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
             if status:
                 good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
                 update_checkpoints(root, 'bmge')
