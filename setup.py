@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='0.1.19',
+    version='0.1.20',
     packages=find_packages(),
     scripts=['phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -30,7 +30,7 @@ setup(
              'phylofisher/utilities/random_sample_iteration.py',
              'phylofisher/utilities/astral_runner.py',
              'phylofisher/utilities/rtc_binner.py',
-             'phylofisher/utilities/restore_backup.py'
+             'phylofisher/utilities/backup_restoration.py'
              ],
     python_requires='>=3.7',
     install_requires=['biopython==1.76',
