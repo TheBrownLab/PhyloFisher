@@ -1,8 +1,0 @@
-package:
-  name: bmge
-  version: 1.12
-source:
-  path: ../../lib/BMGE-1.12
-about:
-  summary: Selection of phylogenetic informative regions from multiple sequence alignments.
-  license: GPL
