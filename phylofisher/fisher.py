@@ -441,6 +441,7 @@ def fasttree(checked_hits):
     tree = Tree(tree_file)
     correct_len = length_check(trim)
     good_hits = [] # SBH hits
+    good_hits_names = set()
     bb_hits = [] # all hits
     for hit in checked_hits:
         if hit.name in correct_len:
@@ -448,11 +449,12 @@ def fasttree(checked_hits):
             hit_node = tree.search_nodes(name=hit.name)[0]
             if correct_phylo_group(hit_node.up, input_taxonomy[org]) is True:
                 good_hits.append(hit)
+                good_hits_names.add(hit.name)
     if args.all_paralogs:
         # keep all hits, even if SBH (good hits) hits exist
         all_hits = good_hits[:]
         for hit in bb_hits:
-            if hit not in good_hits:
+            if hit.name not in good_hits_names:
                 hit.name = hit.name.replace('_SBH', '_BBH')
                 all_hits.append(hit)
         return all_hits
