@@ -581,7 +581,7 @@ if __name__ == '__main__':
     config.read('config.ini')
 
     description = 'Script for ortholog fishing.'
-    parser, optional, required = help_formatter.initialize_argparse(name='fisher.py',
+    parser, optional = help_formatter.initialize_argparse(name='fisher.py',
                                                                     desc=description,
                                                                     usage='fisher.py [OPTIONS]')
 
@@ -613,7 +613,7 @@ if __name__ == '__main__':
                           Previous output of fisher.py to add new organisms from a new input metadata.
                           Requires --add option.
                           """))
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+    args = help_formatter.get_args(parser, optional, pre_suf=False, inp_dir=False)
 
     if args.add and not args.add_to:
         parser.error("--add requires --add_to.")
