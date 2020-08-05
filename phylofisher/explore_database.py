@@ -60,7 +60,7 @@ class Metadata:
         Return table with metadata grouped according to a higher taxonomy.
         """
         return self.metadata.groupby(['Higher Taxonomy']
-        ).size().reset_index(drop=True).rename(columns={0:'organisms'})
+        ).size().reset_index().rename(columns={0:'organisms'})
 
 
     def lower_taxonomy(self):
@@ -68,7 +68,7 @@ class Metadata:
         Return table with metadata grouped according to a lower taxonomy.
         """
         return self.metadata.groupby(['Higher Taxonomy','Lower Taxonomy']
-        ).size().reset_index(drop=True).rename(columns={0:'organisms'})
+        ).size().reset_index().rename(columns={0:'organisms'})
 
 
     def get_higher(self, term):
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                           Return table with orthologs, paralogs for organisms from a given Lower Taxonomy.
                               """))
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, out_dir=False)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, out_dir=False, inp_dir=False)
 
     if args.higher_taxonomy:
         print(metadata_handle.higher_taxonomy().to_string())
@@ -137,4 +137,4 @@ if __name__ == '__main__':
         print(metadata_handle.get_higher(args.get_higher).to_string())
 
     elif args.get_lower:
-        print(metadata_handle.get_higher(args.get_lower).to_string())
+        print(metadata_handle.get_lower(args.get_lower).to_string())
