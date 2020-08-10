@@ -22,8 +22,8 @@ class Metadata:
                                     'Higher Taxonomy', 'Lower Taxonomy']]
         self.ortholog_folder = ortholog_folder
         self.paralog_folder = paralog_folder
-        self.metadata['orthologs'] =  self.metadata['Unique ID'].map(self.parse_orthologs())
-        self.metadata['paralogs'] =  self.metadata['Unique ID'].map(self.parse_paralogs())
+        self.metadata['Orthologs'] =  self.metadata['Unique ID'].map(self.parse_orthologs())
+        self.metadata['Paralogs'] =  self.metadata['Unique ID'].map(self.parse_paralogs())
 
     def parse_orthologs(self):
         """
@@ -60,7 +60,7 @@ class Metadata:
         Return table with metadata grouped according to a higher taxonomy.
         """
         return self.metadata.groupby(['Higher Taxonomy']
-        ).size().reset_index().rename(columns={0:'organisms'})
+        ).size().reset_index().rename(columns={0:'Organisms'})
 
 
     def lower_taxonomy(self):
@@ -68,7 +68,7 @@ class Metadata:
         Return table with metadata grouped according to a lower taxonomy.
         """
         return self.metadata.groupby(['Higher Taxonomy','Lower Taxonomy']
-        ).size().reset_index().rename(columns={0:'organisms'})
+        ).size().reset_index().rename(columns={0:'Organisms'})
 
 
     def get_higher(self, term):
@@ -86,6 +86,14 @@ class Metadata:
         return self.metadata[self.metadata['Lower Taxonomy'
         ] == term].sort_values('Unique ID').reset_index(drop=True)
 
+    
+    def get_org(self, term):
+        """
+        Return ifnormation about a given organism using its short name.
+        """
+        org_df = self.metadata.copy()
+        org_df = org_df.set_index('Unique ID')
+        return org_df.loc[ term , : ]
 
 
 
@@ -125,16 +133,24 @@ if __name__ == '__main__':
                           Return table with orthologs, paralogs for organisms from a given Lower Taxonomy.
                               """))
 
+    optional.add_argument('-o','--get_org', default=None,
+                          help=textwrap.dedent("""\
+                          Return ifnormation about a given organism using its short name.
+                              """))
+
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, out_dir=False, inp_dir=False)
 
     if args.higher_taxonomy:
-        print(metadata_handle.higher_taxonomy().to_string())
+        print(metadata_handle.higher_taxonomy().to_string(index=False))
 
     elif args.lower_taxonomy:
-        print(metadata_handle.lower_taxonomy().to_string())
+        print(metadata_handle.lower_taxonomy().to_string(index=False))
 
     elif args.get_higher:
-        print(metadata_handle.get_higher(args.get_higher).to_string())
+        print(metadata_handle.get_higher(args.get_higher).to_string(index=False))
 
     elif args.get_lower:
-        print(metadata_handle.get_lower(args.get_lower).to_string())
+        print(metadata_handle.get_lower(args.get_lower).to_string(index=False))
+
+    elif args.get_org:
+        print(metadata_handle.get_org(args.get_org).to_string())
