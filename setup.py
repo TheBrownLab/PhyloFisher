@@ -18,6 +18,7 @@ setup(
              'phylofisher/select_orthologs.py',
              'phylofisher/sgt_constructor.py',
              'phylofisher/prep_final_dataset.py',
+             'phylofisher/explore_dataset.py',
              'phylofisher/utilities/fast_site_removal.py',
              'phylofisher/utilities/mammal_modeler.py',
              'phylofisher/utilities/bipartition_examiner.py',
