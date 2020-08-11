@@ -208,6 +208,7 @@ def genecode_plot(res_list_dict, all_codons, transcriptome):
                     final_result.plot.bar()
                     plt.title(f"{codon.replace('T', 'U')} (The Standard Code: {std_code[codon]})")
                     plt.xticks(rotation='horizontal')
+                    plt.ylabel('conserved positions')
                     pdf.savefig(bbox_inches='tight')
                     plt.close()
 
