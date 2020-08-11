@@ -49,9 +49,9 @@ def restore():
 
 if __name__ == '__main__':
     desc = 'Utility to restore the PhyloFisher Database from backups'
-    parser, optional, required = help_formatter.initialize_argparse(name='restore_backup.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='backup_restoration.py',
                                                                     desc=desc,
-                                                                    usage="restore_backup.py -d <db_dir>")
+                                                                    usage="backup_restoration.py -d <db_dir>")
 
     required.add_argument('-d', '--database', type=str, metavar='<db_dir>', required=True,
                           help=textwrap.dedent("""\
