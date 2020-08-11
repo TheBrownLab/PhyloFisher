@@ -18,7 +18,7 @@ setup(
              'phylofisher/select_orthologs.py',
              'phylofisher/sgt_constructor.py',
              'phylofisher/prep_final_dataset.py',
-             'phylofisher/explore_dataset.py',
+             'phylofisher/explore_database.py',
              'phylofisher/utilities/fast_site_removal.py',
              'phylofisher/utilities/mammal_modeler.py',
              'phylofisher/utilities/bipartition_examiner.py',
@@ -31,7 +31,6 @@ setup(
              'phylofisher/utilities/random_sample_iteration.py',
              'phylofisher/utilities/astral_runner.py',
              'phylofisher/utilities/rtc_binner.py',
-             'phylofisher/utilities/backup_restoration.py'
              ],
     python_requires='>=3.7',
     install_requires=['biopython==1.76',
@@ -44,7 +43,7 @@ setup(
                       ],
     url='https://github.com/TheBrownLab/PhyloFisher',
     license='MIT',
-    author='David Zihala',
+    authors='...',
     author_email='zihaladavid@gmail.com',
     description='PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic '
                 'datasets that consist of protein sequences from eukaryotic organisms.'
