@@ -518,7 +518,7 @@ def new_best_hits(candidate_hits):
                 try:
                     # if hit is reciprocal hit to a corresponding gene
                     if gene == reciprocal_hits[seq_name[:-4]]:
-                        d.write(f'>{seq_name}_q{n}r\n{cand.seq}\n')
+                        d.write(f'>{seq_name}_q{n}c\n{cand.seq}\n')
                     else:
                         d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
                         with open(f'{args.output}/nonreciprocal_hits.txt', 'a') as nonrep:
