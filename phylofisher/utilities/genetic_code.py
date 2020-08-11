@@ -5,6 +5,7 @@ import re
 import subprocess
 import configparser
 import textwrap
+import shutil
 from pathlib import Path
 from collections import defaultdict
 from glob import glob
@@ -177,8 +178,8 @@ def genecode_plot(res_list_dict, all_codons, transcriptome):
     std_code['TAA'] = "*"
     std_code['TGA'] = "*"
 
-    with PdfPages(transcriptome + '.pdf') as pdf:
-        AA_ = 'RHKDESTNQCGPAVILMFYW*'
+    with PdfPages(transcriptome + '_genecode.pdf') as pdf:
+        AA_ = 'RHKDESTNQCGPAVILMFYW'
 
         for codon, res_list in res_list_dict.items():
             most_freq = (0, None)
@@ -226,6 +227,10 @@ def main():
     print(f'{"=" * 20}\nCollecting information from conserved positions ...\n{"=" * 20}\n')
     stats = collect_counts(transcriptome, args.conserved)
     genecode_plot(stats, args.all_codons, transcriptome)
+    os.chdir('..')
+    if not args.keep_tmp:
+        subprocess.call(f'mv {folder}/{transcriptome}_genecode.pdf .', shell=True)
+        shutil.rmtree(folder)
 
 
 if __name__ == '__main__':
@@ -256,7 +261,7 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('-c', '--conserved', type=float, metavar='0-1', default=0.7,
                           help=textwrap.dedent("""\
-                          Conservation level. 0-1.
+                          Conservation level. 0-1. Default is 0.7
                           """))
     optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X', default='1e-30',
                           help=textwrap.dedent("""\
@@ -271,7 +276,7 @@ if __name__ == '__main__':
                           Keep temporary files
                           """))
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
