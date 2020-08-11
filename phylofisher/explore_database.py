@@ -98,14 +98,6 @@ class Metadata:
 
 
 if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    ortholog_folder  = str(Path(dfo, f'orthologs'))
-    paralog_folder = str(Path(dfo, f'paralogs'))
-    metadata = str(os.path.join(dfo, 'metadata.tsv'))
-    metadata_handle = Metadata(metadata, ortholog_folder, paralog_folder)
-    
 
     description = 'Explore database'
     parser, optional, required = help_formatter.initialize_argparse(name='explore_database.py',
@@ -113,6 +105,12 @@ if __name__ == '__main__':
                                                                     usage='explore_database.py [OPTIONS]')
 
     # Optional Arguments
+    optional.add_argument('-d','--database',
+                          help=textwrap.dedent("""\
+                          Path to the database folder.
+                              """))
+
+
     optional.add_argument('-t','--higher_taxonomy', action='store_true',
                           help=textwrap.dedent("""\
                           Show table with metadata grouped according to the higher taxonomy.
@@ -139,6 +137,21 @@ if __name__ == '__main__':
                               """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, out_dir=False, inp_dir=False)
+
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    if args.database:
+        dfo = str(Path(args.database).resolve())
+    else:
+        dfo = str(Path(config['PATHS']['database_folder']).resolve())
+    
+    ortholog_folder  = str(Path(dfo, f'orthologs'))
+    paralog_folder = str(Path(dfo, f'paralogs'))
+    metadata = str(os.path.join(dfo, 'metadata.tsv'))
+    metadata_handle = Metadata(metadata, ortholog_folder, paralog_folder)
+
+
 
     if args.higher_taxonomy:
         print(metadata_handle.higher_taxonomy().to_string(index=False))
