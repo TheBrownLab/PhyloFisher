@@ -112,9 +112,9 @@ def clean_up():
 
 if __name__ == '__main__':
     description = 'Constructs super-matrices from randomly sampled genes.'
-    parser, optional, required = help_formatter.initialize_argparse(name='random_sample_iteration.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='random_resampler.py',
                                                                     desc=description,
-                                                                    usage='random_sample_iteration.py '
+                                                                    usage='random_resampler.py '
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Optional Arguments

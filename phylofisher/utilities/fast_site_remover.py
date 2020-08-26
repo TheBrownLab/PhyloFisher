@@ -28,22 +28,23 @@ def unique_name(keys):
 
 
 def fake_phylip(matrix):
-    seqs = 0
     length = None
     pseudonames = {}
     pseudonames_rev = {}
-    result = ''
-    with open('TEMP.phy', 'w') as res:
-        for record in SeqIO.parse(matrix, 'fasta'):
-            seqs += 1
-            if not length:
-                length = len(record.seq)
-            uname = unique_name(pseudonames)
-            pseudonames[record.name] = uname
-            pseudonames_rev[uname] = record.name
-            result += f'{uname} {record.seq}\n'
-        res.write(f' {seqs} {length}\n')
-        res.write(result)
+    records = []
+
+    for record in SeqIO.parse(matrix, args.in_format):
+        uname = unique_name(pseudonames)
+        pseudonames[record.name] = uname
+        pseudonames_rev[uname] = record.name
+        seq = str(record.seq)
+        records.append(SeqRecord(Seq(seq, IUPAC.protein),
+                                 id=uname,
+                                 name='',
+                                 description=''))
+
+    SeqIO.write(records, 'TEMP.phy', 'phylip')
+
     return pseudonames, pseudonames_rev
 
 
@@ -109,7 +110,7 @@ def main():
         run_dist()
 
     matrix_dict = {}
-    for record in SeqIO.parse(args.matrix, 'fasta'):
+    for record in SeqIO.parse(args.matrix, args.in_format):
         matrix_dict[record.name] = pd.Series(list(record.seq))
 
     sorted_rates = parse_rates()
@@ -134,9 +135,9 @@ def main():
 
 if __name__ == "__main__":
     description = 'This removes the fastest evolving sites within the phylogenomic supermatrix in a stepwise fashion.'
-    parser, optional, required = help_formatter.initialize_argparse(name='fast_site_removal.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='fast_site_remover.py',
                                                                     desc=description,
-                                                                    usage='fast_site_removal.py '
+                                                                    usage='fast_site_remover.py '
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Required Arguments
@@ -144,18 +145,25 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                               Path to matrix
                               """))
+    required.add_argument('-tr', '--tree', type=str, metavar='',
+                          help=textwrap.dedent("""\
+                                Path to tree
+                                  """))
 
     # Optional Arguments
-    optional.add_argument('-tr', '--tree', type=str, metavar='',
-                          help=textwrap.dedent("""\
-                              Path to tree
-                              """))
     optional.add_argument('-c', '--chunk', type=int, default=3000, metavar='N',
                           help=textwrap.dedent("""\
                               Size of removal step (i.e., 1000 sites removed) to exhaustion
                               Default: 3000
                               """))
-    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='phylip-relaxed',
+                          help=textwrap.dedent("""\
+                                  Format of input matrix.
+                                  Options: fasta, nexus, phylip (names truncated at 10 characters), 
+                                  or phylip-relaxed (names are not truncated)
+                                  Default: phylip-relaxed
+                                  """))
+    optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
                           help=textwrap.dedent("""\
                               Desired format of the output chunks.
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
