@@ -9,10 +9,43 @@ import sys
 import textwrap
 from glob import glob
 from collections import defaultdict, Counter
+import pandas as pd
 from Bio import SeqIO
 import re
 
 from phylofisher import help_formatter
+
+
+def rename_taxa():
+    """"""
+
+    # Read in to_rename.tsv
+    rename_dict = dict()
+    with open(args.rename, 'r') as infile:
+        infile.readline()
+        for line in infile:
+            line = line.strip()
+            line_list = line.split('\t')
+            rename_dict[line_list[0]] = line_list[1:]
+
+    # Rename in orthologs/ and paralogs/
+    files = glob('orthologs/*.fas') + glob('paralogs/*.fas')
+    for file in files:
+        with open(file, 'r') as infile, open('tmp', 'w') as tmp_file:
+            for line in infile:
+                line = line.strip()
+                for key, value in rename_dict.items():
+                    if key in line:
+                        line = line.replace(key, value[0])
+                tmp_file.write(f'{line}\n')
+        shutil.move('tmp', file)
+
+    df = pd.read_csv('metadata.tsv', sep='\t')
+    for key, value in rename_dict.items():
+        df.loc[df['Unique ID'] == key, 'Long Name'] = value[1]
+        df.loc[df['Unique ID'] == key, 'Unique ID'] = value[0]
+    
+    df.to_csv('metadata.tsv', sep='\t', index=False)
 
 
 def get_ortho_taxa():
@@ -41,7 +74,6 @@ def get_meta_taxa():
             if row[0] == 'Unique ID':
                 continue
             unique_orgs_meta.add(row[0])
-    print(len(unique_orgs_meta))
     return unique_orgs_meta
 
 
@@ -69,7 +101,12 @@ def check_taxa():
 
 
 def id_generator(size=5, chars=string.digits):
-    """"Generate random number with 5 digits."""
+    """
+    Generate random number with 5 digits.
+    :param size:
+    :param chars:
+    :return:
+    """
     return ''.join(random.choice(chars) for _ in range(size))
 
 
@@ -159,8 +196,7 @@ def get_og_file(threshold):
 
 def concat_gene_files():
     files = glob('*.fas')
-    print(files)
-    print()
+
     with open('datasetdb.fasta', 'w') as outfile:
         for file in files:
             with open(file, 'r') as infile:
@@ -209,8 +245,9 @@ def make_profiles(threads):
     os.chdir('..')
 
 
-def main(threads, no_og_file, threshold):
+def main(args, threads, no_og_file, threshold):
     """
+    :param args:
     :param threads: number of threads
     :param make_og_file: Boolean
     :param threshold: float 0-1
@@ -221,6 +258,13 @@ def main(threads, no_og_file, threshold):
     # it if not
     if os.path.isdir('paralogs') is False:
         os.mkdir('paralogs')
+    if os.path.isdir('datasetdb') is True:
+        shutil.rmtree('datasetdb')
+    if os.path.isdir('profiles') is True:
+        shutil.rmtree('profiles')
+
+    if args.rename:
+        rename_taxa()
 
     datasetdb()  # creates datasetdb
 
@@ -232,9 +276,9 @@ def main(threads, no_og_file, threshold):
 
 if __name__ == "__main__":
     description = 'Script for dataset construction.'
-    parser, optional, required = help_formatter.initialize_argparse(name='build_dataset.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='build_database.py',
                                                                     desc=description,
-                                                                    usage='build_dataset.py [OPTIONS]')
+                                                                    usage='build_database.py [OPTIONS]')
 
     optional.add_argument('-t', '--threads', type=int,
                           help=textwrap.dedent("""\
@@ -244,15 +288,20 @@ if __name__ == "__main__":
 
     optional.add_argument('-n', '--no_og_file', action='store_true',
                           help=textwrap.dedent("""\
-                            Do not make Gene OG file
-                            """))
+                          Do not make Gene OG file
+                          """))
     optional.add_argument('-o', '--og_threshold', type=float, default=0.1, metavar='0.X',
                           help=textwrap.dedent("""\
-                            Threshold 0-1 for OG.
-                            Default: 0.1
-                            """))
+                          Threshold 0-1 for OG.
+                          Default: 0.1
+                          """))
+    optional.add_argument('--rename', type=str, metavar='<to_rename.tsv>',
+                          help=textwrap.dedent("""\
+                          Rename taxa in the database.
+                          Takes a TSV file containing the Old Unique ID, New Unique ID, and New Long Name.
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
     check_taxa()
-    main(args.threads, args.no_og_file, args.og_threshold)
+    main(args, args.threads, args.no_og_file, args.og_threshold)

@@ -66,9 +66,9 @@ class Matrix:
 
 if __name__ == '__main__':
     description = 'Removes the fastest evolving taxa, based on branch length.'
-    parser, optional, required = help_formatter.initialize_argparse(name='fast_tax_removal.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='fast_taxa_remover.py',
                                                                     desc=description,
-                                                                    usage='fast_tax_removal.py [OPTIONS] '
+                                                                    usage='fast_taxa_remover.py [OPTIONS] '
                                                                           '-t <tree> '
                                                                           '-m <matrix> '
                                                                           '-i <num_of_iterations>')

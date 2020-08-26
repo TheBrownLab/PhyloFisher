@@ -236,8 +236,8 @@ def main():
 
 if __name__ == '__main__':
     description = 'Script for fast genetic code analysis.'
-    usage = 'genetic_code.py [OPTIONS] -i, --input file.fas -q, --queries Allomacr,Mantplas,...'
-    parser, optional, required = help_formatter.initialize_argparse(name='genetic_code.py',
+    usage = 'genetic_code_examiner.py [OPTIONS] -i, --input file.fas -q, --queries Allomacr,Mantplas,...'
+    parser, optional, required = help_formatter.initialize_argparse(name='genetic_code_examiner.py',
                                                                     desc=description,
                                                                     usage=usage)
 
