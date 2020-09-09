@@ -4,12 +4,29 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 import tarfile
 import textwrap
+import time
 import urllib.request
+import hashlib
 from zipfile import ZipFile
 
 from phylofisher import help_formatter
+
+
+def reporthook(count, block_size, total_size):
+    global start_time
+    if count == 0:
+        start_time = time.time()
+        return
+    duration = time.time() - start_time
+    progress_size = int(count * block_size)
+    speed = int(progress_size / (1024 * duration))
+    percent = int(count * block_size * 100 / total_size)
+    sys.stdout.write("\r%d%%, %d MB, %d KB/s, %d seconds elapsed" %
+                    (percent, progress_size / (1024 * 1024), speed, duration))
+    sys.stdout.flush()
 
 
 def bash(cmd):
@@ -30,7 +47,7 @@ def is_in_path(cmd):
 
 def download(url):
     fname = url.split('/')[-1]
-    urllib.request.urlretrieve(url, f'{fisher_dir}/{fname}')
+    urllib.request.urlretrieve(url, f'{fisher_dir}/{fname}', reporthook)
 
     return fname
 
@@ -45,8 +62,6 @@ def extract(fname):
 def get_trimal():
     os.chdir(fisher_dir)
     if is_in_path('trimal') is False:
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/trimal-1.2.tar.gz'
-        extract(download(url))
         os.chdir(f'{fisher_dir}/trimAl/source/')
         bash('make')
         os.chdir(fisher_dir)
@@ -63,8 +78,6 @@ def get_raxml():
     os.chdir(fisher_dir)
     if is_in_path('raxmlHPC-PTHREADS-AVX2') is False:
         # Download and extract RAxML
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/standard-RAxML-8.2.12.tar.gz'
-        extract(download(url))
         os.chdir(f'{fisher_dir}/standard-RAxML-8.2.12/')
         bash('make -f Makefile.AVX.PTHREADS.gcc')
         # Symlink executables to user bin
@@ -77,9 +90,6 @@ def get_hmmer():
     os.chdir(fisher_dir)
     if is_in_path('hmmsearch') is False:
         # Download and extract hmmer
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/hmmer-3.3.tar.gz'
-        extract(download(url))
-
         os.chdir(f'{fisher_dir}/hmmer-3.3/')
         bash('./configure --prefix=$HOME/.local && make install')
 
@@ -88,8 +98,6 @@ def get_diamond():
     os.chdir(fisher_dir)
     if is_in_path('diamond') is False:
         # Download and extract Diamond
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/diamond-0.9.34.tar.gz'
-        extract(download(url))
         shutil.copy(f'{fisher_dir}/diamond', f'{user_bin}/diamond')
         os.remove(f'{fisher_dir}/diamond')
 
@@ -98,23 +106,18 @@ def get_fasttree():
     os.chdir(fisher_dir)
     if is_in_path('fasttree') is False:
         # Download and extract Diamond
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/FastTree-2.1.11.tar.gz'
-        extract(download(url))
         bash('gcc -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm')
         shutil.copy(f'{fisher_dir}/FastTree', f'{user_bin}/fasttree')
-        os.remove(f'{fisher_dir}/FastTree-2.1.11.tar.gz')
         os.remove(f'{fisher_dir}/FastTree.c')
-        
+
 
 def get_blast():
     os.chdir(fisher_dir)
     if is_in_path('blastn') is False:
-        linux_url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/ncbi-blast-2.10.1-linux.tar.gz'
-        mac_url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/ncbi-blast-2.10.1-macosx.tar.gz'
         if platform.system() == 'Darwin':
-            extract(download(mac_url))
+            extract(f'{fisher_dir}/ncbi-blast-2.10.1-macosx.tar.gz')
         else:
-            extract(download(linux_url))
+            extract(f'{fisher_dir}/ncbi-blast-2.10.1-linux.tar.gz')
 
         src = f'{fisher_dir}/ncbi-blast-2.10.1+/bin/*'
         bash(f'cp {src} {user_bin}')
@@ -123,9 +126,6 @@ def get_blast():
 def get_cd_hit():
     os.chdir(fisher_dir)
     if is_in_path('cd-hit') is False:
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/cdhit-4.8.1.tar.gz'
-        extract(download(url))
-
         os.chdir(f'{fisher_dir}/cdhit-4.8.1')
         if platform.system() == 'Darwin':
             bash(f'make clean && make CC={args.gxx}')
@@ -141,10 +141,6 @@ def get_cd_hit():
 def get_mafft():
     os.chdir(fisher_dir)
     if is_in_path('mafft') is False:
-        # Download and extract mafft
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/mafft-7.453.tar.gz'
-        extract(download(url))
-
         os.chdir(f'{fisher_dir}/mafft-7.453-without-extensions/core')
         with open('Makefile', 'r') as infile, open('tmp', 'w') as outfile:
             for line in infile:
@@ -162,8 +158,6 @@ def get_mafft():
 def get_divvier():
     os.chdir(fisher_dir)
     if is_in_path('divvier') is False:
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/Divvier-1.01.tar.gz'
-        extract(download(url))
         os.chdir(f'{fisher_dir}/Divvier-1.01')
         bash('make clean && make')
         src = f'{fisher_dir}/Divvier-1.01/divvier'
@@ -174,8 +168,6 @@ def get_divvier():
 def get_prequal():
     os.chdir(fisher_dir)
     if is_in_path('prequal') is False:
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/prequal-1.02.tar.gz'
-        extract(download(url))
         os.chdir(f'{fisher_dir}/prequal-1.02')
         bash('make clean && make')
         src = f'{fisher_dir}/prequal-1.02/prequal'
@@ -186,10 +178,7 @@ def get_prequal():
 def get_bmge():
     os.chdir(fisher_dir)
     if is_in_path('BMGE') is False:
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/BMGE-1.12.tar.gz'
-        bash(f'wget {url}')
-        extract('BMGE-1.12.tar.gz')
-        os.chdir('BMGE-1.12')
+        os.chdir(f'{fisher_dir}/BMGE-1.12')
         with open('stub.sh', 'w') as outfile:
             stub = ('#!/bin/sh\n'
                     'MYSELF=`which "$0" 2>/dev/null`\n'
@@ -205,15 +194,13 @@ def get_bmge():
 
         bash('cat stub.sh BMGE.jar > BMGE && chmod +x BMGE ')
         src = f'{fisher_dir}/BMGE-1.12/BMGE'
-        des = f'{user_bin}/BMGE'
+        des = f'{user_bin}/bmge'
         shutil.copy(src, des)
 
 
 def get_dist_est():
     os.chdir(fisher_dir)
     if is_in_path('dist_est') is False:
-        url = 'https://github.com/TheBrownLab/PhyloFisher/raw/master/lib/archives/dist_est-1.1.tar.gz'
-        extract(download(url))
         os.chdir(f'{fisher_dir}/dist_est-1.1')
         bash('make clean && make')
         src = f'{fisher_dir}/dist_est-1.1/dist_est'
@@ -254,6 +241,40 @@ if __name__ == '__main__':
         os.mkdir(fisher_dir)
 
     os.chdir(fisher_dir)
+
+    # Get tarball with deps from msstate library
+    print('Downloading dependencies:')
+    url = 'https://ir.library.msstate.edu/bitstream/handle/11668/19731/Tice_etal.PhyloFisher.archives.tar.gz'
+    file_name = 'Tice_etal.PhyloFisher.archives.tar.gz'
+
+    if not os.path.isfile(file_name):
+        download(url)
+
+    # Correct original md5 goes here
+    original_md5 = '062c84f27388304094d35946f5616a79'
+
+    # Open,close, read file and calculate MD5 on its contents
+    with open(file_name, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()
+        # pipe contents of the file through
+        md5_returned = hashlib.md5(data).hexdigest()
+
+    # Finally compare original MD5 with freshly calculated
+    if original_md5 != md5_returned:
+        print('download corrupted')
+    else:
+        extract(file_name)
+        files = os.listdir(f'{fisher_dir}/archives')
+        for file in files:
+            shutil.move(f'{fisher_dir}/archives/{file}', f'{fisher_dir}/{file}')
+            if 'blast' not in file:
+                extract(f'{fisher_dir}/{file}')
+
+        shutil.rmtree(f'{fisher_dir}/archives')
+
+
+
     get_trimal()
     get_raxml()
     get_hmmer()
