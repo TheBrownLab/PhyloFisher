@@ -14,16 +14,50 @@ def in_out_completeness(df):
     :param df:
     :return:
     """
-    pass
+    # Gets all taxa unique IDS
+    all_taxa_set = set()
+    with open(f'{dfo}/metadata.tsv', 'r') as infile:
+        for line in infile:
+            line = line.strip().split('\t')[0]
+            all_taxa_set.add(line)
+
+    # Gets out group Unique IDS
+    out_group_set = set()
+    with open(args.out_group, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            out_group_set.add(line)
+
+    # Determine in group from all taxa - out group
+    in_group_set = all_taxa_set - out_group_set
+
+    # Calculates completeness for each gene based on in group presence
+    in_df = df[df.index.isin(list(in_group_set))]
+    in_df = in_df.sum().divide(other=len(in_df))
+
+    # Calculates completeness for each gene based on out group presence
+    out_df = df[df.index.isin(list(out_group_set))]
+    out_df = out_df.sum().divide(other=len(out_df))
+
+    return out_df.to_dict(), in_df.to_dict()
 
 
 def make_subset_tsv():
+    """
+
+    :return: df
+    """
     df = gene_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
     df = df.sort_values(by=['Completeness'], ascending=False)
     df = df.round({'Completeness': 3})
-    to_keep = ['no' for k in df.index]
-    df['Include in Subset'] = to_keep
+
+    if args.out_group:
+        out_dict, in_dict = in_out_completeness(matrix)
+        df['In-Group Completeness'] = df.index.map(in_dict)
+        df['Out-Group Completeness'] = df.index.map(out_dict)
+        df = df.round({'In-Group Completeness': 3})
+        df = df.round({'Out-Group Completeness': 3})
 
     if args.gene_number:
         num_to_keep = args.gene_number
@@ -35,6 +69,9 @@ def make_subset_tsv():
 
     else:
         num_to_keep = len(df)
+
+    to_keep = ['no' for k in df.index]
+    df['Include in Subset'] = to_keep
 
     i = 1
     for gene, row in df.iterrows():
@@ -72,6 +109,10 @@ if __name__ == '__main__':
                                                                           '[OPTIONS]')
 
     # Optional Arguments
+    optional.add_argument('--out_group', type=str, metavar='out_group.txt', default=None,
+                          help=textwrap.dedent("""\
+                          Path to text file containing out-group taxa Unique IDs.
+                          """))
     optional.add_argument('-n', '--gene_number', type=int, metavar='<N>', default=None,
                           help=textwrap.dedent("""\
                           Number of genes in subset.

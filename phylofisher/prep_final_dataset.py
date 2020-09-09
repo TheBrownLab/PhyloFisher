@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import configparser
 import os
 import shutil
@@ -19,9 +21,12 @@ def parse_ortholog_tsv():
         genes_to_include = []
         for line in infile:
             line = line.strip()
-            taxon, _, include = line.split('\t')
+            if 'In-Group Completeness' in line:
+                gene, _, _, _, include = line.split('\t')
+            else:
+                gene, _, include = line.split('\t')
             if include == 'yes':
-                genes_to_include.append(taxon)
+                genes_to_include.append(gene)
 
     return genes_to_include
 
