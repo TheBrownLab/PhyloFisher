@@ -3,14 +3,19 @@ import configparser
 import glob
 import os
 import random
+import shutil
 import string
+import tarfile
 import textwrap
 from collections import defaultdict
+from datetime import date
 from pathlib import Path
 
 from Bio import SeqIO
+import pandas as pd
 
-from phylofisher import help_formatter
+from phylofisher import help_formatter, subset_tools
+from phylofisher.utilities import build_database
 
 
 def dataset_orgs():
@@ -199,13 +204,32 @@ def add_to_meta(abbrev):
     input:  short name of organism
     return: None
     """
-    with open(metadata, 'a') as res:
-        full = input_info[abbrev]['full_name']
-        tax = input_info[abbrev]['tax'].replace('*', '')
-        subtax = input_info[abbrev]['subtax'].replace('*', '')
-        data_type = input_info[abbrev]['data_type']
-        notes = input_info[abbrev]['notes']
-        res.write(f'{abbrev}\t{full}\t{tax}\t{subtax}\t{data_type}\t{notes}\n')
+    new_row = {'Unique ID': abbrev,
+               'Long Name': input_info[abbrev]['full_name'],
+               'Higher Taxonomy': input_info[abbrev]['tax'].replace('*', ''),
+               'Lower Taxonomy': input_info[abbrev]['subtax'].replace('*', ''),
+               'Data Type': input_info[abbrev]['data_type'],
+               'Notes': input_info[abbrev]['notes']
+               }
+
+    taxa_comp, gene_count = subset_tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=False)
+    bin_matrix = subset_tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=True)
+    taxa_comp = taxa_comp.to_dict()
+
+    df = pd.read_csv(metadata, delimiter='\t')
+    df = df.set_index('Unique ID')
+
+    comp_list = [taxa_comp[ind] if ind in taxa_comp else 0 for ind in df.index]
+    df['Completeness'] = comp_list
+    df['Completeness'] = df['Completeness'] * 100
+    df['Completeness'] = df['Completeness'].round(2)
+
+    # df = df.append(new_row, ignore_index=True)
+    df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'])
+    df.to_csv('metadata.tsv', sep='\t', index=False)
+
+    print(bin_matrix)
+    print(df)
 
 
 def new_database(table):
@@ -239,11 +263,43 @@ def new_database(table):
 
 def backup():
     """
-    Backs up dataset/orthologs/ and dataset/paralogs/ before applying decisions
-    :return:
+    Backs up database/orthologs/, database/paralogs/, and database/metadata.tsv before applying decisions
+    :return: NONE
     """
-    # TODO: Finish this Function
-    pass
+    today_date = date.today().strftime("%b_%d_%Y")
+    source_dir = f'{dfo}/backups/{today_date}'
+
+    shutil.copytree(f'{dfo}/orthologs/', f'{source_dir}/orthologs')
+    shutil.copytree(f'{dfo}/paralogs/', f'{source_dir}/paralogs')
+    shutil.copy(f'{dfo}/metadata.tsv', f'{source_dir}/metadata.tsv')
+    shutil.copy(f'{dfo}/tree_colors.csv', f'{source_dir}/tree_colors.csv')
+
+    with tarfile.open(f'{source_dir}.tar.gz', "w:gz") as tar:
+        tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+    shutil.rmtree(source_dir)
+
+
+def rebuild_db():
+    """
+    
+    :return: 
+    """
+    try:
+        shutil.rmtree(f'{dfo}/profiles')
+    except FileNotFoundError:
+        pass
+
+    try:
+        shutil.rmtree(f'{dfo}/datasetdb')
+    except FileNotFoundError:
+        pass
+    
+    cwd = os.getcwd()
+    os.chdir(dfo)
+    args.rename = None
+    build_database.main(args, 4, True, 0.1)
+    os.chdir(cwd)
 
 
 def main():
@@ -254,6 +310,11 @@ def main():
     for table in glob.glob(f'{args.input}/*_parsed.tsv'):
         new_database(table)
 
+    rebuild_db()
+
+    matrix = subset_tools.completeness(args, f'{dfo}/orthologs')
+    matrix.to_csv(f'{dfo}/bin_matrix.tsv', sep='\t')
+    print(matrix)
 
 if __name__ == '__main__':
     desc = ''
@@ -268,20 +329,26 @@ if __name__ == '__main__':
 
     optional.add_argument('--to_exclude', type=str, metavar='to_exclude.txt',
                           help=textwrap.dedent("""\
-                          Path to .txt file containing taxa to exclude from 
-                          dataset addition with one taxon per line.
+                          Path to .txt file containing Unique IDs of taxa to exclude from dataset 
+                          addition with one taxon per line.
                           Example:
-                            Taxon1
-                            Taxon2
+                            Unique ID (taxon 1)
+                            Unique ID (taxon 2)
                             """))
 
-    args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False)
+    in_help = 'Path to forest output directory to use for database addition.'
+    args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False, in_help=in_help)
 
     fisher_dir = args.fisher_dir
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
+
+    if not os.path.isdir(f'{dfo}/backups'):
+        os.mkdir(f'{dfo}/backups')
+    backup()
+
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
     meta_orgs = dataset_orgs()
