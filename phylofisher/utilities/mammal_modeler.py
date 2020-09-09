@@ -77,7 +77,8 @@ if __name__ == "__main__":
     # Optional Arguments
     optional.add_argument('-c', '--rate_classes', metavar='<N>', type=int, default=60,
                           help=textwrap.dedent("""\
-                              The number od rate classes for MAMMaL to infer.
+                              The number of frequency classes in the mixture model.
+                              Options: 10, 20, 30, 40, 50, or 60
                               Default: 60
                             """))
     optional.add_argument('-at', '--alignment_type', metavar='<format>', type=str, default='phylip-relaxed',

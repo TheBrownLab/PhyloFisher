@@ -45,7 +45,7 @@ def delete_gaps_stars(gene, root):
 
 
 def trim_and_align(gene):
-    root = os.path.basename(gene)
+    root = os.path.basename(gene).split('.')[0]
     # prequal
     mk_and_cd_dir(f'{args.output}/prequal')
     delete_gaps_stars(gene, root)
@@ -117,9 +117,9 @@ def stats(total_len, out_dict):
 
 
 if __name__ == '__main__':
+    description = 'To trim align and concatenate orthologs into a super-matrix run:'
     parser, optional, required = help_formatter.initialize_argparse(name='forge.py',
-                                                                    desc='Concatenates alignments into one'
-                                                                         ' super-matrix.',
+                                                                    desc=description,
                                                                     usage='forge.py [OPTIONS] -i path/to/input/')
 
     # Optional Arguments
@@ -132,14 +132,14 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                          Desired format of the output matrix.
+                          Format of the input matrix.
                           Options: fasta, phylip (names truncated at 10 characters), 
                           phylip-relaxed (names are not truncated), or nexus.
                           Default: phylip-relaxed
                           """))
     optional.add_argument('-c', '--concatenation_only', action='store_true', default=False,
                           help=textwrap.dedent("""\
-                          Only concatenate alignments
+                          Only concatenate alignments. Trimming and alignment are not performed automatically.
                           """))
     optional.add_argument('-t', '--threads', metavar='N', type=int, default=1,
                           help=textwrap.dedent("""\
@@ -148,7 +148,7 @@ if __name__ == '__main__':
                           """))
 
     # Changes help descriptions from the default input and output help descriptions
-    in_help = 'Path to input directory containing alignments in FASTA format'
+    in_help = 'Path to prep_final_dataset_<M.D.Y>'
     args = help_formatter.get_args(parser, optional, required, in_help=in_help)
 
     args.input = os.path.abspath(args.input)

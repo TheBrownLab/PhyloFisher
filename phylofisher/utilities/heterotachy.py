@@ -187,13 +187,13 @@ def site_removal():
     @return:
     """
     i = 0
-    os.mkdir(f'chunks_{args.step}')
-    os.chdir(f'chunks_{args.step}')
-    for chunk in range(args.step, len(sorted_sites), args.step):
+    os.mkdir(f'steps_{args.step_size}')
+    os.chdir(f'steps_{args.step_size}')
+    for step in range(args.step_size, len(sorted_sites), args.step_size):
         with open(f'step{i}', 'w') as res:
             records = []
             for name, seq in matrix_dict.items():
-                seq = "".join(seq[sorted_sites[chunk:]].values)
+                seq = "".join(seq[sorted_sites[step:]].values)
                 records.append(SeqRecord(Seq(seq, IUPAC.protein),
                                          id=name,
                                          name='',
@@ -221,7 +221,7 @@ if __name__ == '__main__':
                           """))
     # Optional Arguments
 
-    optional.add_argument('-s', '--step', type=int, default=3000, metavar='N',
+    optional.add_argument('-s', '--step_size', type=int, default=3000, metavar='N',
                           help=textwrap.dedent("""\
                           Size of removal step (i.e., 1000 sites removed) to exhaustion
                           Default: 3000
@@ -235,7 +235,7 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
                           help=textwrap.dedent("""\
-                          Desired format of the output chunks.
+                          Desired format of the output steps.
                           Options: fasta, nexus, phylip (names truncated at 10 characters), 
                           or phylip-relaxed (names are not truncated)
                           Default: phylip-relaxed

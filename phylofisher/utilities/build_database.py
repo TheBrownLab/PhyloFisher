@@ -275,7 +275,7 @@ def main(args, threads, no_og_file, threshold):
 
 
 if __name__ == "__main__":
-    description = 'Script for dataset construction.'
+    description = 'Script for database construction and taxonomic updates.'
     parser, optional, required = help_formatter.initialize_argparse(name='build_database.py',
                                                                     desc=description,
                                                                     usage='build_database.py [OPTIONS]')
@@ -292,8 +292,9 @@ if __name__ == "__main__":
                           """))
     optional.add_argument('-o', '--og_threshold', type=float, default=0.1, metavar='0.X',
                           help=textwrap.dedent("""\
-                          Threshold 0-1 for OG.
-                          Default: 0.1
+                          0.X proportion of sequences (0-1) of sequences that must hit an 
+                          OrthoMCL orthogroup for the group to be assigned.
+                          Default: 0.1 (10%)
                           """))
     optional.add_argument('--rename', type=str, metavar='<to_rename.tsv>',
                           help=textwrap.dedent("""\

@@ -46,7 +46,7 @@ def parse_metadata(metadata, input_metadata=None):
             full = sline[1].strip()
             if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
                 color_dict[group] = 'white'
-            metadata_comb[tax] = {'group': group, 'col': color_dict[group], 'full': full, 'subtax': sub_tax}
+            metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full, 'Lower Taxonomy': sub_tax}
     if input_metadata:
         for line in open(input_metadata):
             if "FILE_NAME" not in line:
@@ -55,7 +55,7 @@ def parse_metadata(metadata, input_metadata=None):
                 group = metadata_input[3].strip()
                 full = metadata_input[6].strip()
                 sub_tax = metadata_input[4]
-                metadata_comb[tax] = {'group': group, 'col': "white", 'full': full, 'subtax': sub_tax}
+                metadata_comb[tax] = {'Higher Taxonomy': group, 'col': "white", 'full': full, 'Lower Taxonomy': sub_tax}
     return metadata_comb, color_dict
 
 
@@ -87,7 +87,7 @@ def suspicious_clades(tree):
                 org = org.split('..')[0]
             else:
                 org = org.split('_')[0]
-            groups.add(metadata[org]['group'])
+            groups.add(metadata[org]['Higher Taxonomy'])
         if len(groups) > 1:
             suspicious.append(clade)
     return tree, suspicious
@@ -120,16 +120,16 @@ def get_best_candidates(tree_file):
     return top_seqs
 
 
-def parse_contaminations(file):
+def parse_contaminants(file):
     """
     Parse contamination file.
     example:
     ==============================
-    Pirisoci	Alveolata	group
-    DiplDSTH	GoniavonGEN	org
-    Fucucera	Ochrophyta	subtax
+    Pirisoci	Alveolata	Higher Taxonomy
+    DiplDSTH	GoniavonGEN	Unique ID
+    Fucucera	Ochrophyta	Lower Taxonomy
     ==============================
-    input: tab separated file with contaminations
+    input: tab separated file with contaminants
     result: dictionary with organism as key and tuple with taxonomy
             and rank 
     """
@@ -151,8 +151,8 @@ def expected_neighborhood(parent, cont_key_rank):
     keywords = set()
     key = cont_key_rank[0]
     rank = cont_key_rank[1]
-    # check that rank is valid (group, subtax, org)
-    assert rank in ['group', 'subtax', 'org'], f'{rank} has to be group,subtax or org'
+    # check that rank is valid (group, Lower Taxonomy, org)
+    assert rank in ['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'], f'{rank} has to be Higher Taxonomy,Lower Taxonomy or org'
     for org in parent.get_leaf_names():
         if (org.count('_') != 4):
             if '..' in org:
@@ -160,16 +160,16 @@ def expected_neighborhood(parent, cont_key_rank):
                 org = org.split('..')[0]
             else:
                 org = org.split('_')[0]
-            if rank == 'group':
-                keywords.add(metadata[org]['group'])
-            elif rank == 'subtax':
-                keywords.add(metadata[org]['subtax'])
-            elif rank == 'org':
+            if rank == 'Higher Taxonomy':
+                keywords.add(metadata[org]['Higher Taxonomy'])
+            elif rank == 'Lower Taxonomy':
+                keywords.add(metadata[org]['Lower Taxonomy'])
+            elif rank == 'Unique ID':
                 keywords.add(org)
     if keywords:
         if len(keywords) == 1:
             # only in a case that expected neighbourhood is exactly what we
-            # are expecting to be. Only one group, subtax, tax
+            # are expecting to be. Only one Higher Taxonomy, Lower Taxonomy, tax
             if key in list(keywords)[0]:
                 return True
             else:
@@ -179,18 +179,18 @@ def expected_neighborhood(parent, cont_key_rank):
     return expected_neighborhood(parent.up, cont_key_rank)
 
 
-def collect_contaminations(tree_file, cont_dict):
+def collect_contaminants(tree_file, cont_dict):
     """
     Collect name of all sequences where position on tree corresponds to expected place 
     for a contamination.
-    input: tree file, contamination dict from parse_contaminations fucntion
-    result: set of proven contaminations, set of proven contamination (same names as in csv result tables)
+    input: tree file, contamination dict from parse_contaminants fucntion
+    result: set of proven contaminants, set of proven contamination (same names as in csv result tables)
     """
     t = Tree(tree_file)
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
     cont_table_names = set()
-    contaminations = set()
+    contaminants = set()
     n = 0
     for node in t.traverse('preorder'):
         if node.is_leaf() is True:
@@ -202,10 +202,10 @@ def collect_contaminations(tree_file, cont_dict):
                 if org in cont_dict:
                     exp_hood = expected_neighborhood(node.up, cont_dict[org])
                     if exp_hood is True:
-                        contaminations.add(name)
+                        contaminants.add(name)
                         cont_table_names.add(table_name)
         n += 1
-    return contaminations, cont_table_names
+    return contaminants, cont_table_names
 
 
 def get_build_len(name_):
@@ -235,9 +235,9 @@ def get_build_len(name_):
         return build_len, len_dict
 
 
-def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
-    if contaminations is None:
-        contaminations = set()
+def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
+    if contaminants is None:
+        contaminants = set()
     tree_base = str(os.path.basename(tree_file))
 
     # what if they will use somethig different than Raxml? We should make some if statement here maybe.
@@ -281,7 +281,7 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
                 node.set_style(node_style)
             else:
                 # All leaves
-                format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked, len_dict)
+                format_leaves(backpropagation, contaminants, node, node_style, table, top_ranked, len_dict)
                 node.set_style(node_style)
 
     title_face = TextFace(f'<{name_}  {len_info}, {sus_clades} suspicious clades>', bold=True)
@@ -291,7 +291,7 @@ def tree_to_tsvg(tree_file, contaminations=None, backpropagation=None):
         table.close()
 
 
-def format_leaves(backpropagation, contaminations, node, node_style, table, top_ranked, len_dict):
+def format_leaves(backpropagation, contaminants, node, node_style, table, top_ranked, len_dict):
     """This function formats the leaves for the svg file and writes to tsv file"""
 
     # This parts is about leaves
@@ -300,7 +300,7 @@ def format_leaves(backpropagation, contaminations, node, node_style, table, top_
     node.add_face(empty_face, column=3, position="aligned")
     org = node.name
     if org.count('_') == 3:  # if org in additions
-        org_in_add(backpropagation, contaminations, node, org, table, top_ranked, len_dict)
+        org_in_add(backpropagation, contaminants, node, org, table, top_ranked, len_dict)
 
     elif '..' in org:
         para_from_meta(backpropagation, node, org, table, len_dict)
@@ -309,18 +309,18 @@ def format_leaves(backpropagation, contaminations, node, node_style, table, top_
         ortho_from_meta(backpropagation, node, node_style, org, table, len_dict)
 
 
-def org_in_add(backpropagation, contaminations, node, org, table, top_ranked, len_dict):
+def org_in_add(backpropagation, contaminants, node, org, table, top_ranked, len_dict):
     """for organisms that are in additions"""
     quality = f'{org.split("_")[-2]}_{org.split("_")[-1]}_{len_dict[org]}'
     org = node.name
     unique_id = org.split('_')[0]
-    group = metadata[unique_id]['group']
+    group = metadata[unique_id]['Higher Taxonomy']
     if group in tax_col:
-        tax_name = TextFace(f'[{group} {metadata[unique_id]["subtax"]}]', fgcolor=tax_col[group], bold=True)
+        tax_name = TextFace(f'[{group} {metadata[unique_id]["Lower Taxonomy"]}]', fgcolor=tax_col[group], bold=True)
     else:
-        tax_name = TextFace(f'[{group} {metadata[unique_id]["subtax"]}]', bold=True)
+        tax_name = TextFace(f'[{group} {metadata[unique_id]["Lower Taxonomy"]}]', bold=True)
     node.add_face(tax_name, column=1, position="aligned")
-    if node.name in contaminations:
+    if node.name in contaminants:
         # Seqs to delete
         if not backpropagation:
             table.write(f'{metadata[unique_id]["full"]}_{quality}@{unique_id}\t{group}\td\n')
@@ -343,20 +343,20 @@ def org_in_add(backpropagation, contaminations, node, org, table, top_ranked, le
 def para_from_meta(backpropagation, node, org, table, len_dict):
     """for paralogs from metadata"""
     unique_id = org.split('..')[0]
-    group = f"{metadata[unique_id]['group']}"
+    group = f"{metadata[unique_id]['Higher Taxonomy']}"
     paraf = TextFace(f'{metadata[unique_id]["full"]}_{len_dict[org]}@{org}', fgcolor='blue')
     node.name = ''
     node.add_face(paraf, column=0)
     if not backpropagation:
         table.write(f'{metadata[unique_id]["full"]}_{len_dict[org]}@{org}\t{group}\tp\n')
-    gface = TextFace(f'[{group} {metadata[unique_id]["subtax"]}]')
+    gface = TextFace(f'[{group} {metadata[unique_id]["Lower Taxonomy"]}]')
     node.add_face(gface, column=1, position="aligned")
 
 
 def ortho_from_meta(backpropagation, node, node_style, org, table, len_dict):
     """for orthologs from dataset"""
-    group = f"{metadata[org]['group']}"
-    gface = TextFace(f'[{group} {metadata[org]["subtax"]}]')  # TODO do not touch me pleeeease
+    group = f"{metadata[org]['Higher Taxonomy']}"
+    gface = TextFace(f'[{group} {metadata[org]["Lower Taxonomy"]}]')  # TODO do not touch me pleeeease
     color = metadata[org]['col']
     node_style["bgcolor"] = color
     if not backpropagation:
@@ -379,7 +379,7 @@ def format_nodes(node, node_style, sus_clades, t):
                     org = org.split('..')[0]
                 else:
                     org = org.split('_')[0]  # for potential orthologs
-                taxons.add(metadata[org]['group'])
+                taxons.add(metadata[org]['Higher Taxonomy'])
         if len(taxons) > 1 and (len(node) < (len(t) / 2)):
             node_style['shape'] = 'sphere'
             node_style['size'] = 12
@@ -434,7 +434,7 @@ def collect_major_taxa(nonredundant_clades_):
                 org = org.split('..')[0]
             else:
                 org = org.split('_')[0]
-            taxons.append(metadata[org]["group"])
+            taxons.append(metadata[org]["Higher Taxonomy"])
         group_perc = {}
         for tax in set(taxons):
             group_perc[tax] = (taxons.count(tax) / len(taxons)) * 100
@@ -446,7 +446,7 @@ def collect_major_taxa(nonredundant_clades_):
                 org = seq.split('..')[0]
             else:
                 org = seq.split('_')[0]
-            if group_perc[metadata[org]["group"]] == 50:
+            if group_perc[metadata[org]["Higher Taxonomy"]] == 50:
                 orgs_[org].append('unspecified')
             else:
                 orgs_[org].append(max_perc)
@@ -483,7 +483,7 @@ def plot_major_taxa(orgs_taxa):
             plt.bar(counted_groups.keys(), counted_groups.values(), color=colors)
             plt.tight_layout()
             plt.ylim(0, max_)
-            plt.title(f'{org}({metadata[org]["group"]})')
+            plt.title(f'{org}({metadata[org]["Higher Taxonomy"]})')
             plt.xticks(rotation='vertical')
             plt.yticks(fontsize=4)
             pdf.savefig(bbox_inches='tight')
@@ -492,9 +492,9 @@ def plot_major_taxa(orgs_taxa):
 
 def backpropagate_contamination(tree_file, cont_names):
     """
-    Changes status in all csv result tables for all proven contaminations
+    Changes status in all csv result tables for all proven contaminants
     to 'd' as delete.
-    input: tree file, set of proven contaminations (same name format as in csv tables)
+    input: tree file, set of proven contaminants (same name format as in csv tables)
     result: None
     """
     tree_base = str(os.path.basename(tree_file))
@@ -535,18 +535,19 @@ if __name__ == '__main__':
                                                                     usage='forest.py [OPTIONS] -i <in_dir>')
     # Add Arguments Specific to this script
     # Optional Arguments
-    optional.add_argument('-a', '--contaminations', metavar='<contams>',
+    optional.add_argument('-a', '--contaminants', metavar='<contams.tsv>',
                           help=textwrap.dedent("""\
-                          Path to file containing previously known contaminations to be removed."""))
+                          Path to file containing previously known contaminants to be removed."""))
     optional.add_argument('-b', '--backpropagate', action='store_true',
                           help=textwrap.dedent("""\
-                          Remove contaminations through backpropagation."""))
+                          Remove contaminants through backpropagation."""))
     optional.add_argument('-t', '--threads', metavar='<N>', type=int,
                           help=textwrap.dedent("""\
                           Number of threads to be used, where N is an integer. 
                           Default: N=1"""))
 
-    args = help_formatter.get_args(parser, optional, required, pre_suf=False)
+    in_help = 'Path to sgt_constructor_out_<M.D.Y>/trees'
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help)
 
     trees_folder = args.input
     output_folder = args.output
@@ -592,15 +593,15 @@ if __name__ == '__main__':
         # Commented out due to issues with the function
         # plot_major_taxa(orgs_taxa)
 
-    if args.contaminations:
-        cont_dict = parse_contaminations(args.contaminations)
+    if args.contaminants:
+        cont_dict = parse_contaminants(args.contaminants)
         for tree in trees:
-            contaminations, contaminated_table = collect_contaminations(tree, cont_dict)
+            contaminants, contaminated_table = collect_contaminants(tree, cont_dict)
             if args.backpropagate:
                 backpropagate_contamination(tree, contaminated_table)
-                tree_to_tsvg(tree, contaminations, backpropagation=True)
+                tree_to_tsvg(tree, contaminants, backpropagation=True)
             else:
-                tree_to_tsvg(tree, contaminations)
+                tree_to_tsvg(tree, contaminants)
     else:
         for tree in trees:
             tree_to_tsvg(tree)

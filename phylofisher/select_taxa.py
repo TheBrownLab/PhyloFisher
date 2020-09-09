@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 import configparser
-import os
 import textwrap
 from pathlib import Path
-import pandas as pd
 
 from phylofisher import help_formatter, subset_tools
 
