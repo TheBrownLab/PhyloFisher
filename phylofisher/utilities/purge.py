@@ -4,10 +4,12 @@ import configparser
 import argparse
 import csv
 import textwrap
-import phylofisher.help_formatter
+
 from Bio import SeqIO
 from glob import glob
 from pathlib import Path
+
+from phylofisher import help_formatter
 
 
 def fasta_cleaner(file, org_set):
@@ -31,6 +33,16 @@ def parse_metadata():
         reader = csv.reader(f, delimiter='\t')
         lines = list(reader)
         return lines
+
+
+def parse_input(infile):
+    file_contents = set()
+    with open(infile, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            file_contents.add(line)
+
+    return list(file_contents)
 
 
 def delete_group_org(orgs_=None, groups=None):
@@ -61,50 +73,40 @@ def delete_group_org(orgs_=None, groups=None):
 
 # TODO input as a file
 if __name__ == '__main__':
-    formatter = lambda prog: phylofisher.help_formatter.MyHelpFormatter(prog, max_help_position=100)
-    description = 'Inspects single gene trees for contamination.'
+    description = 'Deletes taxa and/or taxonomic groups from the database'
     parser, optional, required = help_formatter.initialize_argparse(name='purge.py',
                                                                     desc=description,
-                                                                    usage='forest.py [OPTIONS] -i <in_dir>')
-    parser = argparse.ArgumentParser(prog='purge.py',
-                                     description='Script for deleting orgs/taxonomic groups from the dataset',
-                                     usage='purge.py [OPTIONS]',
-                                     formatter_class=formatter,
-                                     add_help=False,
-                                     epilog=textwrap.dedent("""\
-                                         additional information:
-                                            stuff
-                                            """))
-    optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
-
-    # Required Arguments
-    required.add_argument('-i', '--input', required=True, type=str, metavar='path/to/input/',
-                          help=textwrap.dedent("""\
-                              Path to input directory
-                              """))
+                                                                    usage='purge.py [OPTIONS] -i <in_dir>')
 
     # Optional Arguments
-    optional.add_argument('-o', '--orgs', default="output", type=str, metavar='',
+    optional.add_argument('-o', '--orgs', type=str, metavar='groups.txt',
                           help=textwrap.dedent("""\
-                              Short names of organisms for deletion: Org1,Org2,Org3
+                              Path to text file containing Unique IDs of organisms for deletion.
+                              Example:
+                              UniqueID-1
+                              UniqueID-2
                               """))
-    optional.add_argument('-g', '--tax_groups', metavar='<format>', type=str, default='fasta',
+    optional.add_argument('-g', '--tax_groups', metavar='groups.txt>', type=str,
                           help=textwrap.dedent("""\
-                              Names of taxonomic groups for deletion: Group1,Group2,Group3
-                              """))
-    optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
-                          help=textwrap.dedent("""\
-                              Show this help message and exit.
+                              Path to text file containing taxonomic groups for deletion.
+                              Example:
+                              Group1
+                              Group2
                               """))
 
-    parser._action_groups.append(optional)
-    args = parser.parse_args()
+    in_help = 'Path to database directory'
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help, out_dir=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
     multi_input = os.path.abspath(config['PATHS']['input_file'])
 
-    delete_group_org(args.orgs, args.tax_groups)
+    if args.orgs:
+        orgs = parse_input(args.orgs)
+        delete_group_org(orgs_=orgs)
+    if args.tax_groups:
+        tax_groups = parse_input(args.tax_groups)
+        delete_group_org(groups=tax_groups)
+
 

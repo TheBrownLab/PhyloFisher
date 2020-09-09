@@ -263,10 +263,12 @@ if __name__ == '__main__':
     optional.add_argument('-c', '--conserved', type=float, metavar='0-1', default=0.7,
                           help=textwrap.dedent("""\
                           Conservation level. 0-1. Default is 0.7
+                          Default: 0.7 (70%)
                           """))
     optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X', default='1e-30',
                           help=textwrap.dedent("""\
                           Evalue for blast searches. Default: 1e-30.
+                          Default: 1e-30
                           """))
     optional.add_argument('-a', '--all_codons', action='store_true', default=False,
                           help=textwrap.dedent("""\

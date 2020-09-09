@@ -104,14 +104,14 @@ if __name__ == '__main__':
     # Optional Arguments
     optional.add_argument('--in_format', metavar='<format>', type=str, default='phylip-relaxed',
                           help=textwrap.dedent("""\
-                                  Desired format of the output chunks.
+                                  Desired format of the output steps.
                                   Options: fasta, nexus, phylip (names truncated at 10 characters),
                                   or phylip-relaxed (names are not truncated)
                                   Default: phylip-relaxed
                                   """))
     optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
                           help=textwrap.dedent("""\
-                                  Desired format of the output chunks.
+                                  Desired format of the output steps.
                                   Options: fasta, nexus, phylip (names truncated at 10 characters), 
                                   or phylip-relaxed (names are not truncated)
                                   Default: phylip-relaxed

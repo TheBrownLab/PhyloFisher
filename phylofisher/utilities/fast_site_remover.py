@@ -115,13 +115,13 @@ def main():
 
     sorted_rates = parse_rates()
     iter = 0
-    os.mkdir(f'{args.output}/chunks_{args.chunk}')
-    os.chdir(f'{args.output}/chunks_{args.chunk}')
-    for chunk in range(args.chunk, len(sorted_rates), args.chunk):
-        with open(f'chunk{iter}', 'w') as res:
+    os.mkdir(f'{args.output}/steps_{args.step_size}')
+    os.chdir(f'{args.output}/steps_{args.step_size}')
+    for step in range(args.step_size, len(sorted_rates), args.step_size):
+        with open(f'step{iter}', 'w') as res:
             records = []
             for name, seq in matrix_dict.items():
-                seq = "".join(seq[sorted_rates[chunk:]].values)
+                seq = "".join(seq[sorted_rates[step:]].values)
                 records.append(SeqRecord(Seq(seq, IUPAC.protein),
                                          id=name,
                                          name='',
@@ -151,7 +151,7 @@ if __name__ == "__main__":
                                   """))
 
     # Optional Arguments
-    optional.add_argument('-c', '--chunk', type=int, default=3000, metavar='N',
+    optional.add_argument('-s', '--step_size', type=int, default=3000, metavar='N',
                           help=textwrap.dedent("""\
                               Size of removal step (i.e., 1000 sites removed) to exhaustion
                               Default: 3000
@@ -165,7 +165,7 @@ if __name__ == "__main__":
                                   """))
     optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
                           help=textwrap.dedent("""\
-                              Desired format of the output chunks.
+                              Desired format of the output steps.
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
                               or phylip-relaxed (names are not truncated)
                               Default: phylip-relaxed

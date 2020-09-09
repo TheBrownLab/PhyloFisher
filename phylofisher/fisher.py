@@ -41,7 +41,7 @@ class Hit:
                     'HMM' - selected just according to Hmmsearch
     - quality: q1,q2...qn refers to position in blast/hmmsearch
                 quality also contains 'r' or 'n' after number
-                which mean reciprocal and nonreciprocal best blast hit
+                which mean corresponding and non_corresponding best blast hit
                 example: q1r means best blast/hmmer hit (depends on path_)
                         which is also reciprocal best blast hit to query
                         gene in our database"""
@@ -115,7 +115,6 @@ class SpecQuery:
                 at_least_one = True
         return at_least_one
 
-
     def spec_query_blast(self):
         """Blast against sample with sequence selected according to spec queries.
         Returns: list with ordered best blast hits."""
@@ -123,7 +122,7 @@ class SpecQuery:
         qfile = f'tmp/{sample_name}/{self.query}.fas'
         bout = f'tmp/{sample_name}/{self.query}.blastout'
         with open(qfile, 'w') as f:
-            n = 0 # just for uniq names of spec query sequences
+            n = 0  # just for uniq names of spec query sequences
             for query_sequence in self.seqs:
                 f.write(f'>{n}\n{query_sequence.replace("-", "")}\n')
 
@@ -394,7 +393,7 @@ def diamond():
     for_diamond = 'tmp/for_diamond.fasta'
 
     db = str(Path(dfo, 'orthomcl/orthomcl.diamonddb'))
-    out = 'tmp/diamond.res'
+    out = 'tmp/orthomcl_diamond.res'
     cmd = (
         f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
         f'--db {db} -o {out} -p {args.threads} --outfmt 6 qseqid stitle evalue')
@@ -440,9 +439,9 @@ def fasttree(checked_hits):
     subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
     tree = Tree(tree_file)
     correct_len = length_check(trim)
-    good_hits = [] # SBH hits
+    good_hits = []  # SBH hits
     good_hits_names = set()
-    bb_hits = [] # all hits
+    bb_hits = []  # all hits
     for hit in checked_hits:
         if hit.name in correct_len:
             bb_hits.append(hit)
@@ -450,7 +449,7 @@ def fasttree(checked_hits):
             if correct_phylo_group(hit_node.up, input_taxonomy[org]) is True:
                 good_hits.append(hit)
                 good_hits_names.add(hit.name)
-    if args.all_paralogs:
+    if args.all_bbh:
         # keep all hits, even if SBH (good hits) hits exist
         all_hits = good_hits[:]
         for hit in bb_hits:
@@ -475,7 +474,7 @@ def parse_diamond_output():
     returns: names of filtered hits with info about gene"""
     correct_hits = set()
     proccesed = set()
-    for line in open('tmp/diamond.res'):
+    for line in open('tmp/orthomcl_diamond.res'):
         sline = line.split("\t")
         full_name = sline[0]
         hit, gene = full_name.split('@')
@@ -521,10 +520,10 @@ def new_best_hits(candidate_hits):
                         d.write(f'>{seq_name}_q{n}c\n{cand.seq}\n')
                     else:
                         d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
-                        with open(f'{args.output}/nonreciprocal_hits.txt', 'a') as nonrep:
+                        with open(f'{args.output}/non_corresponding_hits.txt', 'a') as nonrep:
                             nonrep.write(
-                                f'nonreciprocal hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
-                            print(f'nonreciprocal hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
+                                f'non-corresponding hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
+                            print(f'non-corresponding hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
                 except KeyError:
                     n -= 1
 
@@ -558,7 +557,7 @@ def get_reciprocal_hits():
     for line in open('tmp/dataset_diamond.res'):
         sline = line.split("\t")
         full_name = sline[0]
-        sequence, gene = full_name.split('@') # do we need this line??
+        sequence, gene = full_name.split('@')  # do we need this line??
         sequence = sequence[:-4]
         if sequence not in proccesed:
             proccesed.add(sequence)
@@ -581,9 +580,9 @@ if __name__ == '__main__':
     config.read('config.ini')
 
     description = 'Script for ortholog fishing.'
-    parser, optional = help_formatter.initialize_argparse(name='fisher.py',
-                                                                    desc=description,
-                                                                    usage='fisher.py [OPTIONS]')
+    parser, optional, required = help_formatter.initialize_argparse(name='fisher.py',
+                                                          desc=description,
+                                                          usage='fisher.py [OPTIONS]')
 
     optional.add_argument('-t', '--threads', type=int, metavar='N', default=1,
                           help=textwrap.dedent("""\
@@ -592,16 +591,17 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('-n', '--max_hits', type=int, metavar='N', default=5,
                           help=textwrap.dedent("""\
-                          Max number of hits to check, where N is an interger.
+                          Max number of hits to check, where N is an integer.
                           Default: 5
                           """))
     optional.add_argument('--keep_tmp', action='store_true',
                           help=textwrap.dedent("""\
                           Keep temporary files
                           """))
-    optional.add_argument('--all_paralogs', action='store_true',
+    optional.add_argument('--all_bbh', action='store_true',
                           help=textwrap.dedent("""\
-                          Keep all paralogs while using specific queires.
+                          Keep all significant BLAST hits regardless of phylogenetic affiliation as 
+                          determined with FastTree through the phylogenetically aware route.
                           """))
     optional.add_argument('--add', metavar='<inputfile>',
                           help=textwrap.dedent("""\
@@ -613,7 +613,7 @@ if __name__ == '__main__':
                           Previous output of fisher.py to add new organisms from a new input metadata.
                           Requires --add option.
                           """))
-    args = help_formatter.get_args(parser, optional, pre_suf=False, inp_dir=False)
+    args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
     if args.add and not args.add_to:
         parser.error("--add requires --add_to.")
@@ -654,7 +654,7 @@ if __name__ == '__main__':
                 # in a case that user used --keep-tmp option before:
                 # it cleans problematic tmp files
                 os.remove('tmp/dataset_diamond.res')
-                os.remove('tmp/diamond.res')
+                os.remove('tmp/orthomcl_diamond.res')
                 os.remove('tmp/for_diamond.fasta')
             except OSError:
                 pass
