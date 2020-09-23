@@ -81,7 +81,7 @@ if __name__ == "__main__":
                               Options: 10, 20, 30, 40, 50, or 60
                               Default: 60
                             """))
-    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                               Input format of matrix
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
