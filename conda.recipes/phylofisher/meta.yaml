@@ -1,30 +1,54 @@
+{% set name = "phylofisher" %}
+{% set version = "0.2.0" %}
+
 package:
-  name: phylofisher
-  version: 0.1.20
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
 
 source:
-  path: ../../
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 7e5cb8b181a9b4373682a6c633840be622c3d99c1ba1cb9eaa58b84843deafaa
 
 build:
-  number: 1
-  script:
-    - python -m pip install --no-deps --ignore-installed .
+  number: 4
+  script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
-  build:
+  host:
+    - biopython
+    - ete3
+    - matplotlib
+    - numpy
+    - pandas
+    - pip
+    - pyqt
     - python
-    - setuptools
-
+    - scipy
+    - binutils
+    - parasorter
+    - trimal=1.4.1
+    - raxml=8.2.12
+    - hmmer=3.3
+    - diamond=0.9.36
+    - fasttree=2.1.10
+    - blast=2.9.0
+    - cd-hit=4.8.1
+    - mafft=7.455
+    - divvier=1.01
+    - bmge=1.12
+    - prequal=1.02
+    - dist_est=1.1
+    - astral=5.7.3
   run:
-    # Python Deps
-    - python=3.7
-    - biopython=1.76
-    - pyqt=5.9.2
-    - ete3=3.1.1
-    - pandas=1.0.1
-    - matplotlib=3.2.1
-    # NON-Python Deps
-    - binutils=2.34
+    - biopython
+    - ete3
+    - matplotlib
+    - numpy
+    - pandas
+    - pyqt
+    - python
+    - scipy
+    - binutils
     - trimal=1.4.1
     - raxml=8.2.12
     - hmmer=3.3
@@ -39,6 +63,17 @@ requirements:
     - dist_est=1.1
     - astral=5.7.3
 
+test:
+  imports:
+    - phylofisher
+    - phylofisher.utilities
+
 about:
-  summary: PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic datasets that consist of protein sequences from eukaryotic organisms.
+  home: "https://github.com/TheBrownLab/PhyloFisher"
   license: MIT
+  license_family: MIT
+  license_file: 
+  summary: "PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic datasets that consist of protein sequences from eukaryotic organisms."
+  doc_url: 
+  dev_url: 
+
