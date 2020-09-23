@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import hashlib
 import os
 import platform
 import shutil
@@ -9,8 +9,6 @@ import tarfile
 import textwrap
 import time
 import urllib.request
-import hashlib
-from zipfile import ZipFile
 
 from phylofisher import help_formatter
 

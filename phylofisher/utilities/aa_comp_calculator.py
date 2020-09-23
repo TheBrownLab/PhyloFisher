@@ -1,19 +1,21 @@
 #!/usr/bin/env python
-import argparse
+import os
 import textwrap
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import scipy.cluster.hierarchy as shc
 from Bio import SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-import matplotlib.pyplot as plt
-import scipy.cluster.hierarchy as shc
-from phylofisher import help_formatter
 from ete3 import Tree
+
+from phylofisher import help_formatter
+
 
 def distance_matrix2tree(Z, names):
     """Return tree representation for distance matrix"""
-    n = Z.shape[0]+1
-    i2n = [0] * (2*n - 1)
+    n = Z.shape[0] + 1
+    i2n = [0] * (2 * n - 1)
     t = Tree()
     for i, (idx1, idx2, dist, sample_count) in enumerate(Z):
         idx1, idx2 = int(idx1), int(idx2)
@@ -35,9 +37,8 @@ def distance_matrix2tree(Z, names):
     return t
 
 
-
 def make_plot():
-    df = pd.read_csv(f'{args.output}.tsv', sep="\t")
+    df = pd.read_csv(f'{args.output}/aa_comp.tsv', sep="\t")
     df = df.set_index('Taxon')
 
     # Todo: Make plot prettier
@@ -46,10 +47,10 @@ def make_plot():
     plt.xticks(rotation=90)
     z = shc.linkage(df, method='ward')
     t = distance_matrix2tree(z, df.index.values)
-    t.write(outfile='distance_matrix.tre')
+    t.write(outfile=f'{args.output}/distance_matrix.tre')
     shc.dendrogram(z, labels=df.index.values, color_threshold=0)
     plt.tight_layout()
-    plt.savefig(f'AA_Composition_Hierarchical_Clustering.pdf')
+    plt.savefig(f'{args.output}/AA_Composition_Hierarchical_Clustering.pdf')
 
 
 if __name__ == '__main__':
@@ -72,8 +73,11 @@ if __name__ == '__main__':
 
     peptides = ['A', 'G', 'P', 'S', 'T', 'C', 'F', 'W', 'Y', 'H', 'R', 'K', 'M', 'I', 'L', 'V', 'N', 'D', 'E', 'Q']
 
-    with open(args.input, 'r') as infile, open(f'{args.output}.tsv', 'w') as outfile:
-        outfile.write('Taxon\t'+'\t'.join(peptides) + '\n')
+    if not os.path.isdir(args.output):
+        os.mkdir(args.output)
+
+    with open(args.input, 'r') as infile, open(f'{args.output}/aa_comp.tsv', 'w') as outfile:
+        outfile.write('Taxon\t' + '\t'.join(peptides) + '\n')
 
         # Reads in input file
         for record in SeqIO.parse(infile, format='phylip-relaxed'):

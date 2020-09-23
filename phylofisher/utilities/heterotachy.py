@@ -1,16 +1,15 @@
 #!/usr/bin/env python
-
+import os
+import subprocess
 import sys
 import textwrap
-import subprocess
-import os
 
+import pandas as pd
 from Bio import SeqIO
-from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from ete3 import Tree
-import pandas as pd
+
 from phylofisher import help_formatter
 
 
@@ -194,7 +193,7 @@ def site_removal():
             records = []
             for name, seq in matrix_dict.items():
                 seq = "".join(seq[sorted_sites[step:]].values)
-                records.append(SeqRecord(Seq(seq, IUPAC.protein),
+                records.append(SeqRecord(Seq(seq),
                                          id=name,
                                          name='',
                                          description=''))
@@ -211,7 +210,7 @@ if __name__ == '__main__':
                                                                     desc=description,
                                                                     usage=usage)
 
-    required.add_argument('-t', '--tree', type=str, metavar='', required=True,
+    required.add_argument('-tr', '--tree', type=str, metavar='', required=True,
                           help=textwrap.dedent("""\
                           Path to tree
                           """))

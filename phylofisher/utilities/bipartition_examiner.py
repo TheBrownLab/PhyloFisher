@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-import argparse
 import os
 import textwrap
-from ete3 import Tree
 from collections import Counter
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
+from ete3 import Tree
+
 from phylofisher import help_formatter
 
 plt.rcParams["figure.figsize"] = (10, 5)
@@ -67,6 +68,7 @@ def file_to_series(file):
     for group, orgs in queries:
         group_sup[group] = get_support(orgs, sup_dict)
     s = pd.Series(group_sup)
+    print(s)
     return s
 
 
@@ -76,11 +78,8 @@ def parse_bss():
     for line in open(args.bs_files):
         line = line.strip()
         column = file_to_series(line.strip())
-        if n == 0:
-            column.name = 'Full dataset'
-        else:
-            column.name = os.path.basename(line)
-            # column.name = f'Step {n}'
+        column.name = os.path.basename(line)
+        # column.name = f'Step {n}'
         columns.append(column)
         n += 1
     return columns
@@ -92,8 +91,8 @@ def main():
     # plot_df.sort_index(inplace=True)
     df.plot()
     plt.legend(loc=0, prop={'size': 6})
-    plt.xticks(range(len(df.index)), list(df.index))
-    plt.tight_layout()
+    plt.xticks(range(len(df.index)), list(df.index), rotation=45)
+    # plt.tight_layout()
     plt.savefig("test_0toN.pdf")
     df.to_csv("test_out.csv")
     return df
@@ -106,22 +105,20 @@ if __name__ == "__main__":
                                                                     usage='bipartition_examiner.py '
                                                                           '[OPTIONS] -i /path/to/input/')
 
-    # TODO: What is optional and required?
     # Required Arguments
     required.add_argument('-b', '--bs_files', required=True, type=str, metavar='',
                           help=textwrap.dedent("""\
-                              Path bs_files
-                              """))
+                          Path bootstrap files.
+                          """))
     required.add_argument('-g', '--groups', type=str, required=True, metavar='',
                           help=textwrap.dedent("""\
-                                  groups
-                                  """))
+                          groups
+                          """))
 
     # Optional Arguments
     optional.add_argument('-on', '--output_name', type=str, metavar='out', default='out',
                           help=textwrap.dedent("""\
-                                      groups
-                                      """))
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 

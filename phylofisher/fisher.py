@@ -1,11 +1,4 @@
 #!/usr/bin/env python
-
-
-"""Script for finding candidate orthologous sequences
-input: predicted proteins, input metadata
-output: fasta files with predicted candidate orthologous sequences
-"""
-
 import configparser
 import os
 import subprocess

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import argparse
 import configparser
 import textwrap
 from pathlib import Path
@@ -20,12 +19,12 @@ if __name__ == '__main__':
                           """))
     required.add_argument('-i', '--input_file', required=True, metavar='<input.tsv>',
                           help=textwrap.dedent("""\
-                          Path to input metadata in tsv format
+                          Path to input metadata in tsv format.
                           """))
     # Optional Arguments
     optional.add_argument('--orthomcl', metavar='<omcl_data>',
                           help=textwrap.dedent("""\
-                          Path to orthomcl if NOT in dataset_dir
+                          Path to orthomcl if NOT in PhyloFisherDatabase_v1.0/database/orthomcl
                           """))
     optional.add_argument('--tree_colors', metavar='<omcl_data>',
                           help=textwrap.dedent("""\

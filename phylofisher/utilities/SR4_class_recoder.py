@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import textwrap
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.Alphabet import generic_protein
-from phylofisher import help_formatter
 
+from Bio import SeqIO
+from Bio.Alphabet import generic_protein
+from Bio.Seq import Seq
+
+from phylofisher import help_formatter
 
 if __name__ == '__main__':
     description = 'Recodes input matrix based on SR4 amino acid classification.'
@@ -18,14 +19,14 @@ if __name__ == '__main__':
                                       Path to input matrix for recoding.
                                       """))
     # Optional Arguments
-    optional.add_argument('-in_format', metavar='<format>', type=str, default='fasta',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                                       Input file format if not FASTA.
                                       Options: fasta, phylip (names truncated at 10 characters), 
                                       phylip-relaxed (names are not truncated), or nexus.
                                       Default: fasta
                                       """))
-    optional.add_argument('-out_format', metavar='<format>', type=str, default='fasta',
+    optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                                   Desired output format.
                                   Options: fasta, phylip (names truncated at 10 characters), 

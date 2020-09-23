@@ -8,7 +8,6 @@ import textwrap
 
 import pandas as pd
 from Bio import SeqIO
-from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
@@ -38,7 +37,7 @@ def fake_phylip(matrix):
         pseudonames[record.name] = uname
         pseudonames_rev[uname] = record.name
         seq = str(record.seq)
-        records.append(SeqRecord(Seq(seq, IUPAC.protein),
+        records.append(SeqRecord(Seq(seq),
                                  id=uname,
                                  name='',
                                  description=''))
@@ -87,20 +86,6 @@ def parse_rates():
     return result
 
 
-def write_seqs(out_handle, records):
-    # Accepted out formats with respective suffix
-    out_dict = {'fasta': 'fas',
-                'phylip': 'phy',
-                'phylip-relaxed': 'phy',
-                'nexus': 'nex'}
-
-    # Writes to output matrix in user specified output
-    if args.out_format.lower() in out_dict:
-        SeqIO.write(records, out_handle, args.out_format.lower())
-    else:
-        sys.exit('Invalid Output Format')
-
-
 def main():
     pseudo_, pseudo_rev_ = fake_phylip(args.matrix)
     fake_tree(args.tree, pseudo_)
@@ -117,16 +102,27 @@ def main():
     iter = 0
     os.mkdir(f'{args.output}/steps_{args.step_size}')
     os.chdir(f'{args.output}/steps_{args.step_size}')
+
+    out_dict = {'fasta'         : 'fas',
+                'phylip'        : 'phy',
+                'phylip-relaxed': 'phy',
+                'nexus'         : 'nex'}
+
     for step in range(args.step_size, len(sorted_rates), args.step_size):
-        with open(f'step{iter}', 'w') as res:
+        with open(f'step{iter}.{out_dict[args.out_format.lower()]}', 'w') as res:
             records = []
             for name, seq in matrix_dict.items():
                 seq = "".join(seq[sorted_rates[step:]].values)
-                records.append(SeqRecord(Seq(seq, IUPAC.protein),
+                records.append(SeqRecord(Seq(seq),
                                          id=name,
                                          name='',
                                          description=''))
-            write_seqs(res, records)
+
+            # Writes to output matrix in user specified output
+            if args.out_format.lower() in out_dict:
+                SeqIO.write(records, res, args.out_format.lower())
+            else:
+                sys.exit('Invalid Output Format')
 
         iter += 1
     # os.remove('../TEMP.phy')
@@ -172,7 +168,7 @@ if __name__ == "__main__":
                               """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
-    
+
     os.mkdir(args.output)
-    
+
     main()

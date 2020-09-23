@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import configparser
 import os
-import textwrap
 from pathlib import Path
+
 from Bio import SeqIO
+
 from phylofisher import help_formatter
 
 
@@ -79,8 +80,6 @@ def main():
     db_o_to_ex, paralogs = parse_orgs(db_orgs_file)
     o_to_ex = new_o_to_ex | db_o_to_ex
 
-    print(paralogs)
-
     # only genes which are not in g_to_ex
     filtered_genes = []
     for file in [file for file in os.listdir(args.input) if file.endswith(f".fas")]:
@@ -92,9 +91,9 @@ def main():
 
 
 if __name__ == '__main__':
-    parser, optional, required = help_formatter.initialize_argparse(name='fishing_net.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='working_dataset_constructor.py',
                                                                     desc='Script for filtering organisms [and|or] genes',
-                                                                    usage='fishing_net.py [OPTIONS] '
+                                                                    usage='working_dataset_constructor.py [OPTIONS] '
                                                                           '-i <input> ')
 
     in_help = "Path to output directory of fisher.py containing the output of informant.py"

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-
 import configparser
 import os
 import shutil
-import textwrap
 from pathlib import Path
 
 from Bio import SeqIO
@@ -104,8 +102,11 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser()
     config.read('config.ini')
-    dfo = str(Path(config['PATHS']['dataset_folder']).resolve())
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
     orthologs_dir = f'{dfo}/orthologs'
+
+    if os.path.isdir(args.output) is False:
+        os.mkdir(args.output)
 
     if os.path.isfile('select_orthologs.tsv'):
         subset_orthologs()

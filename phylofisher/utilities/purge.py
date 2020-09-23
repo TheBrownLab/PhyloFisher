@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-import os
 import configparser
-import argparse
 import csv
+import os
 import textwrap
-
-from Bio import SeqIO
 from glob import glob
 from pathlib import Path
+
+from Bio import SeqIO
 
 from phylofisher import help_formatter
 
@@ -48,12 +47,12 @@ def parse_input(infile):
 def delete_group_org(orgs_=None, groups=None):
     meta = os.path.join(dfo, 'metadata.tsv')
     if groups:
-        group_set = set(groups.split(','))
+        group_set = set(groups)
     else:
         group_set = set()
 
     if orgs_:
-        orgs = set(orgs_.split(','))
+        orgs = set(orgs_)
     else:
         orgs = set()
 
@@ -63,6 +62,8 @@ def delete_group_org(orgs_=None, groups=None):
         res = csv.writer(out_file, delimiter='\t')
         for line in lines:
             if line[2] in group_set:
+                orgs_to_del.add(line[0])
+            elif line[3] in group_set:
                 orgs_to_del.add(line[0])
             elif line[0] in orgs:
                 orgs_to_del.add(line[0])
@@ -86,7 +87,7 @@ if __name__ == '__main__':
                               UniqueID-1
                               UniqueID-2
                               """))
-    optional.add_argument('-g', '--tax_groups', metavar='groups.txt>', type=str,
+    optional.add_argument('-g', '--tax_groups', metavar='groups.txt', type=str,
                           help=textwrap.dedent("""\
                               Path to text file containing taxonomic groups for deletion.
                               Example:

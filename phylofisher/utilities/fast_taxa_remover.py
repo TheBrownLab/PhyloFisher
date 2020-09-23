@@ -2,10 +2,10 @@
 import os
 import shutil
 import textwrap
-
-from ete3 import Tree
 from statistics import mean
+
 from Bio import SeqIO
+from ete3 import Tree
 
 from phylofisher import help_formatter
 
@@ -67,12 +67,12 @@ class Matrix:
             #         if record.name not in exclude:
             #             res.write(f'>{record.name}\n{record.seq}\n')
 
-            seq_files = [file for file in os.listdir(args.single_genes) if file.endswith('.fas')]
+            seq_files = [file for file in os.listdir(args.ortholog_files) if file.endswith('.fas')]
 
             os.mkdir(f'{output_folder}/tmp')
 
             for file in seq_files:
-                with open(f'{args.single_genes}/{file}', 'r') as infile, open(f'{output_folder}/tmp/{file}', 'w') as outfile:
+                with open(f'{args.ortholog_files}/{file}', 'r') as infile, open(f'{output_folder}/tmp/{file}', 'w') as outfile:
                     records = []
                     for record in SeqIO.parse(infile, 'fasta'):
                         if record.name not in exclude:
@@ -80,7 +80,7 @@ class Matrix:
 
                     SeqIO.write(records, outfile, 'fasta')
 
-            os.system(f'forge.py '
+            os.system(f'matrix_constructor.py '
                       f'-i {output_folder}/tmp '
                       f'-o {output_folder}/step_{i} '
                       f'-of {args.out_format.lower()} '

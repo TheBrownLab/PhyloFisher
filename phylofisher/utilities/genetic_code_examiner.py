@@ -1,21 +1,21 @@
 #!/usr/bin/env python
-
-import os
-import re
-import subprocess
 import configparser
-import textwrap
+import os
 import shutil
-from pathlib import Path
+import subprocess
+import textwrap
 from collections import defaultdict
 from glob import glob
-from Bio.Blast import NCBIXML
-from Bio import SeqIO
-from Bio import AlignIO
-from Bio.Data import CodonTable
-import pandas as pd
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import pandas as pd
+from Bio import AlignIO
+from Bio import SeqIO
+from Bio.Blast import NCBIXML
+from Bio.Data import CodonTable
 from matplotlib.backends.backend_pdf import PdfPages
+
 from phylofisher import help_formatter
 
 plt.style.use('ggplot')
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     optional.add_argument('-c', '--conserved', type=float, metavar='0-1', default=0.7,
                           help=textwrap.dedent("""\
                           Conservation level. 0-1. Default is 0.7
-                          Default: 0.7 (70%)
+                          Default: 0.7 (70%%)
                           """))
     optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X', default='1e-30',
                           help=textwrap.dedent("""\

@@ -11,8 +11,8 @@ from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
-from Bio import SeqIO
 import pandas as pd
+from Bio import SeqIO
 
 from phylofisher import help_formatter, subset_tools
 from phylofisher.utilities import build_database
@@ -228,9 +228,6 @@ def add_to_meta(abbrev):
     df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'])
     df.to_csv('metadata.tsv', sep='\t', index=False)
 
-    print(bin_matrix)
-    print(df)
-
 
 def new_database(table):
     """Make changes in the PhyloFisher dataset according to information from
@@ -314,13 +311,13 @@ def main():
 
     matrix = subset_tools.completeness(args, f'{dfo}/orthologs')
     matrix.to_csv(f'{dfo}/bin_matrix.tsv', sep='\t')
-    print(matrix)
+
 
 if __name__ == '__main__':
     desc = ''
-    parser, optional, required = help_formatter.initialize_argparse(name='lumberjack.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='apply_to_db.py',
                                                                     desc=desc,
-                                                                    usage="lumberjack.py -i <in_dir>")
+                                                                    usage="apply_to_db.py -i <in_dir>")
 
     required.add_argument('-fi', '--fisher_dir', type=str, metavar='<fisher_dir>', required=True,
                           help=textwrap.dedent("""\

@@ -2,12 +2,13 @@
 import configparser
 import os
 import sys
+import textwrap
 from pathlib import Path
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
+
 from phylofisher import help_formatter
 
 
@@ -45,7 +46,7 @@ def collapse():
         collapse_dict = dict()
         for line in infile:
             collapse_dict[line.strip().split(',')[0]] = line.strip().split(',')[1:]
-    empty_record = SeqRecord(Seq('', IUPAC.protein),
+    empty_record = SeqRecord(Seq(''),
                              id='')
 
     for gene_file in gene_files:
@@ -55,7 +56,6 @@ def collapse():
             for record in SeqIO.parse(infile, 'fasta'):
                 for key in collapse_dict.keys():
                     if record.id in collapse_dict[key]:
-                        print('yes')
                         if len(record.seq) > len(record_dict[key].seq):
                             record.id = key
                             record.description = ''
@@ -76,9 +76,12 @@ if __name__ == '__main__':
                                                                     desc=description,
                                                                     usage='taxon_collapser.py [OPTIONS] -i <taxa>')
 
-    in_help = ('Path to CSV formatted file containing taxa to be collapsed.\n'
-               'Example Row: "CollapsedName,Taxon1,Taxon2,...,TaxonN')
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help, out_dir=False, pre_suf=False)
+    required.add_argument('-i', '--input', type=str, metavar='to_collapse.csv', default=None,
+                          help=textwrap.dedent("""\
+                          Path to CSV formatted file containing taxa to be collapsed.
+                          Example Row: "CollapsedName,Taxon1,Taxon2,...,TaxonN"""))
+    args = help_formatter.get_args(parser, optional, required,
+                                   out_dir=False, pre_suf=False, inp_dir=False)
 
     # Congig Parser
     config = configparser.ConfigParser()

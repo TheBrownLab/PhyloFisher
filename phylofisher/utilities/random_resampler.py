@@ -51,7 +51,12 @@ def subsample(percent, genes, output):
         for file in sample:
             shutil.copy(file, f'{output}/tmp')
         # Runs forge to create super matrix of subsampled gene sets
-        os.system(f'forge.py -i {output}/tmp -o {output}/replicate_{i + 1} -of {args.out_format.lower()} -c')
+        os.system(f'matrix_constructor.py '
+                  f'-i {output}/tmp '
+                  f'-o {output}/replicate_{i + 1} '
+                  f'-if {args.in_format.lower()} '
+                  f'-of {args.out_format.lower()} '
+                  f'-c')
         shutil.rmtree(f'{output}/tmp')
 
 
@@ -80,9 +85,9 @@ def make_csv():
         data = {int(k): v for k, v in data.items()}
         df = pd.DataFrame(data).transpose()
         df = df.sort_index().transpose()
-        df = df.add_prefix('Replicate_')
+        df = df.add_prefix('Replicate ')
 
-        df.to_csv(f'{args.output}/{percent}_Percent.csv', index=False)
+        df.to_csv(f'{args.output}/{percent}_Percent.csv', index=False, sep='\t')
 
 
 def clean_up():
@@ -118,7 +123,14 @@ if __name__ == '__main__':
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Optional Arguments
-    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                              Format of the input single gene alignments.
+                              Options: fasta, phylip (names truncated at 10 characters), 
+                              phylip-relaxed (names are not truncated), or nexus.
+                              Default: phylip-relaxed
+                              """))
+    optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                               Desired format of the output steps.
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
