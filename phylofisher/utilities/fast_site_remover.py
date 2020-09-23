@@ -152,14 +152,14 @@ if __name__ == "__main__":
                               Size of removal step (i.e., 1000 sites removed) to exhaustion
                               Default: 3000
                               """))
-    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                                   Format of input matrix.
                                   Options: fasta, nexus, phylip (names truncated at 10 characters), 
                                   or phylip-relaxed (names are not truncated)
                                   Default: phylip-relaxed
                                   """))
-    optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                               Desired format of the output steps.
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 

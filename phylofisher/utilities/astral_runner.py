@@ -41,7 +41,7 @@ if __name__ == '__main__':
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Optional Arguments
-    # optional.add_argument('--in_format', metavar='<format>', type=str, default='phylip-relaxed',
+    # optional.add_argument('--in_format', metavar='<format>', type=str, default='fasta',
     #                       help=textwrap.dedent("""\
     #                               Desired format of the output steps.
     #                               Options: fasta, nexus, phylip (names truncated at 10 characters),
