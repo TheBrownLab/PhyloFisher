@@ -10,7 +10,6 @@ from glob import glob
 from multiprocessing import Pool
 
 from Bio import SeqIO
-from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
@@ -35,7 +34,7 @@ def delete_gaps_stars(gene, root):
     records = []
     for record in SeqIO.parse(gene, args.in_format):
         seq_string = str(record.seq).replace("-", "").replace("*", "")
-        records.append(SeqRecord(Seq(seq_string, IUPAC.protein),
+        records.append(SeqRecord(Seq(seq_string),
                                  id='',
                                  name='',
                                  description=record.description))
@@ -118,9 +117,9 @@ def stats(total_len, out_dict):
 
 if __name__ == '__main__':
     description = 'To trim align and concatenate orthologs into a super-matrix run:'
-    parser, optional, required = help_formatter.initialize_argparse(name='forge.py',
+    parser, optional, required = help_formatter.initialize_argparse(name='matrix_constructor.py',
                                                                     desc=description,
-                                                                    usage='forge.py [OPTIONS] -i path/to/input/')
+                                                                    usage='matrix_constructor.py [OPTIONS] -i path/to/input/')
 
     # Optional Arguments
     optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
@@ -200,7 +199,7 @@ if __name__ == '__main__':
     # Creates SeqRecord iterator
     records = []
     for org, seq in res_dict.items():
-        records.append(SeqRecord(Seq(seq, IUPAC.protein),
+        records.append(SeqRecord(Seq(seq),
                                  id=org,
                                  name='',
                                  description=''))

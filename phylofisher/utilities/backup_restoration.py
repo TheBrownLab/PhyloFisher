@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-import tarfile
 import os
 import shutil
+import tarfile
 import textwrap
 from datetime import datetime
 

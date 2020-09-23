@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+import random
+import string
 import subprocess
 import textwrap
-import string
-import random
+
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
@@ -38,12 +39,12 @@ def fake_phylip(matrix):
                                  id=uname,
                                  name='',
                                  description=''))
-    SeqIO.write(records, 'TEMP_alph_seq.phy', 'phylip-sequential')
+    SeqIO.write(records, 'TEMP.phy', 'phylip-sequential')
     return pseudonames, pseudonames_rev
 
 
 def fake_tree(treefile, pseudonames):
-    with open('TEMP_alph_seq.tre', 'w') as res, open('key_alph_seq.tsv', 'w') as key_tsv:
+    with open('TEMP.tre', 'w') as res, open('key.tsv', 'w') as key_tsv:
         original = open(treefile).readline()
         key_tsv.write('Original Name\tID\n')
         for key, value in pseudonames.items():
@@ -53,9 +54,8 @@ def fake_tree(treefile, pseudonames):
 
 
 def run_mammal():
-    cmd = f'mammal -s TEMP_alph.phy -t TEMP_alph.tre -c {args.rate_classes} -l'
+    cmd = f'mammal -s TEMP.phy -t TEMP.tre -c {args.rate_classes} -l'
     subprocess.run(cmd, executable='/bin/bash', shell=True)
-
 
 
 if __name__ == "__main__":
@@ -66,11 +66,11 @@ if __name__ == "__main__":
                                                                           '[OPTIONS] -t <tree_file> -s <matrix>')
 
     # Required Arguments
-    required.add_argument('-s', '--supermatrix', required=True, type=str, metavar='<matrix>',
+    required.add_argument('-m', '--matrix', required=True, type=str, metavar='<matrix>',
                           help=textwrap.dedent("""\
                               Path to supermatrix file.
                               """))
-    required.add_argument('-t', '--tree', type=str, metavar='<tree>',
+    required.add_argument('-tr', '--tree', type=str, metavar='<tree>',
                           help=textwrap.dedent("""\
                               Path to tree.
                               """))
@@ -81,9 +81,9 @@ if __name__ == "__main__":
                               Options: 10, 20, 30, 40, 50, or 60
                               Default: 60
                             """))
-    optional.add_argument('-at', '--alignment_type', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='phylip-relaxed',
                           help=textwrap.dedent("""\
-                              Input format of the
+                              Input format of matrix
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
                               or phylip-relaxed (names are not truncated)
                               Default: phylip-relaxed
@@ -93,3 +93,4 @@ if __name__ == "__main__":
 
     pseudo_, pseudo_rev_ = fake_phylip(args.matrix)
     fake_tree(args.tree, pseudo_)
+    run_mammal()

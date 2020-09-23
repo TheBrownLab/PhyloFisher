@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import configparser
 import textwrap
 from pathlib import Path

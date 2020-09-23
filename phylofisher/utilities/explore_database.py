@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-import os
 import configparser
+import os
+import textwrap
 from glob import glob
 from pathlib import Path
-from Bio import SeqIO
+
 import pandas as pd
+from Bio import SeqIO
+
 from phylofisher import help_formatter
-import textwrap
 
 pd.options.display.float_format = '{:,.0f}'.format
 

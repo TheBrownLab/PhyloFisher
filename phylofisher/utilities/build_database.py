@@ -2,16 +2,16 @@
 import csv
 import os
 import random
+import shutil
 import string
 import subprocess
-import shutil
 import sys
 import textwrap
-from glob import glob
 from collections import defaultdict, Counter
+from glob import glob
+
 import pandas as pd
 from Bio import SeqIO
-import re
 
 from phylofisher import help_formatter
 

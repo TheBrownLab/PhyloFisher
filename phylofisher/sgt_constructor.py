@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import csv
+import glob
 import os
 import shutil
 import subprocess
@@ -74,7 +75,7 @@ def good_length(trimmed_aln, threshold):
 def mk_checkpoint_tmp(files):
     if os.path.isfile(f'checkpoint.tmp') is False:
         with open(f'checkpoint.tmp', 'w') as outfile:
-            header = 'taxon,prequal,mafft1,divvier1,bmge,mafft2,divvier2,trimal,raxml\n'
+            header = 'gene,prequal,mafft1,divvier1,bmge,mafft2,divvier2,trimal,raxml\n'
             outfile.write(header)
             for file in files:
                 outfile.write(f'{file}{9 * ",0"}\n')
@@ -97,7 +98,7 @@ def update_checkpoints(root, prog):
     filename = f'{args.output}/checkpoint.tmp'
     tempfile = NamedTemporaryFile(mode='w', delete=False)
 
-    fields = ['taxon', 'prequal', 'mafft1', 'divvier1', 'bmge', 'mafft2', 'divvier2', 'trimal', 'raxml']
+    fields = ['gene', 'prequal', 'mafft1', 'divvier1', 'bmge', 'mafft2', 'divvier2', 'trimal', 'raxml']
 
     with open(filename, 'r') as csvfile, tempfile:
         reader = csv.DictReader(csvfile, fieldnames=fields)
@@ -105,9 +106,9 @@ def update_checkpoints(root, prog):
         # Writes header to the output file
         writer.writerow(next(reader))
         for row in reader:
-            if row['taxon'] == str(root):
+            if row['gene'] == str(root):
                 row[prog] = 1
-            row = {'taxon': row['taxon'], 'prequal': row['prequal'], 'mafft1': row['mafft1'],
+            row = {'gene': row['gene'], 'prequal': row['prequal'], 'mafft1': row['mafft1'],
                    'divvier1': row['divvier1'], 'bmge': row['bmge'], 'mafft2': row['mafft2'],
                    'divvier2': row['divvier2'], 'trimal': row['trimal'], 'raxml': row['raxml']
                    }
@@ -206,22 +207,27 @@ def prepare_analyses(checks, root):
         # raxml
         elif args.no_tree is False and i == 7 and check == '0':
             mkdir_and_cd(f'{args.output}/RAxML')
+
+            files = glob.glob(f'*{root}*')
+            for f in files:
+                try:
+                    os.remove(f)
+                except FileNotFoundError:
+                    pass
+
             status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a '
                                   f'-s {args.output}/trimal/{root}.final -n {root}.tre -x 123 -N 100 -p 12345')
             if status:
                 update_checkpoints(root, 'raxml')
+                mkdir_and_cd(f'{args.output}/trees')
+                shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
+                            f'{args.output}/trees/RAxML_bipartitions.{root}.tre')
+                shutil.copy(f'{args.output}/trimal/{root}.final',
+                            f'{args.output}/trees/{root}.final')
+                shutil.copy(f'{args.output}/length_filtration/bmge/{root}.bmge',
+                            f'{args.output}/trees/{root}.trimmed')
             else:
                 break
-
-        elif not args.no_tree and i == 8:
-            # add_length(root, length)
-            mkdir_and_cd(f'{args.output}/trees')
-            shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
-                        f'{args.output}/trees/RAxML_bipartitions.{root}.tre')
-            shutil.copy(f'{args.output}/trimal/{root}.final',
-                        f'{args.output}/trees/{root}.final')
-            shutil.copy(f'{args.output}/length_filtration/bmge/{root}.bmge',
-                        f'{args.output}/trees/{root}.trimmed')
 
     return root, checks
 
@@ -241,9 +247,9 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('--no_tree', action='store_true',
                           help=textwrap.dedent("""\
-                              Do NOT build single gene trees.
-                              Length filtration and trimmming only.
-                              """))
+                          Do NOT build single gene trees.
+                          Length filtration and trimmming only.
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=True)
 

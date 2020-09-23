@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-import glob
-from collections import defaultdict
-import pandas as pd
-from Bio import SeqIO
-import numpy as np
 import configparser
-from pathlib import Path
+import glob
 import os
 import sys
 import textwrap
+from collections import defaultdict
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from Bio import SeqIO
+
 from phylofisher import help_formatter, subset_tools
 
 
@@ -91,13 +93,19 @@ def table_with_routes(df, routes):
         high_tax_list.append(group)
         low_tax_list.append(subtax)
         full_names.append(long_name)
-    print(in_taxa_dict)
+
     df = df[df.index.isin(in_taxa_dict.keys())]
+    no_seqs = set(in_taxa_dict.keys()) - set(df.index)
+
+    for taxon in no_seqs:
+        df.loc[taxon] = len(df.columns) * [0]
+
     df.index.name = 'Unique ID'
     df.insert(loc=0, column='Lower Taxonomy', value=low_tax_list)
     df.insert(loc=0, column='Higher Taxonomy', value=high_tax_list)
     df.insert(loc=0, column='Full Name', value=full_names)
 
+    df = df.sort_index(axis=0)
     df.to_csv(f'{output_fold}/occupancy.csv')
 
     # Adds routes to df
