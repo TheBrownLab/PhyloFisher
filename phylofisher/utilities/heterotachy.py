@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import os
+import random
+import string
 import subprocess
 import sys
 import textwrap
@@ -22,24 +24,45 @@ def bash(cmd):
     subprocess.run(cmd, executable='/bin/bash', shell=True)
 
 
-def write_seqs(out_handle, records):
-    """
-    Writes input sequences to a file
-    @param out_handle: file handle to write to
-    @param records: list of Seq records
-    @return: NONE
-    """
-    # Accepted out formats with respective suffix
-    out_dict = {'fasta': 'fas',
-                'phylip': 'phy',
-                'phylip-relaxed': 'phy',
-                'nexus': 'nex'}
+def id_generator(size=10, chars=string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
-    # Writes to output matrix in user specified output
-    if args.out_format.lower() in out_dict:
-        SeqIO.write(records, out_handle, args.out_format.lower())
+
+def unique_name(keys):
+    id_ = id_generator()
+    if id_ not in keys:
+        return id_
     else:
-        sys.exit('Invalid Output Format')
+        unique_name(keys)
+
+
+def fake_phylip(matrix):
+    length = None
+    pseudonames = {}
+    pseudonames_rev = {}
+    records = []
+
+    for record in SeqIO.parse(matrix, args.in_format):
+        uname = unique_name(pseudonames)
+        pseudonames[record.name] = uname
+        pseudonames_rev[uname] = record.name
+        seq = str(record.seq)
+        records.append(SeqRecord(Seq(seq),
+                                 id=uname,
+                                 name='',
+                                 description=''))
+
+    SeqIO.write(records, 'renamed.phy', 'phylip')
+
+    return pseudonames, pseudonames_rev
+
+
+def fake_tree(treefile, pseudonames):
+    with open('renamed.tre', 'w') as res:
+        original = open(treefile).readline()
+        for key, value in pseudonames.items():
+            original = original.replace(key, value)
+        res.write(original)
 
 
 def get_taxa():
@@ -49,8 +72,8 @@ def get_taxa():
     """
     taxa_list = []
     mat_dict = {}
-    with open(args.matrix, 'r') as infile:
-        for record in SeqIO.parse(infile, args.in_format):
+    with open('renamed.phy', 'r') as infile:
+        for record in SeqIO.parse(infile, 'phylip'):
             taxa_list.append(record.description)
             mat_dict[record.name] = pd.Series(list(record.seq))
     return taxa_list, mat_dict
@@ -61,7 +84,7 @@ def get_branch_lens():
     Parse input tree and retrieve branch lengths
     @return:
     """
-    tree = Tree(args.tree)
+    tree = Tree('renamed.tre')
     dist_mat = []
     for i, taxon1 in enumerate(taxa):
         dist_mat.append([])
@@ -92,7 +115,7 @@ def prune_tree(speed):
         mylist = list(series.nlargest(size).index)
     else:
         mylist = list(series.nsmallest(size).index)
-    tree = Tree(args.tree)
+    tree = Tree('renamed.tre')
     nodes = [tree & x for x in mylist]
     tree.prune(nodes, preserve_branch_length=True)
     tree.write(outfile=f'{speed}.tre')
@@ -105,10 +128,10 @@ def trim_matrix():
 
     @return:
     """
-    with open(args.matrix, 'r') as infile, open('fast.phy', 'w') as fast_fas, open('slow.phy', 'w') as slow_fas:
+    with open('renamed.phy', 'r') as infile, open('fast.phy', 'w') as fast_fas, open('slow.phy', 'w') as slow_fas:
         fast_recs = []
         slow_recs = []
-        for record in SeqIO.parse(infile, args.in_format):
+        for record in SeqIO.parse(infile, 'phylip'):
             if record.description in slow_taxa:
                 slow_recs.append(record)
             elif record.description in fast_taxa:
@@ -185,21 +208,29 @@ def site_removal():
 
     @return:
     """
-    i = 0
     os.mkdir(f'steps_{args.step_size}')
     os.chdir(f'steps_{args.step_size}')
-    for step in range(args.step_size, len(sorted_sites), args.step_size):
-        with open(f'step{i}', 'w') as res:
+
+    out_dict = {'fasta': 'fas',
+                'phylip': 'phy',
+                'phylip-relaxed': 'phy',
+                'nexus': 'nex'}
+
+    for i, step in enumerate(range(args.step_size, len(sorted_sites), args.step_size)):
+        with open(f'step{i}.{out_dict[args.in_format]}', 'w') as outfile:
             records = []
             for name, seq in matrix_dict.items():
                 seq = "".join(seq[sorted_sites[step:]].values)
                 records.append(SeqRecord(Seq(seq),
-                                         id=name,
+                                         id=name_dict_rev[name],
                                          name='',
                                          description=''))
-            write_seqs(res, records)
 
-        i += 1
+            # Writes to output matrix in user specified output
+            if args.out_format.lower() in out_dict:
+                SeqIO.write(records, outfile, args.out_format.lower())
+            else:
+                sys.exit('Invalid Output Format')
 
 
 if __name__ == '__main__':
@@ -225,14 +256,14 @@ if __name__ == '__main__':
                           Size of removal step (i.e., 1000 sites removed) to exhaustion
                           Default: 3000
                           """))
-    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Input format of matrix
                           Options: fasta, nexus, phylip (names truncated at 10 characters), 
                           or phylip-relaxed (names are not truncated)
                           Default: phylip-relaxed
                           """))
-    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='phylip-relaxed',
+    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Desired format of the output steps.
                           Options: fasta, nexus, phylip (names truncated at 10 characters), 
@@ -241,6 +272,15 @@ if __name__ == '__main__':
                           """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+
+    cwd = os.getcwd()
+
+    if not os.path.exists(args.output):
+        os.mkdir(args.output)
+    os.chdir(args.output)
+
+    name_dict, name_dict_rev = fake_phylip(f'{cwd}/{args.matrix}')
+    fake_tree(f'{cwd}/{args.tree}', name_dict)
 
     # Parse input alignment
     taxa, matrix_dict = get_taxa()
