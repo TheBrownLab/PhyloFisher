@@ -6,7 +6,7 @@ source:
   path: ../../../lib/mammal-1.1.1/
 
 build:
-  number: 3
+  number: 4
 
 requirements:
   build:
