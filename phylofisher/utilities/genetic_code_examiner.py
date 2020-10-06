@@ -213,25 +213,43 @@ def genecode_plot(res_list_dict, all_codons, transcriptome):
                     plt.close()
 
 
+def check_alignments():
+    """
+    Check it aligments folder exist and is not empty.
+    """
+    alignmnets_folder = str(Path(dfo, 'alignments'))
+    if os.path.isdir(alignmnets_folder) == False:
+        print("ERROR: For the first run of genetic_code_examiner.py you have to use --prepare_alignments option.")
+        return False
+
+    if len(os.listdir(alignmnets_folder)) == 0:
+        print("ERROR: Aligments folder is empty. Try to run this script again using --prepare_alignments option.")
+        return False
+    
+    return True
+
+        
+
 def main():
     if args.prepare_alignments:
         prepare_alignments(args.threads)
-    transcriptome = args.input
-    folder = f"{transcriptome.split('.')[0]}_genecode"
-    os.mkdir(folder)
-    subprocess.call(f'cp {transcriptome} {folder}/', shell=True)
-    os.chdir(folder)
-    queries_list = args.queries.split(',')
-    collect_queries(queries_list)
-    print(f'{"=" * 20}\nPerforming blast searches ...\n{"=" * 20}\n')
-    blastDB_tblastn(transcriptome, args.threads, args.blast_evalue)
-    print(f'{"=" * 20}\nCollecting information from conserved positions ...\n{"=" * 20}\n')
-    stats = collect_counts(transcriptome, args.conserved)
-    genecode_plot(stats, args.all_codons, transcriptome)
-    os.chdir('..')
-    if not args.keep_tmp:
-        subprocess.call(f'mv {folder}/{transcriptome}_genecode.pdf .', shell=True)
-        shutil.rmtree(folder)
+    if check_alignments(): # execute the block only if alignments are ok
+        transcriptome = args.input
+        folder = f"{transcriptome.split('.')[0]}_genecode"
+        os.mkdir(folder)
+        subprocess.call(f'cp {transcriptome} {folder}/', shell=True)
+        os.chdir(folder)
+        queries_list = args.queries.split(',')
+        collect_queries(queries_list)
+        print(f'{"=" * 20}\nPerforming blast searches ...\n{"=" * 20}\n')
+        blastDB_tblastn(transcriptome, args.threads, args.blast_evalue)
+        print(f'{"=" * 20}\nCollecting information from conserved positions ...\n{"=" * 20}\n')
+        stats = collect_counts(transcriptome, args.conserved)
+        genecode_plot(stats, args.all_codons, transcriptome)
+        os.chdir('..')
+        if not args.keep_tmp:
+            subprocess.call(f'mv {folder}/{transcriptome}_genecode.pdf .', shell=True)
+            shutil.rmtree(folder)
 
 
 if __name__ == '__main__':
