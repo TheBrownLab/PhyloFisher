@@ -125,8 +125,8 @@ def main():
                 sys.exit('Invalid Output Format')
 
         iter += 1
-    # os.remove('../TEMP.phy')
-    # os.remove('../TEMP.tre')
+    os.remove('../TEMP.phy')
+    os.remove('../TEMP.tre')
 
 
 if __name__ == "__main__":

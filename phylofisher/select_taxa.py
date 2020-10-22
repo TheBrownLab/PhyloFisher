@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import configparser
+import os
 import textwrap
 from pathlib import Path
 
@@ -66,6 +67,23 @@ def make_subset_tsv():
 
     df.to_csv(f'select_taxa.tsv', sep='\t')
 
+def update_df_ortho(df):
+    """
+
+    :return:
+    """
+    with open('select_orthologs.tsv', 'r') as infile:
+        infile.readline()
+        to_drop = []
+        for line in infile:
+            line = line.strip()
+            gene, _, include = line.split()
+            if include == 'no':
+                to_drop.append(gene)
+
+    df = df.drop(to_drop)
+    return df
+
 
 def update_dataframe(df):
     """
@@ -94,13 +112,13 @@ if __name__ == '__main__':
                                                                           '[OPTIONS]')
 
     # Optional Arguments
+    optional.add_argument('--to_exclude', type=str, metavar='exc_taxa.txt', default=None,
+                          help=textwrap.dedent("""\
+                          List of taxa to exclude.
+                          """))
     optional.add_argument('--to_include', type=str, metavar='inc_taxa.txt', default=None,
                           help=textwrap.dedent("""\
                           List of taxa to include.
-                          """))
-    optional.add_argument('--to_exclude', type=str, metavar='exc_taxa.txt', default=None,
-                          help=textwrap.dedent("""\
-                          List of taxa to exclude
                           """))
 
     args = help_formatter.get_args(parser, optional, required, inp_dir=False, pre_suf=False)
@@ -111,7 +129,14 @@ if __name__ == '__main__':
     metadata = f'{dfo}/metadata.tsv'
     orthologs_dir = f'{dfo}/orthologs/'
 
-    taxa_comp, gene_count = subset_tools.completeness(args=args, input_dir=orthologs_dir, genes=False)
+    matrix = subset_tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
+    matrix = matrix.transpose()
+
+    if os.path.isfile('select_orthologs.tsv'):
+        matrix = update_df_ortho(matrix)
+
+    gene_count, _ = matrix.shape
+    taxa_comp = matrix.sum().divide(other=gene_count)
+
     make_subset_tsv()
-    taxa_comp = update_dataframe(taxa_comp)
     subset_tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)

@@ -58,7 +58,7 @@ def get_ortho_taxa():
         with open(file, 'r') as infile:
             records = SeqIO.parse(infile, 'fasta')
             for record in records:
-                unique_orgs_orthos.add(record.name)
+                unique_orgs_orthos.add(record.description)
 
     return unique_orgs_orthos
 
@@ -139,7 +139,7 @@ def prepare_diamond_input():
         for file in files:
             gene = file.split('/')[-1].split('.')[0]
             for record in SeqIO.parse(file, 'fasta'):
-                res.write(f'>{gene}@{record.name}\n{record.seq}\n')
+                res.write(f'>{gene}@{record.description}\n{record.seq}\n')
 
 
 def diamond():
@@ -275,12 +275,12 @@ def main(args, threads, no_og_file, threshold):
 
 
 if __name__ == "__main__":
-    description = 'Script for database construction and taxonomic updates.'
+    description = 'Script for database construction and taxonomic updates. Must be run within path/to/database/'
     parser, optional, required = help_formatter.initialize_argparse(name='build_database.py',
                                                                     desc=description,
                                                                     usage='build_database.py [OPTIONS]')
 
-    optional.add_argument('-t', '--threads', type=int,
+    optional.add_argument('-t', '--threads', type=int, default=1,
                           help=textwrap.dedent("""\
                           Number of threads.
                           Default:1
@@ -294,7 +294,7 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                           0.X proportion of sequences (0-1) of sequences that must hit an 
                           OrthoMCL orthogroup for the group to be assigned.
-                          Default: 0.1 (10%)
+                          Default: 0.1 (10%%)
                           """))
     optional.add_argument('--rename', type=str, metavar='<to_rename.tsv>',
                           help=textwrap.dedent("""\
