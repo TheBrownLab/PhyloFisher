@@ -2,6 +2,7 @@
 import configparser
 import os
 import shutil
+import textwrap
 from pathlib import Path
 
 from Bio import SeqIO
@@ -11,7 +12,8 @@ from phylofisher import help_formatter
 
 def parse_ortholog_tsv():
     """
-
+    Parses select_orthologs.tsv (output of select_orthologs.py) to determine which genes are to be included in
+    the final dataset.
     :return:
     """
     with open('select_orthologs.tsv', 'r') as infile:
@@ -30,11 +32,19 @@ def parse_ortholog_tsv():
 
 
 def subset_orthologs():
+    """
+    Subsets orthologs from the Database into a new directory to be included in the final dataset
+    :return:
+    """
+    # Creates output dir if it doesn't already exist
     if os.path.isdir(args.output) is False:
         os.makedirs(args.output)
 
+    # Genes to include in the final dataset
     genes = parse_ortholog_tsv()
+    # List of paths to ortholog files
     files = [os.path.join(orthologs_dir, x) for x in os.listdir(orthologs_dir) if x.endswith('.fas')]
+    # Copies gene files to the output dir
     for gene in genes:
         for file in files:
             if gene == os.path.basename(file).split('.')[0]:
@@ -45,7 +55,8 @@ def subset_orthologs():
 
 def parse_taxa_tsv():
     """
-
+    Parses select_taxa.tsv (output of select_taxa.py) to determine which taxa are to be included in
+    the final dataset.
     :param tsv_file:
     :return:
     """
@@ -63,7 +74,7 @@ def parse_taxa_tsv():
 
 def subset_taxa():
     """
-
+    Subsets taxa from the Database into a new directory to be included in the final dataset
     :return:
     """
     taxa = parse_taxa_tsv()
@@ -73,7 +84,9 @@ def subset_taxa():
         with open(f'{args.output}/{file}', 'r') as infile, open(f'{args.output}/tmp', 'w') as outfile:
             records = []
             for record in SeqIO.parse(infile, 'fasta'):
-                if record.description in taxa:
+                if args.chimeras:
+                    pass
+                elif record.description in taxa:
                     records.append(record)
 
             SeqIO.write(records, outfile, 'fasta')
@@ -89,14 +102,11 @@ if __name__ == '__main__':
                                                                           '[OPTIONS]')
 
     # Optional Arguments
-    # optional.add_argument('--orthologs', type=str, metavar='orthologs.tsv', default=None,
-    #                       help=textwrap.dedent("""\
-    #                           Path to orthologs.tsv. Output of select_orthologs.py.
-    #                           """))
-    # optional.add_argument('--taxa', type=str, metavar='taxa.tsv', default=None,
-    #                       help=textwrap.dedent("""\
-    #                           Path to taxa.tsv. Output of select_taxa.py
-    #                           """))
+    optional.add_argument('--chimeras', type=str, metavar='orthologs.tsv', default=None,
+                          help=textwrap.dedent("""\
+                          Path to chimeras.tsv. This will collapses taxa listed in chimera.tsv into a chimera 
+                          keeping the longest sequence for each gene.
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, inp_dir=False, pre_suf=False)
 

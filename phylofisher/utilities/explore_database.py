@@ -36,10 +36,10 @@ class Metadata:
         counted_orthologs = {}
         for file in glob(f'{self.ortholog_folder}/*.fas'):
             for record in SeqIO.parse(file, 'fasta'):
-                if record.name not in counted_orthologs:
-                    counted_orthologs[record.name] = 1
+                if record.description not in counted_orthologs:
+                    counted_orthologs[record.description] = 1
                 else:
-                    counted_orthologs[record.name] += 1
+                    counted_orthologs[record.description] += 1
         return counted_orthologs
 
     def parse_paralogs(self):
@@ -50,7 +50,7 @@ class Metadata:
         counted_paralogs = {}
         for file in glob(f'{self.paralog_folder}/*.fas'):
             for record in SeqIO.parse(file, 'fasta'):
-                name = record.name.split('.')[0]
+                name = record.description.split('.')[0]
                 if name not in counted_paralogs:
                     counted_paralogs[name] = 1
                 else:

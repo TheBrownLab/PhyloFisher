@@ -61,6 +61,7 @@ def trim_and_align(gene):
     mk_and_cd_dir(f'{args.output}/divvier')
     bash(f'divvier -partial -mincol 4 -divvygap {args.output}/mafft/{root}.aln')
     shutil.move(f'{args.output}/mafft/{root}.aln.partial.fas', f'{args.output}/divvier/{root}.aln.partial.fas')
+    shutil.move(f'{args.output}/mafft/{root}.aln.PP', f'{args.output}/divvier/{root}.aln.PP')
     os.chdir(args.output)
 
     # trimal
@@ -105,11 +106,11 @@ def stats(total_len, out_dict):
     :param total_len:
     :return:
     """
-    with open(f'{args.output}/forge_stats.tsv', 'w') as out_file:
+    with open(f'{args.output}/matrix_constructor_stats.tsv', 'w') as out_file:
         tsv_writer = csv.writer(out_file, delimiter='\t')
         tsv_writer.writerow(['Taxon', 'PercentMissingData'])
         missing = []
-        for record in SeqIO.parse(f'{args.output}/matrix.{out_dict[args.out_format.lower()]}', 'fasta'):
+        for record in SeqIO.parse(f'{args.output}/matrix.{out_dict[args.out_format.lower()]}', args.out_format.lower()):
             missing.append((record.name, (record.seq.count('-') / total_len) * 100))
         for org_missing in sorted(missing, key=lambda x: x[1], reverse=True):
             tsv_writer.writerow(list(org_missing))
@@ -127,14 +128,14 @@ if __name__ == '__main__':
                           Desired format of the output matrix.
                           Options: fasta, phylip (names truncated at 10 characters), 
                           phylip-relaxed (names are not truncated), or nexus.
-                          Default: phylip-relaxed
+                          Default: fasta
                           """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Format of the input matrix.
                           Options: fasta, phylip (names truncated at 10 characters), 
                           phylip-relaxed (names are not truncated), or nexus.
-                          Default: phylip-relaxed
+                          Default: fasta
                           """))
     optional.add_argument('-c', '--concatenation_only', action='store_true', default=False,
                           help=textwrap.dedent("""\

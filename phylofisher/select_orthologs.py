@@ -58,25 +58,24 @@ def make_subset_tsv():
         df = df.round({'In-Group Completeness': 3})
         df = df.round({'Out-Group Completeness': 3})
 
+    to_keep = ['no' for k in df.index]
+    df['Include in Subset'] = to_keep
+
     if args.gene_number:
         num_to_keep = args.gene_number
+        i = 1
+        for gene, row in df.iterrows():
+            if i <= num_to_keep:
+                df.at[gene, 'Include in Subset'] = 'yes'
+            i += 1
 
     elif args.percent_complete:
         if args.percent_complete > 1:
             args.percent_complete = args.percent_complete / 100
-        num_to_keep = int(round(args.percent_complete * len(df)))
 
-    else:
-        num_to_keep = len(df)
-
-    to_keep = ['no' for k in df.index]
-    df['Include in Subset'] = to_keep
-
-    i = 1
-    for gene, row in df.iterrows():
-        if i <= num_to_keep:
-            df.at[gene, 'Include in Subset'] = 'yes'
-        i += 1
+        for gene, row in df.iterrows():
+            if df.at[gene, 'Completeness'] >= args.percent_complete:
+                df.at[gene, 'Include in Subset'] = 'yes'
 
     df.to_csv(f'select_orthologs.tsv', sep='\t')
     return df
@@ -115,13 +114,11 @@ if __name__ == '__main__':
     optional.add_argument('-n', '--gene_number', type=int, metavar='<N>', default=None,
                           help=textwrap.dedent("""\
                           Number of genes in subset.
-                          This will be ignored if not used with --subset.
                           Cannot be used with percent_complete.
                           """))
     optional.add_argument('-c', '--percent_complete', type=float, metavar='<N>', default=None,
                           help=textwrap.dedent("""\
-                          Threshold for percent missing when subsetting.
-                          This will be ignored if not used with --subset.
+                          Threshold for percent complete when subsetting.
                           Cannot be used with gene_number.
                           """))
 
