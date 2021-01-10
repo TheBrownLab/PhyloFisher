@@ -217,16 +217,17 @@ def add_to_meta(abbrev):
     taxa_comp = taxa_comp.to_dict()
 
     df = pd.read_csv(metadata, delimiter='\t')
-    df = df.set_index('Unique ID')
+    print(df)
+    df.index = df['Unique ID']
 
     comp_list = [taxa_comp[ind] if ind in taxa_comp else 0 for ind in df.index]
     df['Completeness'] = comp_list
     df['Completeness'] = df['Completeness'] * 100
     df['Completeness'] = df['Completeness'].round(2)
 
-    # df = df.append(new_row, ignore_index=True)
+    df = df.append(new_row, ignore_index=True)
     df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'])
-    df.to_csv('metadata.tsv', sep='\t', index=False)
+    df.to_csv(str(Path(dfo, 'metadata.tsv')), sep='\t', index=False)
 
 
 def new_database(table):
