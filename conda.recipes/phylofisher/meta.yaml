@@ -1,5 +1,5 @@
 {% set name = "phylofisher" %}
-{% set version = "0.2.0" %}
+{% set version = "0.2.3" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,10 +7,9 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 7e5cb8b181a9b4373682a6c633840be622c3d99c1ba1cb9eaa58b84843deafaa
 
 build:
-  number: 4
+  number: 1
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
@@ -49,6 +48,7 @@ requirements:
     - python
     - scipy
     - binutils
+    - parasorter
     - trimal=1.4.1
     - raxml=8.2.12
     - hmmer=3.3
