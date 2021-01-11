@@ -43,8 +43,13 @@ if __name__ == '__main__':
            'T': ['F', 'I', 'L', 'M', 'V']
            }
 
+    out_dict = {'fasta'         : 'fas',
+                'phylip'        : 'phy',
+                'phylip-relaxed': 'phy',
+                'nexus'         : 'nex'}
+
     # Opens input and output files
-    with open(args.input, 'r') as infile, open(args.output, 'w') as outfile:
+    with open(args.input, 'r') as infile, open(f'{args.output}.{out_dict[args.out_format]}', 'w') as outfile:
         all_records = []
         # SeqIO parses input file
         for record in SeqIO.parse(infile, format=args.in_format, alphabet=generic_protein):
