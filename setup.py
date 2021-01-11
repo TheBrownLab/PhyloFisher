@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='0.2.0',
+    version='0.2.3',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -38,7 +38,7 @@ setup(
                       'pyqt5>=5',
                       'ete3==3.1.1',
                       'pandas==1.0.3',
-                      'matplotlib==3.1.3',
+                      'matplotlib==3.2.2',
                       'scipy==1.4.1',
                       'numpy==1.18.1'
                       ],
