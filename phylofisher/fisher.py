@@ -426,10 +426,10 @@ def fasttree(checked_hits):
             f.write(f'>{hit.name}\n{hit.seq}\n')
     cmd1 = f'mafft --auto --reorder {fas} > {aln}'
     subprocess.run(cmd1, shell=True, stderr=subprocess.DEVNULL)
-    cmd2 = f"trimal -in {aln} -gt 0.2 -keepheader -out {trim}"
+    cmd2 = f"trimal -in {aln} -gt 0.2 -out {trim}"
     subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL)
-    cmd3 = f"fasttree -quote {trim} > {tree_file}"
-    subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
+    cmd3 = f"fasttree {trim} > {tree_file}"
+    subprocess.run(cmd3, shell=True) #, stderr=subprocess.DEVNULL)
     tree = Tree(tree_file)
     correct_len = length_check(trim)
     good_hits = []  # SBH hits
