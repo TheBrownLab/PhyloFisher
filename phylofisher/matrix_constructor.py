@@ -20,12 +20,17 @@ def bash(cmd):
     subprocess.run(cmd, executable='/bin/bash', shell=True)
 
 
-def mk_and_cd_dir(mydir):
-    if os.path.isdir(mydir) is True:
-        os.chdir(mydir)
-    else:
-        os.mkdir(mydir)
-        os.chdir(mydir)
+def mk_dirs():
+    """
+
+    :return:
+    """
+    dirs = ['prequal', 'mafft', 'divvier', 'trimal']
+
+    for my_dir in dirs:
+        my_dir = f'{args.output}/{my_dir}'
+        if os.path.isdir(my_dir) is False:
+            os.mkdir(my_dir)
 
 
 def delete_gaps_stars(gene, root):
@@ -46,26 +51,26 @@ def delete_gaps_stars(gene, root):
 def trim_and_align(gene):
     root = os.path.basename(gene).split('.')[0]
     # prequal
-    mk_and_cd_dir(f'{args.output}/prequal')
+    os.chdir(f'{args.output}/prequal')
     delete_gaps_stars(gene, root)
     bash(f'prequal {root}.aa')
     os.chdir(args.output)
 
     # mafft
-    mk_and_cd_dir(f'{args.output}/mafft')
+    os.chdir(f'{args.output}/mafft')
     bash(f'mafft --globalpair --maxiterate 1000 --unalignlevel 0.6 '
          f'--thread 1 {args.output}/prequal/{root}.aa.filtered > {root}.aln')
     os.chdir(args.output)
 
     # divvier
-    mk_and_cd_dir(f'{args.output}/divvier')
+    os.chdir(f'{args.output}/divvier')
     bash(f'divvier -partial -mincol 4 -divvygap {args.output}/mafft/{root}.aln')
     shutil.move(f'{args.output}/mafft/{root}.aln.partial.fas', f'{args.output}/divvier/{root}.aln.partial.fas')
     shutil.move(f'{args.output}/mafft/{root}.aln.PP', f'{args.output}/divvier/{root}.aln.PP')
     os.chdir(args.output)
 
     # trimal
-    mk_and_cd_dir(f'{args.output}/trimal')
+    os.chdir(f'{args.output}/trimal')
     bash(f'trimal -in {args.output}/divvier/{root}.aln.partial.fas -gt 0.80 -out {root}.gt80trimal -phylip')
     os.chdir(args.output)
 
@@ -132,7 +137,7 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                          Format of the input matrix.
+                          Format of the input files.
                           Options: fasta, phylip (names truncated at 10 characters), 
                           phylip-relaxed (names are not truncated), or nexus.
                           Default: fasta
@@ -163,6 +168,7 @@ if __name__ == '__main__':
     files, orgs = parse_names(args.input)
     if args.concatenation_only is False:
         os.chdir(args.output)
+        mk_dirs()
         parallelize(files)
         files = sorted(glob(f'{args.output}/trimal/*'))
 
