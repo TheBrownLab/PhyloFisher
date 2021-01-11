@@ -21,12 +21,17 @@ class Metadata:
 
     def __init__(self, metadata, ortholog_folder, paralog_folder):
         self.metadata = pd.read_csv(metadata, sep='\t')
-        self.metadata = self.metadata[['Unique ID', 'Long Name',
-                                       'Higher Taxonomy', 'Lower Taxonomy']]
+
         self.ortholog_folder = ortholog_folder
         self.paralog_folder = paralog_folder
         self.metadata['Orthologs'] = self.metadata['Unique ID'].map(self.parse_orthologs())
         self.metadata['Paralogs'] = self.metadata['Unique ID'].map(self.parse_paralogs())
+
+        self.org_meta = self.metadata[['Unique ID', 'Long Name', 'Higher Taxonomy', 'Lower Taxonomy',
+                                       'Data Type', 'Orthologs', 'Paralogs', 'Source']]
+        self.metadata = self.metadata[['Unique ID', 'Long Name', 'Higher Taxonomy', 'Lower Taxonomy',
+                                       'Data Type', 'Orthologs', 'Paralogs']]
+
 
     def parse_orthologs(self):
         """
@@ -89,9 +94,10 @@ class Metadata:
         """
         Return ifnormation about a given organism using its short name.
         """
-        org_df = self.metadata.copy()
+        org_df = self.org_meta.copy()
         org_df = org_df.set_index('Unique ID')
-        return org_df.loc[term, :]
+        df = pd.DataFrame([org_df.loc[term, :]]).transpose()
+        return df
 
 
 if __name__ == '__main__':
