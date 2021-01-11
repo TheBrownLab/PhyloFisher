@@ -23,7 +23,7 @@ def configure_colors():
         infile.readline()
         for line in infile:
             line = line.strip()
-            tax, color = line.split(',')
+            tax, color = line.split('\t')
             color_dict[tax] = color
 
     return color_dict

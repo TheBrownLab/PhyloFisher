@@ -87,7 +87,7 @@ def make_csv():
         df = df.sort_index().transpose()
         df = df.add_prefix('Replicate ')
 
-        df.to_csv(f'{args.output}/{percent}_Percent.csv', index=False, sep='\t')
+        df.to_csv(f'{args.output}/{percent}_Percent.tsv', index=False, sep='\t')
 
 
 def clean_up():

@@ -45,7 +45,7 @@ def collapse():
     with open(args.input, 'r') as infile:
         collapse_dict = dict()
         for line in infile:
-            collapse_dict[line.strip().split(',')[0]] = line.strip().split(',')[1:]
+            collapse_dict[line.strip().split('\t')[0]] = line.strip().split('\t')[1:]
     empty_record = SeqRecord(Seq(''),
                              id='')
 
@@ -76,10 +76,10 @@ if __name__ == '__main__':
                                                                     desc=description,
                                                                     usage='taxon_collapser.py [OPTIONS] -i <taxa>')
 
-    required.add_argument('-i', '--input', type=str, metavar='to_collapse.csv', default=None,
+    required.add_argument('-i', '--input', type=str, metavar='to_collapse.tsv', default=None,
                           help=textwrap.dedent("""\
-                          Path to CSV formatted file containing taxa to be collapsed.
-                          Example Row: "CollapsedName,Taxon1,Taxon2,...,TaxonN"""))
+                          Path to TSV formatted file containing taxa to be collapsed.
+                          Example Row: "CollapsedName   Taxon1  Taxon2  ... TaxonN"""))
     args = help_formatter.get_args(parser, optional, required,
                                    out_dir=False, pre_suf=False, inp_dir=False)
 

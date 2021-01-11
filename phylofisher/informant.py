@@ -106,7 +106,7 @@ def table_with_routes(df, routes):
     df.insert(loc=0, column='Full Name', value=full_names)
 
     df = df.sort_index(axis=0)
-    df.to_csv(f'{output_fold}/occupancy.csv')
+    df.to_csv(f'{output_fold}/occupancy.tsv', sep='\t')
 
     # Adds routes to df
     for gene in df.columns:
@@ -115,7 +115,7 @@ def table_with_routes(df, routes):
             if org in routes[gene]:
                 df.at[org, gene] = f'{df[gene][org]}_{routes[gene][org]}'
 
-    df.to_csv(f'{output_fold}/occupancy_with_routes.csv')
+    df.to_csv(f'{output_fold}/occupancy_with_routes.tsv', sep='\t')
 
     return df
 
@@ -154,7 +154,7 @@ def get_routes():
 
 def stats_orgs(df, new_data=False):
     """
-    Create csv file with basic summary about analyzed dataset without information
+    Create tsv file with basic summary about analyzed dataset without information
     about 'routes' and paralogs.
     input: dataframe
     return: None
@@ -166,10 +166,15 @@ def stats_orgs(df, new_data=False):
     else:
         df = df[df.index.isin(db_taxa_dict.keys())]
 
+    df2 = df.copy()
+    df2[df2 >= 1] = 1
+
     df = df.sum(axis=1).to_frame()
 
     if new_data:
+        df[f"Genes out of {len(matrix.columns)}"] = df2.sum(axis=1).to_frame()
         df = df.rename(columns={0: f"Sequences Collected"})
+
     else:
         df = df.rename(columns={0: f"Genes out of {len(matrix.columns)}"})
 
@@ -184,7 +189,7 @@ def stats_orgs(df, new_data=False):
 
     # Rearrange Columns to Put Genes after taxa stats
     cols = df.columns.tolist()
-    cols = cols[1:] + cols[:1]
+    cols = cols[2:] + cols[:2]
     df = df[cols]
 
     if new_data:
@@ -193,9 +198,9 @@ def stats_orgs(df, new_data=False):
         df["#SBH"] = df.index.map(list_of_routes_dicts[0])
         df["#BBH"] = df.index.map(list_of_routes_dicts[1])
         df["#HMM"] = df.index.map(list_of_routes_dicts[2])
-        out_filename = 'new_taxa_stats.csv'
+        out_filename = 'new_taxa_stats.tsv'
     else:
-        out_filename = 'db_taxa_stats.csv'
+        out_filename = 'db_taxa_stats.tsv'
 
     # Fill in columns for including in SGT construction. By default all are yes
     has_paralogs = check_paralogs()
@@ -216,7 +221,7 @@ def stats_orgs(df, new_data=False):
         df['Paralogs'] = df.index.map(paralogs_dict)
 
     df = df.rename_axis('Unique ID')
-    df.to_csv(f'{output_fold}/{out_filename}')
+    df.to_csv(f'{output_fold}/{out_filename}', sep='\t')
 
 
 def stats_gene(df):
@@ -232,7 +237,7 @@ def stats_gene(df):
     df = df.rename_axis('Gene Name')
     df = df.sort_values(by=['Number of Taxa'], ascending=False)
     df['SGT'] = ['yes'] * len(df)
-    df.to_csv(f'{output_fold}/gene_stats.csv')
+    df.to_csv(f'{output_fold}/gene_stats.tsv', sep='\t')
 
 
 if __name__ == '__main__':
@@ -244,9 +249,9 @@ if __name__ == '__main__':
     # Optional Arguments
     optional.add_argument('--orthologs_only', action='store_true',
                           help=textwrap.dedent("""\
-                          Paralogs will NOT be included from any taxa in the starting
-                           database in downstream single gene tree construction.
-                              """))
+                          Paralogs will NOT be included from any taxa in the starting 
+                          database in downstream single gene tree construction.
+                          """))
 
     in_help = 'Path to fisher.py output directory'
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help, out_dir=False)

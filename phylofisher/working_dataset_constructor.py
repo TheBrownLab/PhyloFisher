@@ -16,7 +16,7 @@ def parse_genes(gene_file):
     with open(gene_file) as lines:
         next(lines)
         for line in lines:
-            gene, _, _, sgt = line.split(',')
+            gene, _, _, sgt = line.split('\t')
             if sgt.strip().lower() != 'yes':
                 to_exlude.add(gene)
     return to_exlude
@@ -33,9 +33,9 @@ def parse_orgs(org_file, new_data=False):
         lines.readline()
         for line in lines:
             if new_data:
-                org, _, _, _, _, _, _, _, sgt = line.split(',')
+                org, _, _, _, _, _, _, _, sgt = line.split('\t')
             else:
-                org, _, _, _, _, sgt, para = line.split(',')
+                org, _, _, _, _, sgt, para = line.split('\t')
 
             if sgt.strip().lower() != 'yes':
                 to_exlude.add(org)
@@ -70,9 +70,9 @@ def fasta_filtr(file, o_to_ex, paralogs=None):
 
 
 def main():
-    gene_file = str(Path(args.input, 'informant_stats/gene_stats.csv'))
-    new_orgs_file = str(Path(args.input, 'informant_stats/new_taxa_stats.csv'))
-    db_orgs_file = str(Path(args.input, 'informant_stats/db_taxa_stats.csv'))
+    gene_file = str(Path(args.input, 'informant_stats/gene_stats.tsv'))
+    new_orgs_file = str(Path(args.input, 'informant_stats/new_taxa_stats.tsv'))
+    db_orgs_file = str(Path(args.input, 'informant_stats/db_taxa_stats.tsv'))
     # genes to exclude
     g_to_ex = parse_genes(gene_file)
     # organisms to exlude

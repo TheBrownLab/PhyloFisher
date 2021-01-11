@@ -38,7 +38,7 @@ if __name__ == '__main__':
         args.orthomcl = str(Path(args.database_folder, 'orthomcl'))
 
     if not args.tree_colors:
-        args.tree_colors = str(Path(args.database_folder, 'tree_colors.csv'))
+        args.tree_colors = str(Path(args.database_folder, 'tree_colors.tsv'))
 
     with open('config.ini', 'w') as configfile:
         config['PATHS'] = {'database_folder': args.database_folder,
