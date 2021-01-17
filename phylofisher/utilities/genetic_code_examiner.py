@@ -30,7 +30,7 @@ def prepare_alignments(threads):
         os.mkdir(alignmnets_folder)
     for file in glob(str(Path(dfo, f'orthologs/*.fas'))):
         cmd = f'mafft --auto --reorder --anysymbol --thread {threads} \
-            {file} > {file.replace("orthologs", "alignments").split(".")[0]}.aln'
+            {file} > {file.replace("orthologs", "alignments")}.aln'
         print(cmd)
         subprocess.call(cmd, shell=True)
 
