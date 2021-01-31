@@ -63,6 +63,22 @@ def get_ortho_taxa():
     return unique_orgs_orthos
 
 
+def check_orthologs():
+    """
+    Check that IDs in orthologs are all unique in the file.
+    """
+    files = glob('orthologs/*.fas')
+    for file in files:
+        ids = set()
+        with open(file, 'r') as infile:
+            records = SeqIO.parse(infile, 'fasta')
+            for record in records:
+                if record.name in ids:
+                    print(f"ERROR: {record.name} is not a unique ID in {file}")
+                    sys.exit()
+                ids.add(record.name)
+
+
 def get_meta_taxa():
     """
     Returns unique set of taxa in metadata
@@ -73,10 +89,12 @@ def get_meta_taxa():
         for row in reader:
             if row[0] == 'Unique ID':
                 continue
+            
             #check that ID is unique
             if row[0] in unique_orgs_meta:
                 print("ERROR: ",row[0], "is not a unique ID")
                 sys.exit()
+
             unique_orgs_meta.add(row[0])
     return unique_orgs_meta
 
@@ -308,5 +326,6 @@ if __name__ == "__main__":
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
+    check_orthologs()
     check_taxa()
     main(args, args.threads, args.no_og_file, args.og_threshold)
