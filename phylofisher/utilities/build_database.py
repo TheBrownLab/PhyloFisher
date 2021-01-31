@@ -206,6 +206,9 @@ def parse_diamond_output():
 
 
 def genes_in_orthodb():
+    """
+    Check if gene has an og in orthomcl. If not -> report this gene.
+    """
     gene_in_gene_og = set()
     for line in open("orthomcl/gene_og"):
         gene_in_gene_og.add(line.split()[0])
