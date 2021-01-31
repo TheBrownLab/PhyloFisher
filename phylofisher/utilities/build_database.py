@@ -101,7 +101,7 @@ def get_meta_taxa():
                 if ch in id_:
                     print(f"ERROR: illegal character {ch} in {id_}")
                     sys.exit()
-                    
+
             unique_orgs_meta.add(id_)
     return unique_orgs_meta
 
@@ -205,6 +205,23 @@ def parse_diamond_output():
     return gene_ogs
 
 
+def genes_in_orthodb():
+    gene_in_gene_og = set()
+    for line in open("orthomcl/gene_og"):
+        gene_in_gene_og.add(line.split()[0])
+
+    files = glob('orthologs/*.fas')
+    genes = [file.split('/')[-1].split('.')[0] for file in files]
+    rerun = False
+    for gene in genes:
+        if gene not in gene_in_gene_og:
+            print(f"{gene} has not hit in orthomcl and thus can not be used in databases."
+            "\nPlease delete this gene in orthologs and re-run build_database.py.")
+            rerun = True
+    if rerun == True:
+        sys.exit()
+
+
 def get_og_file(threshold):
     prepare_diamond_input()  # prepares orthologs for diamondF
     diamond()  # starts diamond
@@ -302,6 +319,7 @@ def main(args, threads, no_og_file, threshold):
     if not no_og_file:
         get_og_file(threshold)
 
+    genes_in_orthodb()
 
 if __name__ == "__main__":
     description = 'Script for database construction and taxonomic updates. Must be run within path/to/database/'
