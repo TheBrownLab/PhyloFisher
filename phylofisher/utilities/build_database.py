@@ -87,15 +87,22 @@ def get_meta_taxa():
     with open('metadata.tsv', 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
         for row in reader:
-            if row[0] == 'Unique ID':
+            id_ = row[0]
+            if id_ == 'Unique ID':
                 continue
             
             #check that ID is unique
-            if row[0] in unique_orgs_meta:
-                print("ERROR: ",row[0], "is not a unique ID")
+            if id_ in unique_orgs_meta:
+                print("ERROR: ",id_, "is not a unique ID")
                 sys.exit()
 
-            unique_orgs_meta.add(row[0])
+            #check illegal characters
+            for ch in ["_"]:
+                if ch in id_:
+                    print(f"ERROR: illegal character {ch} in {id_}")
+                    sys.exit()
+                    
+            unique_orgs_meta.add(id_)
     return unique_orgs_meta
 
 
