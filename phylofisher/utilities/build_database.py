@@ -73,6 +73,10 @@ def get_meta_taxa():
         for row in reader:
             if row[0] == 'Unique ID':
                 continue
+            #check that ID is unique
+            if row[0] in unique_orgs_meta:
+                print("ERROR: ",row[0], "is not a unique ID")
+                sys.exit()
             unique_orgs_meta.add(row[0])
     return unique_orgs_meta
 
