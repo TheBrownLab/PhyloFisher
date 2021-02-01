@@ -46,6 +46,10 @@ def restore():
         os.remove(f'{args.database}/tree_colors.csv')
     shutil.copy(f'{backup_dir}/{backups[args.restore - 1]}/tree_colors.csv', f'{args.database}/tree_colors.csv')
 
+    if os.path.isdir(f'{args.database}/proteomes'):
+        shutil.rmtree(f'{args.database}/proteomes')
+    shutil.copytree(f'{backup_dir}/{backups[args.restore - 1]}/proteomes', f'{args.database}/proteomes')
+
 
 if __name__ == '__main__':
     desc = 'Utility to restore the PhyloFisher Database from backups'

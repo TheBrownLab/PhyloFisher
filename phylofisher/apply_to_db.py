@@ -271,6 +271,7 @@ def backup():
     shutil.copytree(f'{dfo}/paralogs/', f'{source_dir}/paralogs')
     shutil.copy(f'{dfo}/metadata.tsv', f'{source_dir}/metadata.tsv')
     shutil.copy(f'{dfo}/tree_colors.csv', f'{source_dir}/tree_colors.csv')
+    shutil.copytree(f'{dfo}/proteomes/', f'{source_dir}/proteomes')
 
     with tarfile.open(f'{source_dir}.tar.gz', "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
@@ -300,6 +301,25 @@ def rebuild_db():
     os.chdir(cwd)
 
 
+def cp_proteomes():
+    with open(input_metadata, 'r') as infile:
+        infile.readline()
+        file_dict = {}
+        for line in infile:
+            s_line = line.strip().split('\t')
+            file_dict[s_line[2]] = os.path.abspath(os.path.join(s_line[0], s_line[1]))
+
+    os.mkdir('tmp')
+    os.chdir('tmp')
+    for key in file_dict.keys():
+        with tarfile.open(f'{key}.faa.tar.gz', "x:gz") as tar:
+            tar.add(file_dict[key], arcname=f'{key}.faa')
+        shutil.copy(f'{key}.faa.tar.gz', f'{dfo}/proteomes/{key}.faa.tar.gz')
+
+    os.chdir('..')
+    shutil.rmtree('tmp')
+
+
 def main():
     """
     Main function. Run new_database on all parsed trees (tsv files)
@@ -312,6 +332,7 @@ def main():
 
     matrix = subset_tools.completeness(args, f'{dfo}/orthologs')
     matrix.to_csv(f'{dfo}/bin_matrix.tsv', sep='\t')
+    cp_proteomes()
 
 
 if __name__ == '__main__':
