@@ -33,7 +33,7 @@ def parse_orgs(org_file, new_data=False):
         lines.readline()
         for line in lines:
             if new_data:
-                org, _, _, _, _, _, _, _, sgt = line.split('\t')
+                org, _, _, _, _, _, _, _, _, sgt = line.split('\t')
             else:
                 org, _, _, _, _, sgt, para = line.split('\t')
 
