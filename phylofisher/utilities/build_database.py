@@ -63,6 +63,22 @@ def get_ortho_taxa():
     return unique_orgs_orthos
 
 
+def check_orthologs():
+    """
+    Check that IDs in orthologs are all unique in the file.
+    """
+    files = glob('orthologs/*.fas')
+    for file in files:
+        ids = set()
+        with open(file, 'r') as infile:
+            records = SeqIO.parse(infile, 'fasta')
+            for record in records:
+                if record.name in ids:
+                    print(f"ERROR: {record.name} is not a unique ID in {file}")
+                    sys.exit()
+                ids.add(record.name)
+
+
 def get_meta_taxa():
     """
     Returns unique set of taxa in metadata
@@ -71,9 +87,22 @@ def get_meta_taxa():
     with open('metadata.tsv', 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter='\t')
         for row in reader:
-            if row[0] == 'Unique ID':
+            id_ = row[0]
+            if id_ == 'Unique ID':
                 continue
-            unique_orgs_meta.add(row[0])
+            
+            #check that ID is unique
+            if id_ in unique_orgs_meta:
+                print("ERROR: ",id_, "is not a unique ID")
+                sys.exit()
+
+            #check illegal characters
+            for ch in ["_"]:
+                if ch in id_:
+                    print(f"ERROR: illegal character {ch} in {id_}")
+                    sys.exit()
+
+            unique_orgs_meta.add(id_)
     return unique_orgs_meta
 
 
@@ -176,6 +205,26 @@ def parse_diamond_output():
     return gene_ogs
 
 
+def genes_in_orthodb():
+    """
+    Check if gene has an og in orthomcl. If not -> report this gene.
+    """
+    gene_in_gene_og = set()
+    for line in open("orthomcl/gene_og"):
+        gene_in_gene_og.add(line.split()[0])
+
+    files = glob('orthologs/*.fas')
+    genes = [file.split('/')[-1].split('.')[0] for file in files]
+    rerun = False
+    for gene in genes:
+        if gene not in gene_in_gene_og:
+            print(f"{gene} has not hit in orthomcl and thus can not be used in databases."
+            "\nPlease delete this gene in orthologs and re-run build_database.py.")
+            rerun = True
+    if rerun == True:
+        sys.exit()
+
+
 def get_og_file(threshold):
     prepare_diamond_input()  # prepares orthologs for diamondF
     diamond()  # starts diamond
@@ -273,6 +322,7 @@ def main(args, threads, no_og_file, threshold):
     if not no_og_file:
         get_og_file(threshold)
 
+    genes_in_orthodb()
 
 if __name__ == "__main__":
     description = 'Script for database construction and taxonomic updates. Must be run within path/to/database/'
@@ -304,5 +354,6 @@ if __name__ == "__main__":
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
+    check_orthologs()
     check_taxa()
     main(args, args.threads, args.no_og_file, args.og_threshold)
