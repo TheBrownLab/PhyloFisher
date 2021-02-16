@@ -2,6 +2,8 @@
 import configparser
 import glob
 import os
+import shutil
+import tarfile
 import textwrap
 from collections import defaultdict, Counter
 from multiprocessing import Pool
@@ -46,7 +48,8 @@ def parse_metadata(metadata, input_metadata=None):
             full = sline[1].strip()
             if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
                 color_dict[group] = 'white'
-            metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full, 'Lower Taxonomy': sub_tax}
+            metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full,
+                                  'Lower Taxonomy': sub_tax}
     if input_metadata:
         for line in open(input_metadata):
             if "FILE_NAME" not in line:
@@ -152,7 +155,8 @@ def expected_neighborhood(parent, cont_key_rank):
     key = cont_key_rank[0]
     rank = cont_key_rank[1]
     # check that rank is valid (group, Lower Taxonomy, org)
-    assert rank in ['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'], f'{rank} has to be Higher Taxonomy,Lower Taxonomy or org'
+    assert rank in ['Higher Taxonomy', 'Lower Taxonomy',
+                    'Unique ID'], f'{rank} has to be Higher Taxonomy,Lower Taxonomy or org'
     for org in parent.get_leaf_names():
         if (org.count('_') != 4):
             if '..' in org:
@@ -251,8 +255,6 @@ def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
         build_len, len_dict = get_build_len(name_)
         len_info = f'Final Align Len: {build_len}'
         len_dict = {k: round(v / build_len, 2) for k, v in len_dict.items()}
-
-
 
     if not backpropagation:
         table = open(f"{output_folder}/{name_.split('_')[0]}.tsv", 'w')
@@ -545,20 +547,39 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Number of threads to be used, where N is an integer. 
                           Default: N=1"""))
+    optional.add_argument('--local_run', action='store_true',
+                          help=textwrap.dedent("""\
+                          To be used when sgt_constructor_out.tar.gz has been downloaded from a server
+                          for single gene tree visualizations to be rendered locally. 
+                          """))
 
     in_help = 'Path to sgt_constructor_out_<M.D.Y>/trees'
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help)
 
-    trees_folder = args.input
     output_folder = args.output
 
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
-    color_conf = str(Path(config['PATHS']['color_conf']).resolve())
+    if args.local_run:
+        with tarfile.open(args.input, "r:gz") as tar:
+            tar.extractall()
+            tar.close()
 
-    args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
+        args.input = args.input.split('.tar.gz')[0]
+        trees_folder = f'{args.input}/trees'
+        args.metadata = f'{args.input}/metadata.tsv'
+        args.input_metadata = f'{args.input}/input_metadata.tsv'
+        color_conf = f'{args.input}/tree_colors.tsv'
+
+        trees_folder = f'{args.input}/trees'
+        args.input = f'{args.input}/trees'
+
+    else:
+        trees_folder = args.input
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        dfo = str(Path(config['PATHS']['database_folder']).resolve())
+        args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
+        color_conf = str(Path(config['PATHS']['color_conf']).resolve())
+        args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
 
     if not args.backpropagate:
         os.mkdir(output_folder)
@@ -605,3 +626,6 @@ if __name__ == '__main__':
     else:
         for tree in trees:
             tree_to_tsvg(tree)
+
+    if args.local_run:
+        shutil.rmtree('/'.join(args.input.split('/')[:-1]))
