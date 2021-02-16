@@ -111,9 +111,9 @@ class SpecQuery:
     def spec_query_blast(self):
         """Blast against sample with sequence selected according to spec queries.
         Returns: list with ordered best blast hits."""
-        db = f"tmp/{sample_name}/{os.path.basename(infile)}.blastdb"
-        qfile = f'tmp/{sample_name}/{self.query}.fas'
-        bout = f'tmp/{sample_name}/{self.query}.blastout'
+        db = f'{args.output}/tmp/{sample_name}/{os.path.basename(infile)}.blastdb'
+        qfile = f'{args.output}/tmp/{sample_name}/{self.query}_collected.fas'
+        bout = f'{args.output}/tmp/{sample_name}/{self.query}.blastout'
         with open(qfile, 'w') as f:
             n = 0  # just for uniq names of spec query sequences
             for query_sequence in self.seqs:
@@ -161,7 +161,7 @@ def length_check(trimmed_aln):
 
 def makeblastdb():
     """Prepares blast database from sample input file"""
-    cmd = f"makeblastdb -in {infile} -out tmp/{sample_name}/{os.path.basename(infile)}.blastdb -dbtype prot"
+    cmd = f"makeblastdb -in {infile} -out {args.output}/tmp/{sample_name}/{os.path.basename(infile)}.blastdb -dbtype prot"
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
 
 
@@ -170,10 +170,10 @@ def hmmer(query):
 
     returns: tuple with (gene_name, list of hmm hits [hmm1, hmm2 ... hmmn]"""
     hmm_prof = str(Path(dfo, f'profiles/{query}.hmm'))
-    cmd = f"hmmsearch -E 1e-10 {hmm_prof} {infile} > tmp/{sample_name}/{query}.hmmout"
+    cmd = f'hmmsearch -E 1e-10 {hmm_prof} {infile} > {args.output}/tmp/{sample_name}/{query}.hmmout'
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
     hits = []
-    for hit in SearchIO.read(f"tmp/{sample_name}/{query}.hmmout", "hmmer3-text"):
+    for hit in SearchIO.read(f'{args.output}/tmp/{sample_name}/{query}.hmmout', 'hmmer3-text'):
         hits.append(hit.id)
     return query, hits
 
@@ -261,10 +261,10 @@ def get_hmm_profiles():
 
 def makedirs():
     """Creates output dictionaries tmp and fasta"""
-    directories = ['tmp', args.output]
+    directories = [args.output, f'{args.output}/tmp']
     for directory in directories:
         if not os.path.isdir(directory):
-            os.makedirs(directory)
+            os.mkdir(directory)
 
 
 def phylofisher(threads, max_hits, spec_queries=None):
@@ -279,7 +279,7 @@ def phylofisher(threads, max_hits, spec_queries=None):
     # return list of tuples (gene:[candidate names],..)
     candidates = get_candidates(threads, max_hits, gene_dict.values())
     # writes all candidates to for_diamond.fasta"
-    with open('tmp/for_diamond.fasta', 'a') as f:
+    with open(f'{args.output}/tmp/for_diamond.fasta', 'a') as f:
         for gene, candi_list in candidates:
             if candi_list:
                 for hit in candi_list:
@@ -303,20 +303,20 @@ def cluster_rename_sequences():
     and rename every sequence with shortname_number
 
     returns: abs path to the file with clustered and renamed sequences"""
-    clustered = f'tmp/{sample_name}/clustered.fasta'
+    clustered = f'{args.output}/tmp/{sample_name}/clustered.fasta'
     cmd = f'cd-hit -i {fasta_file} -o {clustered} -c 0.98'
     # performs cd-hit
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     original_names = {}
     n = 1
     # prepares files with clustered and renamed sequences
-    with open(f'tmp/{sample_name}/clustered_renamed.fasta', 'w') as res:
+    with open(f'{args.output}/tmp/{sample_name}/clustered_renamed.fasta', 'w') as res:
         for record in SeqIO.parse(clustered, 'fasta'):
             new_name = f"{sample_name}_{n}"
             original_names[new_name] = record.name
             res.write(f'>{new_name}\n{record.seq}\n')
             n += 1
-    abs_path = os.path.abspath(f'tmp/{sample_name}/clustered_renamed.fasta')
+    abs_path = os.path.abspath(f'{args.output}/tmp/{sample_name}/clustered_renamed.fasta')
 
     # prepares file tsv files which keep information about old name: new name
     with open(f'{args.output}/original_names.tsv', 'a') as f:
@@ -383,17 +383,17 @@ def check_input():
 
 def diamond():
     """executes diamond against orthomcl and datasetdb database"""
-    for_diamond = 'tmp/for_diamond.fasta'
+    for_diamond = f'{args.output}/tmp/for_diamond.fasta'
 
     db = str(Path(dfo, 'orthomcl/orthomcl.diamonddb'))
-    out = 'tmp/orthomcl_diamond.res'
+    out = f'{args.output}/tmp/orthomcl_diamond.res'
     cmd = (
         f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
         f'--db {db} -o {out} -p {args.threads} --outfmt 6 qseqid stitle evalue')
     subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     datasetdb = str(Path(dfo, 'datasetdb/datasetdb.dmnd'))
-    out2 = 'tmp/dataset_diamond.res'
+    out2 = f'{args.output}/tmp/dataset_diamond.res'
     cmd2 = (
         f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
         f'--db {datasetdb} -o {out2} -p {args.threads} --outfmt 6 qseqid stitle evalue')
@@ -416,11 +416,11 @@ def fasttree(checked_hits):
     full_name = checked_hits[0].name
     org = full_name.split('_')[0]
     gene = full_name.split('@')[1]
-    fas = f'tmp/{org}/{gene}.for_ftree'
-    aln = f'tmp/{org}/{gene}.aln'
-    trim = f'tmp/{org}/{gene}.trimal'
-    tree_file = f'tmp/{org}/{gene}.tree'
-    copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), f'tmp/{org}/{gene}.for_ftree')
+    fas = f'{args.output}/tmp/{org}/{gene}.fas'
+    aln = f'{args.output}/tmp/{org}/{gene}.aln'
+    trim = f'{args.output}/tmp/{org}/{gene}.trimal'
+    tree_file = f'{args.output}/tmp/{org}/{gene}.tree'
+    copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), f'{args.output}/tmp/{org}/{gene}.fas')
     with open(fas, 'a') as f:
         for hit in checked_hits:
             f.write(f'>{hit.name}\n{hit.seq}\n')
@@ -429,7 +429,7 @@ def fasttree(checked_hits):
     cmd2 = f"trimal -in {aln} -gt 0.2 -out {trim}"
     subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL)
     cmd3 = f"fasttree {trim} > {tree_file}"
-    subprocess.run(cmd3, shell=True) #, stderr=subprocess.DEVNULL)
+    subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
     tree = Tree(tree_file)
     correct_len = length_check(trim)
     good_hits = []  # SBH hits
@@ -439,9 +439,13 @@ def fasttree(checked_hits):
         if hit.name in correct_len:
             bb_hits.append(hit)
             hit_node = tree.search_nodes(name=hit.name)[0]
-            if correct_phylo_group(hit_node.up, input_taxonomy[org]) is True:
-                good_hits.append(hit)
-                good_hits_names.add(hit.name)
+            try:
+                if correct_phylo_group(hit_node.up, input_taxonomy[org]) is True:
+                    good_hits.append(hit)
+                    good_hits_names.add(hit.name)
+            except AttributeError:
+                pass
+
     if args.all_bbh:
         # keep all hits, even if SBH (good hits) hits exist
         all_hits = good_hits[:]
@@ -467,7 +471,7 @@ def parse_diamond_output():
     returns: names of filtered hits with info about gene"""
     correct_hits = set()
     proccesed = set()
-    for line in open('tmp/orthomcl_diamond.res'):
+    for line in open(f'{args.output}/tmp/orthomcl_diamond.res'):
         sline = line.split("\t")
         full_name = sline[0]
         hit, gene = full_name.split('@')
@@ -489,7 +493,7 @@ def new_best_hits(candidate_hits):
     # if _SBH path: check for phylogenetically best candidates
     top_candidates = []
     if candidate_hits:
-        if '_SBH' in candidate_hits[0].name:
+        if '_SBH' in candidate_hits[0].name and '*' not in input_taxonomy[candidate_hits[0].name.split('_')[0]]:
             top_candidates = fasttree(candidate_hits)
         else:
             top_candidates = candidate_hits
@@ -532,7 +536,7 @@ def prepare_good_hits():
     not in correct hits (wrongs orthogroups or bacterial best diamond
     hit from orthomcl database)"""
     gene_hits = defaultdict(list)
-    for record in SeqIO.parse('tmp/for_diamond.fasta', 'fasta'):
+    for record in SeqIO.parse(f'{args.output}/tmp/for_diamond.fasta', 'fasta'):
         if record.name in correct_hits:
             gene = record.name.split('@')[1]
             org = record.name.split('_')[0]
@@ -547,7 +551,7 @@ def get_reciprocal_hits():
     returns: list with reciprocal hits"""
     reciprocal = {}
     proccesed = set()
-    for line in open('tmp/dataset_diamond.res'):
+    for line in open(f'{args.output}/tmp/dataset_diamond.res'):
         sline = line.split("\t")
         full_name = sline[0]
         sequence, gene = full_name.split('@')  # do we need this line??
@@ -642,17 +646,17 @@ if __name__ == '__main__':
         makedirs()
     else:
         # if --add option
-        if os.path.exists('tmp/'):
+        if os.path.exists(f'{args.output}/tmp/'):
             try:
                 # in a case that user used --keep-tmp option before:
                 # it cleans problematic tmp files
-                os.remove('tmp/dataset_diamond.res')
-                os.remove('tmp/orthomcl_diamond.res')
-                os.remove('tmp/for_diamond.fasta')
+                os.remove(f'{args.output}/tmp/dataset_diamond.res')
+                os.remove(f'{args.output}/tmp/orthomcl_diamond.res')
+                os.remove(f'{args.output}/tmp/for_diamond.fasta')
             except OSError:
                 pass
         else:
-            os.mkdir('tmp')
+            os.mkdir(f'{args.output}/tmp')
 
     # stores information about org:taxonomy for input samples
     input_taxonomy = {}
@@ -667,7 +671,7 @@ if __name__ == '__main__':
             input_taxonomy[sample_name] = taxonomy
             specific_queries = metadata_input[5].strip()
             print(f'{sample_name} has started\n--------------------------')
-            os.mkdir(f'tmp/{sample_name}')
+            os.mkdir(f'{args.output}/tmp/{sample_name}')
 
             # performs cd-hit and rename sequences to common format
             # shortName_number
@@ -699,5 +703,5 @@ if __name__ == '__main__':
         additions_to_input()
     # when user doesn't want to keep tmp/* files
     if not args.keep_tmp:
-        rmtree("tmp/")
+        rmtree(f'{args.output}/tmp/')
     print('Fisher completed without any errors.')
