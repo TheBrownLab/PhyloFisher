@@ -93,11 +93,11 @@ def get_meta_taxa():
             
             #check that ID is unique
             if id_ in unique_orgs_meta:
-                print("ERROR: ",id_, "is not a unique ID")
+                print("ERROR: ", id_, "is not a unique ID")
                 sys.exit()
 
             #check illegal characters
-            for ch in ["_"]:
+            for ch in ["_", '@']:
                 if ch in id_:
                     print(f"ERROR: illegal character {ch} in {id_}")
                     sys.exit()
@@ -109,7 +109,7 @@ def get_meta_taxa():
 def check_taxa():
     """
     Checks to see if all taxa in metadata is in ortholog dir and vice-versa. If there are differences the script exits
-    here and prints the discrepancies. Also replaces @'s and ..'s with _'s if present in the UniqueID
+    here and prints the discrepancies.
 
     :return: None
     """
