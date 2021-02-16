@@ -268,11 +268,17 @@ def compress_output():
     """
     os.chdir(cwd)
 
+    source_dir = f'tmp/{args.output}'
+
+    shutil.copytree(f'{args.output}/trees', f'{source_dir}/trees')
+    shutil.copy(args.metadata, f'{source_dir}/{os.path.basename(args.metadata)}')
+    shutil.copy(args.input_metadata, f'{source_dir}/{os.path.basename(args.input_metadata)}')
+    shutil.copy(args.color_conf, f'{source_dir}/{os.path.basename(args.color_conf)}')
+
     with tarfile.open(f'{args.output}.tar.gz', "x:gz") as tar:
-        tar.add(f'{args.output}/trees', arcname=os.path.basename(f'{args.output}/trees'))
-        tar.add(args.metadata, arcname=os.path.basename(args.metadata))
-        tar.add(args.input_metadata, arcname=os.path.basename(args.input_metadata))
-        tar.add(args.color_conf, arcname=os.path.basename(args.color_conf))
+        tar.add(source_dir, arcname=args.output.split('/')[-1])
+
+    shutil.rmtree('tmp')
 
 
 if __name__ == '__main__':
