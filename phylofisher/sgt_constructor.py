@@ -1,12 +1,15 @@
 #!/usr/bin/env python
+import configparser
 import csv
 import glob
 import os
 import shutil
 import subprocess
+import tarfile
 import textwrap
 from functools import partial
 from multiprocessing import Pool
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from Bio import SeqIO
@@ -15,9 +18,13 @@ from phylofisher import help_formatter
 
 
 def bash_command(cmd):
-    """Function to run bash commands in a shell"""
-    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash')#,
-                                #  stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    """
+    Function to run bash commands in a shell
+    :param cmd:
+    :return:
+    """
+    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash')  # ,
+    #  stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     if command_run == 0:
         return True
     else:
@@ -34,10 +41,10 @@ def mkdir_and_cd(dir_name):
 
 def delete_gaps_stars(root):
     """Removes -'s and *'s from alignments"""
-    file = f'{args.input}/{root}.fas'
+    file = f'{args.input}/{root}.{out_dict[args.in_format]}'
     file_name = f'{root}.aa'
     with open(file_name, 'w') as res:
-        for record in SeqIO.parse(file, 'fasta'):
+        for record in SeqIO.parse(file, args.in_format):
             res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
 
 
@@ -205,7 +212,7 @@ def prepare_analyses(checks, root):
                 break
 
         # raxml
-        elif args.no_tree is False and i == 7 and check == '0':
+        elif args.no_trees is False and i == 7 and check == '0':
             mkdir_and_cd(f'{args.output}/RAxML')
 
             files = glob.glob(f'*{root}*')
@@ -232,6 +239,42 @@ def prepare_analyses(checks, root):
     return root, checks
 
 
+def make_trees_only(root):
+    """
+
+    :param root:
+    :return:
+    """
+    if (args.threads / file_count) > 1:
+        threads = int(args.threads / file_count)
+    else:
+        threads = 1
+
+    mkdir_and_cd(f'{args.output}/RAxML')
+    status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a '
+                          f'-s {args.input}/{root} -n {root}.tre -x 123 -N 100 -p 12345')
+    if status:
+        mkdir_and_cd(f'{args.output}/trees')
+        shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
+                    f'{args.output}/trees/RAxML_bipartitions.{root}.tre')
+        shutil.copy(f'{args.input}/{root}',
+                    f'{args.output}/trees/{root}')
+
+
+def compress_output():
+    """
+
+    :return:
+    """
+    os.chdir(cwd)
+
+    with tarfile.open(f'{args.output}.tar.gz', "x:gz") as tar:
+        tar.add(f'{args.output}/trees', arcname=os.path.basename(f'{args.output}/trees'))
+        tar.add(args.metadata, arcname=os.path.basename(args.metadata))
+        tar.add(args.input_metadata, arcname=os.path.basename(args.input_metadata))
+        tar.add(args.color_conf, arcname=os.path.basename(args.color_conf))
+
+
 if __name__ == '__main__':
     description = 'Aligns, trims, and builds single gene trees from unaligned gene files.'
     usage = 'sgt_constructor.py -i path/to/input/ [OPTIONS]'
@@ -245,27 +288,60 @@ if __name__ == '__main__':
                           Desired number of threads to be utilized.
                           Default: 1
                           """))
-    optional.add_argument('--no_tree', action='store_true',
+    optional.add_argument('--no_trees', action='store_true',
                           help=textwrap.dedent("""\
                           Do NOT build single gene trees.
                           Length filtration and trimmming only.
                           """))
+    optional.add_argument('--trees_only', action='store_true',
+                          help=textwrap.dedent("""\
+                          Only build single gene trees.
+                          No length filtration and trimming.
+                          """))
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
+                          help=textwrap.dedent("""\
+                          Format of the input files.
+                          Options: fasta, phylip (names truncated at 10 characters), 
+                          phylip-relaxed (names are not truncated), or nexus.
+                          Default: fasta
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=True)
 
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
+    args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
+    args.color_conf = str(os.path.abspath(config['PATHS']['color_conf']))
+    args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
+
+    out_dict = {'fasta': 'fas',
+                'phylip': 'phy',
+                'phylip-relaxed': 'phy',
+                'nexus': 'nex'}
+
     # Parallelization of prepare_analyses function
+    cwd = os.getcwd()
     args.input = os.path.abspath(args.input)
-    roots = [os.path.basename(file).split('.')[0] for file in os.listdir(args.input) if file.endswith('.fas')]
     args.output = os.path.abspath(args.output)
     mkdir_and_cd(args.output)
-    mk_checkpoint_tmp(roots)
-    checkpoints = get_checkpoints()
-    file_count = len(roots)
 
+    if args.trees_only:
+        roots = [file for file in os.listdir(args.input)]
+        prep_analyses = make_trees_only
+
+    else:
+        roots = [os.path.basename(file).split('.')[0] for file in os.listdir(args.input) if file.endswith(out_dict[args.in_format])]
+        mk_checkpoint_tmp(roots)
+        checkpoints = get_checkpoints()
+        prep_analyses = partial(prepare_analyses, checkpoints)
+
+    file_count = len(roots)
     processes = args.threads
     if file_count < args.threads:
         processes = file_count
 
-    prep_analyses = partial(prepare_analyses, checkpoints)
     with Pool(processes=processes) as p:
         all_checks = p.map(prep_analyses, roots)
+
+    compress_output()
