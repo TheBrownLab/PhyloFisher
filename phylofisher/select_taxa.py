@@ -2,6 +2,7 @@
 import configparser
 import os
 import textwrap
+import pandas as pd
 from pathlib import Path
 
 from phylofisher import help_formatter, subset_tools
@@ -29,6 +30,13 @@ def make_subset_tsv():
     taxa = subset_tools.parse_metadata(metadata)
     df = taxa_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
+
+    if args.chimeras:
+        with open(args.chimeras, 'r') as infile:
+            for line in infile:
+                line = line.strip()
+                split_line = line.split('\t')
+                taxa[split_line[0]] = split_line[1:3]
 
     # Add Taxonomic Groups to DataFrame
     high_tax_list = [taxa[ind][0] for ind in df.index]
@@ -67,6 +75,7 @@ def make_subset_tsv():
 
     df.to_csv(f'select_taxa.tsv', sep='\t')
 
+
 def update_df_ortho(df):
     """
 
@@ -82,6 +91,27 @@ def update_df_ortho(df):
                 to_drop.append(gene)
 
     df = df.drop(to_drop)
+    return df
+
+
+def gen_chimera(df):
+    with open(args.chimeras, 'r') as infile:
+        chim_dict = {}
+        for line in infile:
+            line = line.strip()
+            split_line = line.split('\t')
+            chim_dict[split_line[0]] = split_line[3:]
+
+    for key in chim_dict.keys():
+        df['int_chim'] = 0
+        for taxon in chim_dict[key]:
+            df['int_chim'] = df['int_chim'] + df[taxon]
+            df = df.drop(taxon, axis=1)
+
+        df.loc[df['int_chim'] >= 1, key] = 1
+        df.loc[df['int_chim'] < 1, key] = 0
+        df = df.drop('int_chim', axis=1)
+
     return df
 
 
@@ -120,8 +150,13 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           List of taxa to include.
                           """))
+    optional.add_argument('--chimeras', type=str, metavar='chimeras.tsv', default=None,
+                          help=textwrap.dedent("""\
+                          A TSV containing chimeras, higher and lower taxonomic designations, 
+                          and the taxa comprising each chimera.
+                          """))
 
-    args = help_formatter.get_args(parser, optional, required, inp_dir=False, pre_suf=False)
+    args = help_formatter.get_args(parser, optional, required, inp_dir=False, pre_suf=False, out_dir=False)
 
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -134,6 +169,10 @@ if __name__ == '__main__':
 
     if os.path.isfile('select_orthologs.tsv'):
         matrix = update_df_ortho(matrix)
+
+    if args.chimeras:
+        matrix  = gen_chimera(matrix)
+        matrix.to_csv('text_df.csv')
 
     gene_count, _ = matrix.shape
     taxa_comp = matrix.sum().divide(other=gene_count)

@@ -58,24 +58,29 @@ def make_subset_tsv():
         df = df.round({'In-Group Completeness': 3})
         df = df.round({'Out-Group Completeness': 3})
 
-    to_keep = ['no' for k in df.index]
+    to_keep = ['yes' for k in df.index]
     df['Include in Subset'] = to_keep
 
     if args.gene_number:
         num_to_keep = args.gene_number
         i = 1
         for gene, row in df.iterrows():
-            if i <= num_to_keep:
-                df.at[gene, 'Include in Subset'] = 'yes'
+            if i > num_to_keep:
+                df.at[gene, 'Include in Subset'] = 'no'
             i += 1
 
     elif args.percent_complete:
         if args.percent_complete > 1:
             args.percent_complete = args.percent_complete / 100
 
-        for gene, row in df.iterrows():
-            if df.at[gene, 'Completeness'] >= args.percent_complete:
-                df.at[gene, 'Include in Subset'] = 'yes'
+        if args.out_group:
+            for gene, row in df.iterrows():
+                if df.at[gene, 'In-Group Completeness'] < args.percent_complete:
+                    df.at[gene, 'Include in Subset'] = 'no'
+        else:
+            for gene, row in df.iterrows():
+                if df.at[gene, 'Completeness'] < args.percent_complete:
+                    df.at[gene, 'Include in Subset'] = 'no'
 
     df.to_csv(f'select_orthologs.tsv', sep='\t')
     return df
@@ -120,6 +125,11 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Threshold for percent complete when subsetting.
                           Cannot be used with gene_number.
+                          """))
+    optional.add_argument('--chimeras', type=str, metavar='chimeras.tsv', default=None,
+                          help=textwrap.dedent("""\
+                          A TSV containing chimeras, higher and lower taxonomic designations, 
+                          and the taxa comprising each chimera.
                           """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)

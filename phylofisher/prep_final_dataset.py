@@ -2,10 +2,13 @@
 import configparser
 import os
 import shutil
+import sys
 import textwrap
 from pathlib import Path
 
 from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 from phylofisher import help_formatter
 
@@ -72,26 +75,72 @@ def parse_taxa_tsv():
     return taxa_to_include
 
 
+def get_chimeras():
+    """
+    Parses chimeras.tsv if the chimera flag is utilized
+    :return: Dict with chimera's Unique ID as the key and a list the Unique IDs of taxa comprising the chimera as the
+    value
+    """
+    chim_dict = dict()
+    chim_taxa = []
+    with open(args.chimeras, 'r') as infile:
+        for line in infile:
+            split_line = line.strip().split('\t')
+            chim_dict[split_line[0]] = split_line[3:]
+            chim_taxa += split_line[3:]
+    return chim_dict, chim_taxa
+
+
 def subset_taxa():
     """
     Subsets taxa from the Database into a new directory to be included in the final dataset
-    :return:
     """
     taxa = parse_taxa_tsv()
+    chimeras, chimeric_taxa = get_chimeras()
 
     files = [file for file in os.listdir(args.output)]
+
     for file in files:
         with open(f'{args.output}/{file}', 'r') as infile, open(f'{args.output}/tmp', 'w') as outfile:
             records = []
+            chimera_seqs = {k: '' for k in chimeras.keys()}
+
             for record in SeqIO.parse(infile, 'fasta'):
-                if args.chimeras:
-                    pass
-                elif record.description in taxa:
-                    records.append(record)
+                # Only includes taxa marked "yes" in select_taxa.tsv
+                if record.description in taxa:
+
+                    # Selects longest sequence from taxa comprising the chimera
+                    if args.chimeras and record.description in chimeric_taxa:
+                        for key in chimeras.keys():
+                            if record.description in chimeras[key] and len(record.seq) > len(chimera_seqs[key]):
+                                chimera_seqs[key] = str(record.seq)
+
+                    else:
+                        records.append(record)
+
+            if args.chimeras:
+                for org, seq in chimera_seqs.items():
+                    if len(seq) > 0:
+                        records.append(SeqRecord(Seq(seq), id=org, name='', description=''))
 
             SeqIO.write(records, outfile, 'fasta')
 
         shutil.move(f'{args.output}/tmp', f'{args.output}/{file}')
+
+
+def check_if_empty():
+    """
+    Checks to see if there are empty files in the output directory
+    :return: Boolian value (True if no empty files)
+    """
+    for subdir, dirs, files in os.walk(args.output):
+        for file in files:
+            filepath = subdir + os.sep + file
+
+            if os.path.getsize(filepath) == 0:
+                sys.exit('There are empty files in the output. Please check for errors')
+
+    return True
 
 
 if __name__ == '__main__':
@@ -127,3 +176,5 @@ if __name__ == '__main__':
 
     if os.path.isfile('select_taxa.tsv'):
         subset_taxa()
+
+    check_if_empty()
