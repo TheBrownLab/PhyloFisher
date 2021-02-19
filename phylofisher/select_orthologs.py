@@ -4,7 +4,7 @@ import os
 import textwrap
 from pathlib import Path
 
-from phylofisher import help_formatter, subset_tools
+from phylofisher import help_formatter, tools
 
 
 def in_out_completeness(df):
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     metadata = f'{dfo}/metadata.tsv'
     orthologs_dir = f'{dfo}/orthologs/'
 
-    matrix = subset_tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
+    matrix = tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
     if os.path.isfile('select_taxa.tsv'):
         matrix = update_df_taxa(matrix)
     taxa_count, _ = matrix.shape
@@ -148,4 +148,4 @@ if __name__ == '__main__':
 
     make_subset_tsv()
 
-    subset_tools.make_plot(gene_comp, f'gene_comp', y_count=taxa_count, genes=True)
+    tools.make_plot(gene_comp, f'gene_comp', y_count=taxa_count, genes=True)

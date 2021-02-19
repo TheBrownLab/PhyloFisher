@@ -5,7 +5,7 @@ import textwrap
 import pandas as pd
 from pathlib import Path
 
-from phylofisher import help_formatter, subset_tools
+from phylofisher import help_formatter, tools
 
 
 def parse_user_inc_exc(input_file):
@@ -27,7 +27,7 @@ def make_subset_tsv():
 
     :return:
     """
-    taxa = subset_tools.parse_metadata(metadata)
+    taxa = tools.parse_metadata(metadata)
     df = taxa_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
 
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     metadata = f'{dfo}/metadata.tsv'
     orthologs_dir = f'{dfo}/orthologs/'
 
-    matrix = subset_tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
+    matrix = tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
     matrix = matrix.transpose()
 
     if os.path.isfile('select_orthologs.tsv'):
@@ -178,4 +178,4 @@ if __name__ == '__main__':
     taxa_comp = matrix.sum().divide(other=gene_count)
 
     make_subset_tsv()
-    subset_tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)
+    tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)

@@ -14,7 +14,7 @@ from pathlib import Path
 import pandas as pd
 from Bio import SeqIO
 
-from phylofisher import help_formatter, subset_tools
+from phylofisher import help_formatter, tools
 from phylofisher.utilities import build_database
 
 
@@ -212,8 +212,8 @@ def add_to_meta(abbrev):
                'Notes': input_info[abbrev]['notes']
                }
 
-    taxa_comp, gene_count = subset_tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=False)
-    bin_matrix = subset_tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=True)
+    taxa_comp, gene_count = tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=False)
+    bin_matrix = tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=True)
     taxa_comp = taxa_comp.to_dict()
 
     df = pd.read_csv(metadata, delimiter='\t')
@@ -257,26 +257,6 @@ def new_database(table):
                 meta_orgs.add(name.split('.')[0])
                 add_to_meta(name.split('.')[0])
             res.write(f'>{name}\n{record.seq}\n')
-
-
-def backup():
-    """
-    Backs up database/orthologs/, database/paralogs/, and database/metadata.tsv before applying decisions
-    :return: NONE
-    """
-    today_date = date.today().strftime("%b_%d_%Y")
-    source_dir = f'{dfo}/backups/{today_date}'
-
-    shutil.copytree(f'{dfo}/orthologs/', f'{source_dir}/orthologs')
-    shutil.copytree(f'{dfo}/paralogs/', f'{source_dir}/paralogs')
-    shutil.copy(f'{dfo}/metadata.tsv', f'{source_dir}/metadata.tsv')
-    shutil.copy(f'{dfo}/tree_colors.csv', f'{source_dir}/tree_colors.csv')
-    shutil.copytree(f'{dfo}/proteomes/', f'{source_dir}/proteomes')
-
-    with tarfile.open(f'{source_dir}.tar.gz', "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
-
-    shutil.rmtree(source_dir)
 
 
 def rebuild_db():
@@ -330,7 +310,7 @@ def main():
 
     rebuild_db()
 
-    matrix = subset_tools.completeness(args, f'{dfo}/orthologs')
+    matrix = tools.completeness(args, f'{dfo}/orthologs')
     matrix.to_csv(f'{dfo}/bin_matrix.tsv', sep='\t')
     cp_proteomes()
 
@@ -364,9 +344,7 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
-    if not os.path.isdir(f'{dfo}/backups'):
-        os.mkdir(f'{dfo}/backups')
-    backup()
+    tools.backup()
 
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
