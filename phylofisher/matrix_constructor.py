@@ -106,7 +106,7 @@ def parse_names(input_folder):
 
 def stats(total_len, out_dict):
     """
-    subset_tools.py [OPTIONS] -i <input_dir> -m <metadata> {-n <gene_number> | -c <percent_complete>}
+    tools.py [OPTIONS] -i <input_dir> -m <metadata> {-n <gene_number> | -c <percent_complete>}
 
     :param total_len:
     :return:

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
+import hashlib
 import os
+import shutil
 from collections import Counter
+from datetime import datetime
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -170,3 +173,68 @@ def make_plot(s, plot_name, y_count, genes=True):
     fig.set_tight_layout(True)
     fig.savefig(f'{plot_name}.pdf')
     fig.show()
+
+
+def get_md5(filename):
+    # Open,close, read file and calculate MD5 on its contents
+    with open(filename, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()
+        # pipe contents of the file through
+        md5_returned = hashlib.md5(data).hexdigest()
+
+    return md5_returned
+
+
+def first_backup(dfo, date_time):
+    os.mkdir(f'{dfo}/backups')
+    os.mkdir(f'{dfo}/backups/{date_time}')
+    shutil.copytree(f'{dfo}/orthologs', f'{dfo}/backups/{date_time}/orthologs')
+    shutil.copytree(f'{dfo}/paralogs', f'{dfo}/backups/{date_time}/paralogs')
+    shutil.copytree(f'{dfo}/proteomes', f'{dfo}/backups/{date_time}/proteomes')
+    shutil.copy(f'{dfo}/metadata.tsv', f'{dfo}/backups/{date_time}/metadata.tsv')
+    shutil.copy(f'{dfo}/tree_colors.tsv', f'{dfo}/backups/{date_time}/tree_colors.tsv')
+
+
+def backup(dfo):
+    now = datetime.now().strftime('%d-%b-%Y_%H:%M:%S')
+
+    if os.path.isdir(f'{dfo}/backups'):
+        backups = os.listdir(f'{dfo}/backups')
+        backups.sort(key=lambda date: datetime.strptime(date, '%d-%b-%Y_%H:%M:%S'), reverse=True)
+        latest_backup = backups[0]
+        
+        back_files = {}
+        db_files = {}
+        os.mkdir(f'{dfo}/backups/{now}')
+        os.mkdir(f'{dfo}/backups/{now}/orthologs')
+        os.mkdir(f'{dfo}/backups/{now}/paralogs')
+        os.mkdir(f'{dfo}/backups/{now}/proteomes')
+
+        for root, dirs, files in os.walk(f'{dfo}/backups'):
+            for file in files:
+                back_files[file] = (os.path.join(root, file))
+
+        for folder in ['orthologs', 'paralogs', 'proteomes']:
+            for root, dirs, files in os.walk(f'{dfo}/{folder}'):
+                for file in files:
+                    db_files[file] = (os.path.join(root, file))
+
+        db_files['metadata.tsv'] = f'{dfo}/metadata.tsv'
+        db_files['tree_colors.tsv'] = f'{dfo}/tree_colors.tsv'
+
+        for k, v in db_files.items():
+            if k == 'metadata.tsv' or k == 'tree_colors.tsv':
+                dest = k
+                up_dir = '..'
+            else:
+                dest = '/'.join(v.split('/')[-2:])
+                up_dir = '../..'
+
+            if k in back_files.keys() and get_md5(db_files[k]) == get_md5(back_files[k]):
+                os.symlink(f'{up_dir}/{latest_backup}/{dest}', f'{dfo}/backups/{now}/{dest}')
+            else:
+                shutil.copy(v, f'{dfo}/backups/{now}/{dest}')
+
+    else:
+        first_backup(dfo, now)

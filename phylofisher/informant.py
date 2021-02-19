@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from Bio import SeqIO
 
-from phylofisher import help_formatter, subset_tools
+from phylofisher import help_formatter, tools
 
 
 def collect_names(files):
@@ -268,8 +268,8 @@ if __name__ == '__main__':
     else:
         os.mkdir(output_fold)
 
-    db_taxa_dict = subset_tools.parse_metadata(args.metadata)
-    in_taxa_dict = subset_tools.parse_metadata(args.input_metadata, input_meta=True)
+    db_taxa_dict = tools.parse_metadata(args.metadata)
+    in_taxa_dict = tools.parse_metadata(args.input_metadata, input_meta=True)
     all_taxa_dict = {**db_taxa_dict, **in_taxa_dict}
 
     matrix, routes = make_table(args.input)

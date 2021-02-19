@@ -14,9 +14,11 @@ def list_backups():
     :return:
     """
     print('Available Backups to Restore From:\n')
-    print(f'Backup Num:\tDate:')
-    for i, my_date in enumerate(backups):
-        print(f'{i + 1}\t\t{my_date.replace("_", "-")}')
+    print(f'Backup Num:\tDate:\t\tTime')
+    for i, date_time in enumerate(backups):
+        date = date_time.split('_')[0]
+        time = date_time.split('_')[1]
+        print(f'{i + 1}\t\t{date}\t{time}')
 
 
 def restore():
@@ -24,11 +26,6 @@ def restore():
     Restores database from user specified backup
     :return:
     """
-    backup_file = f'{backup_dir}/{backups[args.restore - 1]}.tar.gz'
-
-    # Extracts backup from tar.gz in backup dir
-    with tarfile.open(backup_file, 'r:gz') as tar:
-        tar.extractall(backup_dir)
 
     if os.path.isdir(f'{args.database}/orthologs'):
         shutil.rmtree(f'{args.database}/orthologs')
@@ -42,9 +39,9 @@ def restore():
         os.remove(f'{args.database}/metadata.tsv')
     shutil.copy(f'{backup_dir}/{backups[args.restore - 1]}/metadata.tsv', f'{args.database}/metadata.tsv')
 
-    if os.path.isfile(f'{args.database}/tree_colors.csv'):
-        os.remove(f'{args.database}/tree_colors.csv')
-    shutil.copy(f'{backup_dir}/{backups[args.restore - 1]}/tree_colors.csv', f'{args.database}/tree_colors.csv')
+    if os.path.isfile(f'{args.database}/tree_colors.tsv'):
+        os.remove(f'{args.database}/tree_colors.tsv')
+    shutil.copy(f'{backup_dir}/{backups[args.restore - 1]}/tree_colors.tsv', f'{args.database}/tree_colors.csv')
 
     if os.path.isdir(f'{args.database}/proteomes'):
         shutil.rmtree(f'{args.database}/proteomes')
@@ -74,8 +71,8 @@ if __name__ == '__main__':
     args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False, inp_dir=False)
 
     backup_dir = f'{os.path.abspath(args.database)}/backups'
-    backups = [file.split('.tar.gz')[0] for file in os.listdir(backup_dir) if file.endswith('.tar.gz')]
-    backups.sort(key=lambda date: datetime.strptime(date, "%b_%d_%Y"))
+    backups = os.listdir(backup_dir)
+    backups.sort(key=lambda date: datetime.strptime(date, '%d-%b-%Y_%H:%M:%S'), reverse=True)
 
     if args.list_backups:
         list_backups()
