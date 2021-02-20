@@ -171,7 +171,7 @@ if __name__ == '__main__':
         matrix = update_df_ortho(matrix)
 
     if args.chimeras:
-        matrix  = gen_chimera(matrix)
+        matrix = gen_chimera(matrix)
         matrix.to_csv('text_df.csv')
 
     gene_count, _ = matrix.shape

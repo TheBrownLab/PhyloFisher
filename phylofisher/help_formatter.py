@@ -85,7 +85,7 @@ def initialize_argparse(name: object, desc: object, usage: object) -> object:
                                      add_help=False,
                                      epilog=textwrap.dedent("""\
                                          additional information:
-                                            Version: 0.1
+                                            Version: 1.0.0
                                             GitHub: https://github.com/TheBrownLab/PhyloFisher
                                             Cite: 
                                             """))
