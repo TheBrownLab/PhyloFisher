@@ -97,7 +97,7 @@ def get_meta_taxa():
                 sys.exit()
 
             #check illegal characters
-            for ch in ["_", '@']:
+            for ch in ["_", '@', '..', '*', ' ']:
                 if ch in id_:
                     print(f"ERROR: illegal character {ch} in {id_}")
                     sys.exit()
