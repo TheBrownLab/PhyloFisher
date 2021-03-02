@@ -16,8 +16,27 @@ from Bio import SeqIO
 from phylofisher import help_formatter
 
 
+def csv_to_tsv():
+    csvs = [csv for csv in os.listdir('.') if csv.endswith('csv')]
+    for csv in csvs:
+        with open(csv, 'r') as infile, open(f'{csv.split(".")[0]}.tsv', 'w')as outfile:
+            for line in infile:
+                line = line.strip().replace(',', '\t')
+                outfile.write(f'{line}\n')
+        os.remove(csv)
+
+    tsvs = [tsv for tsv in os.listdir('.') if tsv.endswith('tsv')]
+    for tsv in tsvs:
+        with open(tsv, 'r') as infile, open('tmp', 'w') as outfile:
+            for line in infile:
+                line = line.strip().replace(',', '\t')
+                outfile.write(f'{line}\n')
+        shutil.move('tmp', tsv)
+
+
 def rename_taxa():
     """"""
+
 
     # Read in to_rename.tsv
     rename_dict = dict()
@@ -354,6 +373,7 @@ if __name__ == "__main__":
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
+    csv_to_tsv()
     check_orthologs()
     check_taxa()
     main(args, args.threads, args.no_og_file, args.og_threshold)
