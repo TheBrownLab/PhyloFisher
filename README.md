@@ -43,8 +43,6 @@ Notes:
 
 # Usage
 
-**Insert Work Flow Figure Here**
-
 ### Main Workflow
 1. **Make a project directory (named anything) and move into it** <br/>
     `mkdir <project_directory>`<br/>
