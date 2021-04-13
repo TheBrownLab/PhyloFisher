@@ -3,7 +3,7 @@
 Jump to:
    - [Installation](#Installation)
    - [Usage](#Usage)
-   - [Custom Dataset Prep](#Custom-dataset-preparation)
+   - [Custom Database Prep](#Custom-dataset-preparation)
 
 <br/>
 
@@ -76,7 +76,7 @@ database directory PhyloFisherDatabase_v1.0/TEST/analysis/input_metadata.tsv
     * Usage: `working_dataset_constructor.py [OPTIONS] -i <fisher_out_dir>`
 
 1. **sgt_constructor.py**
-    * Length filtration, trimming and homolog tree construction
+    * Length filtration, trimming, and homolog tree construction
     * Usage: `sgt_constructor.py [OPTIONS] -i <working_dataset_constructor_out_dir>`
     
 1. **forest.py**
@@ -260,9 +260,9 @@ metadata.tsv, and tree_colors.tsv file via wget:<br/>
     * All proteomes must be tar and gzipped and follow the naming convention {Unique ID}.tar.gz
 
 7. Fill out the metadata.tsv file found in PhyloFisher_FOR_CUSTOM_DATABASE/database. Deailted
-    instructions on preparing the metadata.tsv file can be found here
+    instructions on preparing the metadata.tsv file can be found in the manual.
 
-8. Run build_database.py. Detailed instructions on build_database.py can be found here.
+8. Run build_database.py. Detailed instructions on build_database.py can be found in the manual.
 
 Some notes about sequence headers:
 * Each sequence header (sequence header = Unique ID) within a file must be unique. Sequence
