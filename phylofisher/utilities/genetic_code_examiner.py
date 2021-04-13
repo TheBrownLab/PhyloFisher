@@ -127,7 +127,7 @@ def collect_counts(transcriptome, conservation_lvl):
 
     for record in blast_records:
         gene_name = record.query.split('@')[1]
-        alignment_name = str(Path(dfo, f'alignments/{gene_name}.aln'))
+        alignment_name = str(Path(dfo, f'alignments/{gene_name}.fas.aln'))
         seq_num = int(record.query.split('@')[-1])
         positional_dict = alignment_parsing(alignment_name, seq_num)
         if len(record.alignments) > 0:
