@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='1.0.0',
+    version='1.0.2',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -33,14 +33,14 @@ setup(
              'phylofisher/utilities/backup_restoration.py',
              'phylofisher/utilities/explore_database.py'
              },
-    python_requires='>=3.7',
-    install_requires=['biopython==1.76',
-                      'pyqt5>=5',
-                      'ete3==3.1.1',
-                      'pandas==1.0.3',
-                      'matplotlib==3.2.2',
-                      'scipy==1.4.1',
-                      'numpy==1.18.1'
+    python_requires='==3.7.10',
+    install_requires=['biopython==1.78',
+                      'pyqt5==5.12.3',
+                      'ete3==3.1.2',
+                      'pandas==1.2.4',
+                      'matplotlib==3.4.1',
+                      'scipy==1.6.2',
+                      'numpy==1.20.2'
                       ],
     url='https://github.com/TheBrownLab/PhyloFisher',
     license='MIT',

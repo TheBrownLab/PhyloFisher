@@ -1,5 +1,5 @@
 {% set name = "phylofisher" %}
-{% set version = "1.0.0" %}
+{% set version = "1.0.2" %}
 
 package:
   name: "{{ name|lower }}"
@@ -14,16 +14,16 @@ build:
 
 requirements:
   host:
-    - biopython
-    - ete3
-    - matplotlib
-    - numpy
-    - pandas
-    - pip
-    - pyqt
-    - python
-    - scipy
-    - binutils
+    - biopython=1.78
+    - ete3=3.1.2
+    - matplotlib=3.4.1
+    - numpy=1.20.2
+    - pandas=1.2.4
+    - pip=21.0.1
+    - pyqt=5.12.3
+    - python=3.7.10
+    - scipy=1.6.2
+    - binutils=1.0.1
     - parasorter
     - trimal=1.4.1
     - raxml=8.2.12
@@ -39,15 +39,16 @@ requirements:
     - dist_est=1.1
     - astral=5.7.3
   run:
-    - biopython
-    - ete3
-    - matplotlib
-    - numpy
-    - pandas
-    - pyqt
-    - python
-    - scipy
-    - binutils
+    - biopython=1.78
+    - ete3=3.1.2
+    - matplotlib=3.4.1
+    - numpy=1.20.2
+    - pandas=1.2.4
+    - pip=21.0.1
+    - pyqt=5.12.3
+    - python=3.7.10
+    - scipy=1.6.2
+    - binutils=1.0.1
     - parasorter
     - trimal=1.4.1
     - raxml=8.2.12

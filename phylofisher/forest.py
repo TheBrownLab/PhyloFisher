@@ -569,7 +569,6 @@ if __name__ == '__main__':
         args.input_metadata = f'{args.input}/input_metadata.tsv'
         color_conf = f'{args.input}/tree_colors.tsv'
 
-        trees_folder = f'{args.input}/trees'
         args.input = f'{args.input}/trees'
 
     else:

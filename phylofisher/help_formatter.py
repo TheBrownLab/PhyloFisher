@@ -8,7 +8,7 @@ today = date.today()
 
 class CustomHelpFormatter(argparse.HelpFormatter):
     """
-    This class changes the way the help ouput is displayed
+    This class changes the way the help output is displayed
     """
 
     def _format_action_invocation(self, action):
@@ -36,10 +36,10 @@ def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre
     """
     Function to add argparse arguments used in all scripts
 
-    input: argparse group class instace "optional"
-           argparse group class instace "required"
-           in_help = help messge output for input
-           out_help = help messge output for output
+    input: argparse group class instance "optional"
+           argparse group class instance "required"
+           in_help = help message output for input
+           out_help = help message output for output
     """
 
     # Required
@@ -62,10 +62,10 @@ def add_global_arguments(parser, optional, required, in_help, out_help, inp, pre
                               Example: path/to/input/prefix*"""))
         optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='',
                               help=textwrap.dedent("""\
-                                  Suffix of input files.
-                                  Default: NONE
-                                  Example: path/to/input/*suffix
-                                  """))
+                              Suffix of input files.
+                              Default: NONE
+                              Example: path/to/input/*suffix
+                              """))
     optional.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS,
                           help=textwrap.dedent("""\
                                       Show this help message and exit.
@@ -78,6 +78,7 @@ def initialize_argparse(name: object, desc: object, usage: object) -> object:
     """
     formatter = lambda prog: MyHelpFormatter(prog, max_help_position=100)
 
+    # noinspection PyTypeChecker
     parser = argparse.ArgumentParser(prog=name,
                                      description=desc,
                                      usage=usage,
@@ -85,7 +86,7 @@ def initialize_argparse(name: object, desc: object, usage: object) -> object:
                                      add_help=False,
                                      epilog=textwrap.dedent("""\
                                          additional information:
-                                            Version: 1.0.0
+                                            Version: 1.0.2
                                             GitHub: https://github.com/TheBrownLab/PhyloFisher
                                             Cite: 
                                             """))

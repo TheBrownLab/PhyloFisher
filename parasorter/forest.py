@@ -2,6 +2,7 @@
 import configparser
 import glob
 import os
+import tarfile
 import textwrap
 from collections import defaultdict, Counter
 from multiprocessing import Pool
@@ -655,12 +656,19 @@ if __name__ == '__main__':
     in_help = 'Path to sgt_constructor_out_<M.D.Y>/trees'
     args = get_args(parser, optional, required, pre_suf=False, in_help=in_help)
 
-    trees_folder = args.input
     output_folder = args.output
 
-    args.metadata = str(os.path.join(args.input, 'metadata.tsv'))
-    color_conf =  str(os.path.join(args.input, 'tree_colors.tsv'))
-    args.input_metadata = str(os.path.join(args.input, 'input_metadata.tsv'))
+    with tarfile.open(args.input, "r:gz") as tar:
+        tar.extractall()
+        tar.close()
+
+    args.input = args.input.split('.tar.gz')[0]
+    trees_folder = f'{args.input}/trees'
+    args.metadata = f'{args.input}/metadata.tsv'
+    args.input_metadata = f'{args.input}/input_metadata.tsv'
+    color_conf = f'{args.input}/tree_colors.tsv'
+
+    args.input = f'{args.input}/trees'
 
     if not args.backpropagate:
         os.mkdir(output_folder)
