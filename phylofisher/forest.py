@@ -531,7 +531,7 @@ def backpropagate_contamination(tree_file, cont_names):
 
 
 if __name__ == '__main__':
-    description = 'Inspects single gene trees for contamination.'
+    description = 'Render .svg and .tsv files of single gene trees for visualization with ParaSorter.'
     parser, optional, required = help_formatter.initialize_argparse(name='forest.py',
                                                                     desc=description,
                                                                     usage='forest.py [OPTIONS] -i <in_dir>')
@@ -549,11 +549,12 @@ if __name__ == '__main__':
                           Default: N=1"""))
     optional.add_argument('--local_run', action='store_true',
                           help=textwrap.dedent("""\
-                          To be used when sgt_constructor_out.tar.gz has been downloaded from a server
-                          for single gene tree visualizations to be rendered locally. 
+                          To be used when sgt_constructor_out.tar.gz has been downloaded from a server for
+                          single gene tree visualizations to be rendered locally.
                           """))
 
-    in_help = 'Path to sgt_constructor_out_<M.D.Y>/trees'
+    in_help = 'Path to sgt_constructor_out_<M.D.Y>/trees if run remotely or sgt_constructor_out_<M.D.Y>.tar.gz ' \
+              'if run locally'
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, in_help=in_help)
 
     output_folder = args.output

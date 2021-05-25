@@ -111,7 +111,6 @@ def initialize_argparse(name: object, desc: object, usage: object) -> object:
 
 def get_args(parser, optional, required, pre_suf=True, inp_dir=True, out_dir=True,
              in_help='Path to input directory'):
-
     out_help = ('Path to user-defined output directory\n'
                 f'Default: ./{format(parser.prog).split(".")[0]}_out_<M.D.Y>')
 
@@ -153,7 +152,8 @@ def parse_metadata(metadata, input_metadata=None):
             full = sline[1].strip()
             if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
                 color_dict[group] = 'white'
-            metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full, 'Lower Taxonomy': sub_tax}
+            metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full,
+                                  'Lower Taxonomy': sub_tax}
     if input_metadata:
         for line in open(input_metadata):
             if "FILE_NAME" not in line:
@@ -259,7 +259,8 @@ def expected_neighborhood(parent, cont_key_rank):
     key = cont_key_rank[0]
     rank = cont_key_rank[1]
     # check that rank is valid (group, Lower Taxonomy, org)
-    assert rank in ['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'], f'{rank} has to be Higher Taxonomy,Lower Taxonomy or org'
+    assert rank in ['Higher Taxonomy', 'Lower Taxonomy',
+                    'Unique ID'], f'{rank} has to be Higher Taxonomy,Lower Taxonomy or org'
     for org in parent.get_leaf_names():
         if (org.count('_') != 4):
             if '..' in org:
@@ -358,8 +359,6 @@ def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
         build_len, len_dict = get_build_len(name_)
         len_info = f'Final Align Len: {build_len}'
         len_dict = {k: round(v / build_len, 2) for k, v in len_dict.items()}
-
-
 
     if not backpropagation:
         table = open(f"{output_folder}/{name_.split('_')[0]}.tsv", 'w')
@@ -636,10 +635,11 @@ def backpropagate_contamination(tree_file, cont_names):
 
 
 if __name__ == '__main__':
-    description = 'Inspects single gene trees for contamination.'
+    description = 'Render .svg and .tsv files of single gene trees for visualization with ParaSorter. \n' \
+                  'This is a local only version of forest.py that can be run on Linux, macOS, and Windows.'
     parser, optional, required = initialize_argparse(name='forest.py',
-                                                                    desc=description,
-                                                                    usage='forest.py [OPTIONS] -i <in_dir>')
+                                                     desc=description,
+                                                     usage='forest.py [OPTIONS] -i <in_dir>')
     # Add Arguments Specific to this script
     # Optional Arguments
     optional.add_argument('-a', '--contaminants', metavar='<contams.tsv>',
@@ -653,7 +653,8 @@ if __name__ == '__main__':
                           Number of threads to be used, where N is an integer. 
                           Default: N=1"""))
 
-    in_help = 'Path to sgt_constructor_out_<M.D.Y>/trees'
+    in_help = 'Path to sgt_constructor_out_<M.D.Y>.tar.gz that was downloaded to the local machine ' \
+              'from a remote server'
     args = get_args(parser, optional, required, pre_suf=False, in_help=in_help)
 
     output_folder = args.output
