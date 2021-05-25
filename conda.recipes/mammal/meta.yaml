@@ -3,10 +3,10 @@ package:
   version: 1.1.1
 
 source:
-  path: ../../../lib/mammal-1.1.1/
+  path: ../../lib/mammal-1.1.1/
 
 build:
-  number: 6
+  number: 7
 
 requirements:
   build:

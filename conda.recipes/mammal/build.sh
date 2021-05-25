@@ -9,6 +9,7 @@ cp mult-data ${PREFIX}/bin
 cp mult-mix-lwt ${PREFIX}/bin
 cp charfreq ${PREFIX}/bin
 cp dgpe ${PREFIX}/bin
+cp *dat ${PREFIX}/bin
 
 mkdir -p ${PREFIX}/etc/conda/activate.d
 
@@ -18,5 +19,5 @@ cat > ${PREFIX}/etc/conda/activate.d/${PKG_NAME}_activate.sh <<EOF
 if [ -d "~/.mammal" ]; then rm -Rf ~/.mammal; fi
 mkdir ~/.mammal
 
-cp ${PREFIX}/*.dat ~/.mammal
+cp ${PREFIX}/bin/*.dat ~/.mammal
 EOF
