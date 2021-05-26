@@ -116,19 +116,21 @@ def make_plot(s, plot_name, y_count, genes=True):
                 s_colors[i] = colors_threshold[threshhold]
     df = s.to_frame()
     df['colors'] = s_colors  # Adds color list as a column in this DataFrame
-    df_colors = tuple([x for x in df['colors']])  # Converts list to tuple because df.plot requires tuple not list
+    df_colors = [x for x in df['colors']]  # Converts list to tuple because df.plot requires tuple not list
     threshold_counts = Counter(df['colors'])
 
     # initailizng plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    df.plot(kind='bar',
-            width=0.85,
-            color=[df_colors],
-            figsize=(35, 10),
-            legend=False,
-            fontsize=8,
-            ax=ax)
+    df.plot.bar(width=0.85,
+                # color=df_colors,
+                figsize=(35, 10),
+                legend=False,
+                fontsize=8,
+                ax=ax)
+
+
+
     ax.set_title(f'{calculated_s} Completeness by {calc_by}', fontsize=30)
 
     # Legend
@@ -162,7 +164,7 @@ def make_plot(s, plot_name, y_count, genes=True):
     plt.axhline(y=1, xmin=0, xmax=1, color='black', zorder=0)
 
     # Top X-Axis
-    gene_num = len(df.index)
+    gene_num = len(df.index) - 1
     ax2 = ax.twiny()
     ax2.set_xlim(ax.get_xlim())
     ax2.set_xticks(range(-1, gene_num, 5))
@@ -203,7 +205,7 @@ def backup(dfo):
         backups = os.listdir(f'{dfo}/backups')
         backups.sort(key=lambda date: datetime.strptime(date, '%d-%b-%Y_%H:%M:%S'), reverse=True)
         latest_backup = backups[0]
-        
+
         back_files = {}
         db_files = {}
         os.mkdir(f'{dfo}/backups/{now}')
@@ -226,13 +228,11 @@ def backup(dfo):
         for k, v in db_files.items():
             if k == 'metadata.tsv' or k == 'tree_colors.tsv':
                 dest = k
-                up_dir = '..'
             else:
                 dest = '/'.join(v.split('/')[-2:])
-                up_dir = '../..'
 
             if k in back_files.keys() and get_md5(db_files[k]) == get_md5(back_files[k]):
-                os.symlink(f'{up_dir}/{latest_backup}/{dest}', f'{dfo}/backups/{now}/{dest}')
+                os.symlink(f'{dfo}/backups/{latest_backup}/{dest}', f'{dfo}/backups/{now}/{dest}')
             else:
                 shutil.copy(v, f'{dfo}/backups/{now}/{dest}')
 
