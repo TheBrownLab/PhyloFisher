@@ -2,7 +2,6 @@
 import textwrap
 
 from Bio import SeqIO
-from Bio.Alphabet import generic_protein
 from Bio.Seq import Seq
 
 from phylofisher import help_formatter
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     with open(args.input, 'r') as infile, open(f'{args.output}.{out_dict[args.out_format]}', 'w') as outfile:
         all_records = []
         # SeqIO parses input file
-        for record in SeqIO.parse(infile, format=args.in_format, alphabet=generic_protein):
+        for record in SeqIO.parse(infile, format=args.in_format):
             # Iterates through the key dictionary's keys
             for nuc in key.keys():
                 # Iterates through key's values
@@ -60,7 +59,7 @@ if __name__ == '__main__':
                     # Replaces aa with nuc and X's with -'s
                     sequence = str(record.seq).replace(aa, nuc).replace("X", "-")
                     # Creates new SeqIO record
-                    record.seq = Seq(sequence, alphabet=generic_protein)
+                    record.seq = Seq(sequence)
                     # Appends newly created SeqIO record to a list of SeqIO records to be used by SeqIO.write()
                     all_records.append(record)
 

@@ -209,21 +209,11 @@ def add_to_meta(abbrev):
                'Higher Taxonomy': input_info[abbrev]['tax'].replace('*', ''),
                'Lower Taxonomy': input_info[abbrev]['subtax'].replace('*', ''),
                'Data Type': input_info[abbrev]['data_type'],
-               'Notes': input_info[abbrev]['notes']
+               'Source': input_info[abbrev]['notes']
                }
 
-    taxa_comp, gene_count = tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=False)
-    bin_matrix = tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=True)
-    taxa_comp = taxa_comp.to_dict()
-
     df = pd.read_csv(metadata, delimiter='\t')
-    print(df)
     df.index = df['Unique ID']
-
-    comp_list = [taxa_comp[ind] if ind in taxa_comp else 0 for ind in df.index]
-    df['Completeness'] = comp_list
-    df['Completeness'] = df['Completeness'] * 100
-    df['Completeness'] = df['Completeness'].round(2)
 
     df = df.append(new_row, ignore_index=True)
     df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'])
@@ -277,7 +267,7 @@ def rebuild_db():
     cwd = os.getcwd()
     os.chdir(dfo)
     args.rename = None
-    build_database.main(args, 4, True, 0.1)
+    build_database.main(args, args.threads, True, 0.1)
     os.chdir(cwd)
 
 
@@ -309,9 +299,6 @@ def main():
         new_database(table)
 
     rebuild_db()
-
-    matrix = tools.completeness(args, f'{dfo}/orthologs')
-    matrix.to_csv(f'{dfo}/bin_matrix.tsv', sep='\t')
     cp_proteomes()
 
 
@@ -335,6 +322,12 @@ if __name__ == '__main__':
                             Unique ID (taxon 2)
                             """))
 
+    optional.add_argument('-t', '--threads', type=int, metavar='N', default=1,
+                          help=textwrap.dedent("""\
+                          Number of threads, where N is an integer.
+                          Default: 1
+                          """))
+
     in_help = 'Path to forest output directory to use for database addition.'
     args = help_formatter.get_args(parser, optional, required, out_dir=False, pre_suf=False, in_help=in_help)
 
@@ -344,7 +337,7 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
-    tools.backup()
+    tools.backup(dfo)
 
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))

@@ -107,16 +107,15 @@ def subset_taxa():
 
             for record in SeqIO.parse(infile, 'fasta'):
                 # Only includes taxa marked "yes" in select_taxa.tsv
+
                 if record.description in taxa:
+                    records.append(record)
 
-                    # Selects longest sequence from taxa comprising the chimera
-                    if args.chimeras and record.description in chimeric_taxa:
-                        for key in chimeras.keys():
-                            if record.description in chimeras[key] and len(record.seq) > len(chimera_seqs[key]):
-                                chimera_seqs[key] = str(record.seq)
+                elif args.chimeras and record.description in chimeric_taxa:
+                    for key in chimeras.keys():
+                        if record.description in chimeras[key] and len(record.seq) > len(chimera_seqs[key]):
+                            chimera_seqs[key] = str(record.seq)
 
-                    else:
-                        records.append(record)
 
             if args.chimeras:
                 for org, seq in chimera_seqs.items():
@@ -151,7 +150,7 @@ if __name__ == '__main__':
                                                                           '[OPTIONS]')
 
     # Optional Arguments
-    optional.add_argument('--chimeras', type=str, metavar='orthologs.tsv', default=None,
+    optional.add_argument('--chimeras', type=str, metavar='chimeras.tsv', default=None,
                           help=textwrap.dedent("""\
                           Path to chimeras.tsv. This will collapses taxa listed in chimera.tsv into a chimera 
                           keeping the longest sequence for each gene.

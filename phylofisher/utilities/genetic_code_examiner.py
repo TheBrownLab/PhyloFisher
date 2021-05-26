@@ -208,7 +208,8 @@ def genecode_plot(res_list_dict, all_codons, transcriptome):
                     final_result.plot.bar()
                     plt.title(f"{codon.replace('T', 'U')} (The Standard Code: {std_code[codon]})")
                     plt.xticks(rotation='horizontal')
-                    plt.ylabel('conserved positions')
+                    plt.ylabel('Conserved Positions')
+                    plt.xlabel('IUPAC Amino Acid Code')
                     pdf.savefig(bbox_inches='tight')
                     plt.close()
 
@@ -280,7 +281,7 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('-c', '--conserved', type=float, metavar='0-1', default=0.7,
                           help=textwrap.dedent("""\
-                          Conservation level. 0-1. Default is 0.7
+                          Conservation level. 0-1.
                           Default: 0.7 (70%%)
                           """))
     optional.add_argument('-e', '--blast_evalue', type=str, metavar='1e-X', default='1e-30',

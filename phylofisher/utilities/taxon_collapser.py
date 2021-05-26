@@ -63,21 +63,11 @@ def add_to_meta(abbrev, input_info):
                'Higher Taxonomy': input_info[abbrev][1],
                'Lower Taxonomy': input_info[abbrev][2],
                'Source': 'taxon_collapser.py',
-               'Data Type': 'Collapsed',
-               'Notes': ','.join(input_info[abbrev][3:])
+               'Data Type': 'Collapsed'
                }
-
-    taxa_comp, gene_count = tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=False)
-    bin_matrix = tools.completeness(args, str(Path(dfo, f'orthologs/')), genes=True)
-    taxa_comp = taxa_comp.to_dict()
 
     df = pd.read_csv(metadata, delimiter='\t')
     df.index = df['Unique ID']
-
-    comp_list = [taxa_comp[ind] if ind in taxa_comp else 0 for ind in df.index]
-    df['Completeness'] = comp_list
-    df['Completeness'] = df['Completeness'] * 100
-    df['Completeness'] = df['Completeness'].round(2)
 
     df = df.append(new_row, ignore_index=True)
     df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'])
@@ -106,7 +96,6 @@ def collapse():
 
         for record in record_dict.values():
             if str(record.seq) != '':
-                print(record)
                 records.append(record)
 
         with open(gene_file, 'w') as outfile:
@@ -126,8 +115,8 @@ if __name__ == '__main__':
 
     required.add_argument('-i', '--input', type=str, metavar='to_collapse.tsv', default=None,
                           help=textwrap.dedent("""\
-                          Path to TSV formatted file containing taxa to be collapsed.
-                          Example Row: "CollapsedName   Taxon1  Taxon2  ... TaxonN"""))
+                          A .tsv containing a Unique ID, higher and lower taxonomic designations, 
+                           and the Unique IDs of the taxa to collapse, for each chimera one per line"""))
     args = help_formatter.get_args(parser, optional, required,
                                    out_dir=False, pre_suf=False, inp_dir=False)
 
@@ -137,6 +126,6 @@ if __name__ == '__main__':
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
     metadata = str(os.path.join(dfo, 'metadata.tsv'))
 
-    tools.backup()
+    tools.backup(dfo)
     check_metadata()
     collapse()
