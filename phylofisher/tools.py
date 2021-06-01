@@ -111,25 +111,24 @@ def make_plot(s, plot_name, y_count, genes=True):
     # Assigns color to genes depending on the completeness. Based off dict above
     s_colors = [''] * len(s.index)
     for i, row in enumerate(s):
-        for j, threshhold in enumerate(colors_threshold.keys()):
-            if row >= threshhold:  # Assigns color based on completeness value
-                s_colors[i] = colors_threshold[threshhold]
+        for j, threshold in enumerate(colors_threshold.keys()):
+            if row >= threshold:  # Assigns color based on completeness value
+                s_colors[i] = colors_threshold[threshold]
     df = s.to_frame()
     df['colors'] = s_colors  # Adds color list as a column in this DataFrame
     df_colors = [x for x in df['colors']]  # Converts list to tuple because df.plot requires tuple not list
     threshold_counts = Counter(df['colors'])
 
-    # initailizng plot
+    # initializing plot
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    df.plot.bar(width=0.85,
-                # color=df_colors,
-                figsize=(35, 10),
-                legend=False,
-                fontsize=8,
-                ax=ax)
-
-
+    s.plot(width=0.85,
+           color=df_colors,
+           figsize=(35, 10),
+           legend=False,
+           fontsize=8,
+           ax=ax,
+           kind='bar')
 
     ax.set_title(f'{calculated_s} Completeness by {calc_by}', fontsize=30)
 

@@ -152,8 +152,8 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('--chimeras', type=str, metavar='chimeras.tsv', default=None,
                           help=textwrap.dedent("""\
-                          A TSV containing chimeras, higher and lower taxonomic designations, 
-                          and the taxa comprising each chimera.
+                           A .tsv containing a Unique ID, higher and lower taxonomic designations, 
+                           and the Unique IDs of the taxa to collapse, for each chimera one per line
                           """))
 
     args = help_formatter.get_args(parser, optional, required, inp_dir=False, pre_suf=False, out_dir=False)
