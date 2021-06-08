@@ -16,8 +16,9 @@ mkdir -p ${PREFIX}/etc/conda/activate.d
 cat > ${PREFIX}/etc/conda/activate.d/${PKG_NAME}_activate.sh <<EOF
 #!/bin/bash
 
-if [ -d "~/.mammal" ]; then rm -Rf ~/.mammal; fi
-mkdir ~/.mammal
+if [ -d "~/.mammal" ]; then rm -Rf ~/.mammal;
+  mkdir ~/.mammal
+fi
 
 cp ${PREFIX}/bin/*.dat ~/.mammal
 EOF

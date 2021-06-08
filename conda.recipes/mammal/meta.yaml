@@ -6,7 +6,7 @@ source:
   path: ../../lib/mammal-1.1.1/
 
 build:
-  number: 7
+  number: 9
 
 requirements:
   build:
@@ -15,14 +15,11 @@ requirements:
     - {{ compiler('cxx') }}
     - {{ compiler('gfortran') }}
   host:
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - {{ compiler('gfortran') }}
-  run:
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - {{ compiler('gfortran') }}
     - r-quadprog
+    - r-base
+  run:
+    - r-quadprog
+    - r-base
 
 about:
     home: https://www.mathstat.dal.ca/~tsusko/doc/mammal.pdf
