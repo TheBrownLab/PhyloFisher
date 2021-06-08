@@ -14,11 +14,12 @@ def list_backups():
     :return:
     """
     print('Available Backups to Restore From:\n')
-    print(f'Backup Num:\tDate:\t\tTime')
+    print(f'Backup Num:\tDate:\t\tTime:')
     for i, date_time in enumerate(backups):
-        date = date_time.split('_')[0]
-        time = date_time.split('_')[1]
-        print(f'{i + 1}\t\t{date}\t{time}')
+        date_time_str = datetime.strftime(date_time, "%d-%b-%Y_%H-%M-%S")
+        date = date_time_str.split('_')[0]
+        time = date_time_str.split('_')[1]
+        print(f'{i + 1}\t\t{date.replace("-"," ")}\t{time.replace("-",":")}')
 
 
 def restore():
@@ -26,26 +27,27 @@ def restore():
     Restores database from user specified backup
     :return:
     """
+    backup_dir = f'{args.database}/backups/{datetime.strftime(backups[args.restore - 1], "%d-%b-%Y_%H-%M-%S")}'
 
     if os.path.isdir(f'{args.database}/orthologs'):
         shutil.rmtree(f'{args.database}/orthologs')
-    shutil.copytree(f'{backup_dir}/{backups[args.restore - 1]}/orthologs', f'{args.database}/orthologs')
+    shutil.copytree(f'{backup_dir}/orthologs', f'{args.database}/orthologs')
 
     if os.path.isdir(f'{args.database}/paralogs'):
         shutil.rmtree(f'{args.database}/paralogs')
-    shutil.copytree(f'{backup_dir}/{backups[args.restore - 1]}/paralogs', f'{args.database}/paralogs')
+    shutil.copytree(f'{backup_dir}/paralogs', f'{args.database}/paralogs')
 
     if os.path.isfile(f'{args.database}/metadata.tsv'):
         os.remove(f'{args.database}/metadata.tsv')
-    shutil.copy(f'{backup_dir}/{backups[args.restore - 1]}/metadata.tsv', f'{args.database}/metadata.tsv')
+    shutil.copy(f'{backup_dir}/metadata.tsv', f'{args.database}/metadata.tsv')
 
     if os.path.isfile(f'{args.database}/tree_colors.tsv'):
         os.remove(f'{args.database}/tree_colors.tsv')
-    shutil.copy(f'{backup_dir}/{backups[args.restore - 1]}/tree_colors.tsv', f'{args.database}/tree_colors.tsv')
+    shutil.copy(f'{backup_dir}/tree_colors.tsv', f'{args.database}/tree_colors.tsv')
 
     if os.path.isdir(f'{args.database}/proteomes'):
         shutil.rmtree(f'{args.database}/proteomes')
-    shutil.copytree(f'{backup_dir}/{backups[args.restore - 1]}/proteomes', f'{args.database}/proteomes')
+    shutil.copytree(f'{backup_dir}/proteomes', f'{args.database}/proteomes')
 
 
 if __name__ == '__main__':
@@ -72,7 +74,8 @@ if __name__ == '__main__':
 
     backup_dir = f'{os.path.abspath(args.database)}/backups'
     backups = os.listdir(backup_dir)
-    backups.sort(key=lambda date: datetime.strptime(date, '%d-%b-%Y_%H:%M:%S'), reverse=True)
+    backups = [datetime.strptime(date, '%d-%b-%Y_%H-%M-%S') for date in backups]
+    backups.sort()
 
     if args.list_backups:
         list_backups()

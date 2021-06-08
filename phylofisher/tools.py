@@ -198,11 +198,11 @@ def first_backup(dfo, date_time):
 
 
 def backup(dfo):
-    now = datetime.now().strftime('%d-%b-%Y_%H:%M:%S')
+    now = datetime.now().strftime('%d-%b-%Y_%H-%M-%S')
 
     if os.path.isdir(f'{dfo}/backups'):
         backups = os.listdir(f'{dfo}/backups')
-        backups.sort(key=lambda date: datetime.strptime(date, '%d-%b-%Y_%H:%M:%S'), reverse=True)
+        backups.sort(key=lambda date: datetime.strptime(date, '%d-%b-%Y_%H-%M-%S'), reverse=True)
         latest_backup = backups[0]
 
         back_files = {}
