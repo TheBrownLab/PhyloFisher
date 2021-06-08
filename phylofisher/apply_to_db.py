@@ -33,7 +33,7 @@ def dataset_orgs():
 
 def taxa_to_exclude():
     to_skip = set()
-    with open(args.to_exclude, 'w') as infile:
+    with open(args.to_exclude, 'r') as infile:
         for line in infile:
             unique_id = line.strip().split(',')[0]
             to_skip.add(unique_id)
@@ -303,7 +303,9 @@ def main():
 
 
 if __name__ == '__main__':
-    desc = ''
+    desc = ('Apply parsing decisions and add new data to the database. \n\n'
+            'NOTE: If apply_to_db.py fails for any reason, see backup_resoration.py \n'
+            ' and restore you database from the proper backup')
     parser, optional, required = help_formatter.initialize_argparse(name='apply_to_db.py',
                                                                     desc=desc,
                                                                     usage="apply_to_db.py -i <in_dir>")

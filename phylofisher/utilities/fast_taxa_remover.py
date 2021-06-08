@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parser, optional, required = help_formatter.initialize_argparse(name='fast_taxa_remover.py',
                                                                     desc=description,
                                                                     usage='fast_taxa_remover.py [OPTIONS] '
-                                                                          '-t <tree> '
+                                                                          '-tr <tree> '
                                                                           '-m <matrix> '
                                                                           '-i <num_of_iterations>')
     # Required Arguments
