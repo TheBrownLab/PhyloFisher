@@ -96,7 +96,9 @@ def subset_taxa():
     Subsets taxa from the Database into a new directory to be included in the final dataset
     """
     taxa = parse_taxa_tsv()
-    chimeras, chimeric_taxa = get_chimeras()
+
+    if args.chimeras:
+        chimeras, chimeric_taxa = get_chimeras()
 
     files = [file for file in os.listdir(args.output)]
 

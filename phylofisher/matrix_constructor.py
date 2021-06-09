@@ -71,7 +71,7 @@ def trim_and_align(gene):
 
     # trimal
     os.chdir(f'{args.output}/trimal')
-    bash(f'trimal -in {args.output}/divvier/{root}.aln.partial.fas -gt 0.80 -out {root}.gt80trimal -phylip')
+    bash(f'trimal -in {args.output}/divvier/{root}.aln.partial.fas -gt 0.80 -out {root}.gt80trimal.fas -fasta')
     os.chdir(args.output)
 
 
@@ -184,7 +184,7 @@ if __name__ == '__main__':
             if args.concatenation_only:
                 myformat = args.in_format
             else:
-                myformat = 'phylip-relaxed'
+                myformat = 'fasta'
             for record in SeqIO.parse(file, myformat):
                 length = len(record.seq)
                 seq_dict[record.id.split('_')[0]] = str(record.seq)
