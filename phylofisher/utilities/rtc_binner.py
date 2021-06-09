@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os
+import os, re
 import shutil
 import subprocess
 import textwrap
@@ -23,9 +23,9 @@ def run_raxml_rtc():
 
     for gene in genes:
         cmd = (f'raxmlHPC-PTHREADS-AVX2 '
-               f'-t {args.input}/RAxML_bipartitions.{gene}.{args.suffix} '
-               f'-z {args.input}/RAxML_bootstrap.{gene}.{args.suffix} '
-               f'-n IC.{gene}.{args.suffix} '
+               f'-t {args.input}/RAxML_bipartitions.{gene}{args.suffix} '
+               f'-z {args.input}/RAxML_bootstrap.{gene}{args.suffix} '
+               f'-n IC.{gene}{args.suffix} '
                f'-f i '
                f'-m PROTCATLGF '
                f'-T 2 '
@@ -44,7 +44,7 @@ def get_rtc():
     genes = [file.split('.')[1] for file in os.listdir(args.input) if 'RAxML_bipartitions.' in file]
     rtc_dict = {}
     for gene in genes:
-        with open(f'{args.output}/RAxML/RAxML_info.IC.{gene}.{args.suffix}', 'r') as infile:
+        with open(f'{args.output}/RAxML/RAxML_info.IC.{gene}{args.suffix}', 'r') as infile:
             for line in infile:
                 line = line.strip()
                 if 'Tree certainty for this tree:' in line:
@@ -75,19 +75,23 @@ def get_genes():
 
 def build_matrices():
     gene_subsets = get_genes()
+    gene_files = [os.path.join(args.input, file) for file in os.listdir(args.input)
+                  if file.endswith(out_dict[args.in_format])]
+
     for key, subset in gene_subsets.items():
         if os.path.isdir(f'{args.output}/rtc{key}'):
             shutil.rmtree(f'{args.output}/rtc{key}')
         os.mkdir(f'{args.output}/rtc{key}')
+    
+        for gene_file in gene_files:
+            for gene in subset:
+                if gene in gene_file:
+                    dst = f'{args.output}/rtc{key}/{os.path.basename(gene_file)}'
+                    shutil.copy(gene_file, dst)
 
-        for gene in subset:
-            src = f'{args.input}/{gene}.{args.suffix}.phy'
-            dst = f'{args.output}/rtc{key}/{gene}.{args.suffix}.phy'
-            shutil.copy(src, dst)
-
-        cmd = (f'forge.py '
+        cmd = (f'matrix_constructor.py '
                f'-i {args.output}/rtc{key} '
-               f'-o {args.output}/forge{key} '
+               f'-o {args.output}/matrix_constructor{key} '
                f'-if {args.in_format.lower()} '
                f'-of {args.out_format.lower()} '
                f'-c')
@@ -103,27 +107,43 @@ if __name__ == '__main__':
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Optional Arguments
-    optional.add_argument('--in_format', metavar='<format>', type=str, default='fasta',
+    optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                                  Desired format of the output steps.
-                                  Options: fasta, nexus, phylip (names truncated at 10 characters),
-                                  or phylip-relaxed (names are not truncated)
-                                  Default: phylip-relaxed
-                                  """))
-    optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
+                          Format of the input alignments.
+                          Options: fasta, nexus, phylip (names truncated at 10 characters),
+                          or phylip-relaxed (names are not truncated)
+                          Default: fasta
+                          """))
+
+    optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                                  Desired format of the output steps.
-                                  Options: fasta, nexus, phylip (names truncated at 10 characters), 
-                                  or phylip-relaxed (names are not truncated)
-                                  Default: phylip-relaxed
-                                  """))
+                          Desired format of the RTC binned alignments.
+                          Options: fasta, nexus, phylip (names truncated at 10 characters), 
+                          or phylip-relaxed (names are not truncated)
+                          Default: fasta
+                          """))
+
+    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='NONE',
+                          help=textwrap.dedent("""\
+                          Suffix of RAxML output files
+                          Example: RAxML_bipartitions.GENE.<SUFFIX>, RAxML_bootstrap.GENE.<SUFFIX>
+                          Default: NONE
+                          """))
 
     in_help = ('Path to directory containing single gene trees built from only orthologs, \n'
                'corresponding bootstrap value files, and corresponding alignments.')
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, pre_suf=False)
 
     args.output = os.path.abspath(args.output)
     args.input = os.path.abspath(args.input)
+
+    out_dict = {'fasta': 'fas',
+                'phylip': 'phy',
+                'phylip-relaxed': 'phy',
+                'nexus': 'nex'}
+
+    if args.suffix and args.suffix[0] != '.':
+        args.suffix = f'.{args.suffix}'
 
     if os.path.isdir(args.output):
         shutil.rmtree(args.output)
