@@ -1,5 +1,7 @@
 .idea/
-scratch/
+.vscode/
+.DS_Store
+__pycache__/
 PhyloFisher.egg-info/
 build/
 paper/
@@ -7,5 +9,5 @@ dist/
 phylofisher/__pycache__/
 phylofisher/utilities/__pycache__/
 phylofisher.egg-info/
-lib/parasorter/
-lib/archives.tar.gz
+archives/
+testing/
