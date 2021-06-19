@@ -222,7 +222,7 @@ def prepare_analyses(checks, root):
                 except FileNotFoundError:
                     pass
 
-            status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a '
+            status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4M -f a '
                                   f'-s {args.output}/trimal/{root}.final -n {root}.tre -x 123 -N 100 -p 12345')
             if status:
                 update_checkpoints(root, 'raxml')
@@ -268,15 +268,15 @@ def compress_output():
     """
     os.chdir(cwd)
 
-    source_dir = f'tmp/{args.output}'
+    source_dir = f'tmp/{args.output}-local'
 
     shutil.copytree(f'{args.output}/trees', f'{source_dir}/trees')
     shutil.copy(args.metadata, f'{source_dir}/{os.path.basename(args.metadata)}')
     shutil.copy(args.input_metadata, f'{source_dir}/{os.path.basename(args.input_metadata)}')
     shutil.copy(args.color_conf, f'{source_dir}/{os.path.basename(args.color_conf)}')
 
-    with tarfile.open(f'{args.output}.tar.gz', "x:gz") as tar:
-        tar.add(source_dir, arcname=args.output.split('/')[-1])
+    with tarfile.open(f'{args.output}-local.tar.gz', "x:gz") as tar:
+        tar.add(source_dir, arcname=f'{args.output.split("/")[-1]}-local')
 
     shutil.rmtree('tmp')
 
