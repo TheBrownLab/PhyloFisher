@@ -1,5 +1,10 @@
-### Windows
-1. Download the Windows version of forest.py. <br/>
-<a href="forest.py" download>Click to Download</a>
-2. Download the ParaSorter Windows installer. <br/>
-<a href="parasorter Setup 1.0.4.exe" download>Click to Download</a>
+## Windows, macOS, and Linux compatible forest.py and ParaSorter
+
+### forest.py
+<a href="forest.py" download>Click to Download</a> (os independent) <br/>
+
+
+### ParaSorter
+<a href="parasorter Setup 1.0.4.exe" download>parasorter Setup 1.0.4.exe</a> (Windows) <br/>
+<a href="parasorter-1.0.4.dmg" download>parasorter-1.0.4.dmg</a> (macOS) <br/>
+<a href="parasorter-1.0.4_amd64.deb" download>parasorter-1.0.4_amd64.deb</a> (Debian-based Linux distros) <br/>

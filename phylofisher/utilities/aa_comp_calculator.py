@@ -147,6 +147,10 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Path to input matrix for analysis.
                           """))
+    required.add_argument('-d', '--database', type=str, metavar='<db_dir>', required=True,
+                          help=textwrap.dedent("""\
+                          Path to database directory.
+                          """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Format of input matrix.
@@ -156,8 +160,11 @@ if __name__ == '__main__':
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
-    tree_colors = 'tree_colors.tsv'
-    metadata = 'metadata.tsv'
+    dfo = os.path.abspath(args.database)
+
+    tree_colors = f'{dfo}/tree_colors.tsv'
+    metadata = f'{dfo}/metadata.tsv'
+
     color_dict, tree_color_dict, meta_dict = parse_tree_colors()
 
     aa_comp_calc()
