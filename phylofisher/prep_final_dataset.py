@@ -105,7 +105,8 @@ def subset_taxa():
     for file in files:
         with open(f'{args.output}/{file}', 'r') as infile, open(f'{args.output}/tmp', 'w') as outfile:
             records = []
-            chimera_seqs = {k: '' for k in chimeras.keys()}
+            if args.chimeras:
+                chimera_seqs = {k: '' for k in chimeras.keys()}
 
             for record in SeqIO.parse(infile, 'fasta'):
                 # Only includes taxa marked "yes" in select_taxa.tsv
