@@ -3,6 +3,7 @@ import textwrap
 from datetime import date
 
 
+version = '1.0.7'
 today = date.today()
 
 
@@ -84,9 +85,9 @@ def initialize_argparse(name: object, desc: object, usage: object) -> object:
                                      usage=usage,
                                      formatter_class=formatter,
                                      add_help=False,
-                                     epilog=textwrap.dedent("""\
+                                     epilog=textwrap.dedent(f"""\
                                          additional information:
-                                            Version: 1.0.2
+                                            Version: {version}
                                             GitHub: https://github.com/TheBrownLab/PhyloFisher
                                             Cite: 
                                             """))
