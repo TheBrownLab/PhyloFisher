@@ -9,47 +9,21 @@ source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
 
 build:
-  number: 3
+  number: 6
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
   host:
-    - biopython=1.78
-    - ete3=3.1.2
-    - matplotlib=3.4.1
-    - numpy=1.20.2
-    - pandas=1.2.4
-    - pip=21.0.1
-    - pyqt=5.12.3
     - python=3.7.10
-    - scipy=1.6.2
-    - binutils=1.0.1
-    - parasorter
-    - trimal=1.4.1
-    - raxml=8.2.12
-    - hmmer=3.3
-    - diamond=0.9.36
-    - fasttree=2.1.10
-    - blast=2.9.0
-    - cd-hit=4.8.1
-    - mafft=7.455
-    - divvier=1.01
-    - bmge=1.12
-    - prequal=1.02
-    - dist_est=1.1
-    - astral=5.7.3
   run:
     - biopython=1.78
     - ete3=3.1.2
     - matplotlib=3.4.1
-    - numpy=1.20.2
     - pandas=1.2.4
     - pip=21.0.1
     - pyqt=5.12.3
     - python=3.7.10
-    - scipy=1.6.2
     - binutils=1.0.1
-    - parasorter
     - trimal=1.4.1
     - raxml=8.2.12
     - hmmer=3.3
