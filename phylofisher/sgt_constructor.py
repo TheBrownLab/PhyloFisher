@@ -11,49 +11,18 @@ from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-
 from Bio import SeqIO
-
 from phylofisher import help_formatter
 
+SNAKEFILE_PATH = f'{os.path.dirname(os.path.realpath(__file__))}/sgt_constructor.smk'
 
-def bash_command(cmd):
+def bash(cmd):
     """
     Function to run bash commands in a shell
     :param cmd:
     :return:
     """
-    command_run = subprocess.call(cmd, shell=True, executable='/bin/bash')  # ,
-    #  stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-    if command_run == 0:
-        return True
-    else:
-        return False
-
-
-def mkdir_and_cd(dir_name):
-    try:
-        os.mkdir(dir_name)
-    except FileExistsError:
-        pass
-    os.chdir(dir_name)
-
-
-def delete_gaps_stars(root):
-    """Removes -'s and *'s from alignments"""
-    file = f'{args.input}/{root}.{out_dict[args.in_format]}'
-    file_name = f'{root}.aa'
-    with open(file_name, 'w') as res:
-        for record in SeqIO.parse(file, args.in_format):
-            res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
-
-
-def x_to_dash(file):
-    """Replaces X's in alignments with -'s"""
-    file_name = f'{os.path.basename(file).split(".")[0]}.pre_bmge'
-    with open(f'{file_name}', 'w') as res:
-        for record in SeqIO.parse(file, 'fasta'):
-            res.write(f'>{record.name}\n{str(record.seq).replace("X", "-")}\n')
+    subprocess.run(cmd, shell=True, executable='/bin/bash')  # ,
 
 
 def read_full_proteins(core):
@@ -78,187 +47,43 @@ def good_length(trimmed_aln, threshold):
             else:
                 print('deleted:', record.name, coverage)
 
-
-def mk_checkpoint_tmp(files):
-    if os.path.isfile(f'checkpoint.tmp') is False:
-        with open(f'checkpoint.tmp', 'w') as outfile:
-            header = 'gene,prequal,mafft1,divvier1,bmge,mafft2,divvier2,trimal,raxml\n'
-            outfile.write(header)
-            for file in files:
-                outfile.write(f'{file}{9 * ",0"}\n')
-    else:
-        pass
+def get_genes():
+    return [file.split('.')[0] for file in os.listdir(args.input)]
 
 
-def get_checkpoints():
-    checks = {}
-    if os.path.isfile(f'{args.output}/checkpoint.tmp') is True:
-        with open(f'checkpoint.tmp', 'r') as infile:
-            for line in infile:
-                line = line.strip()
-                checks[line.split(',')[0]] = line.split(',')[1:]
+def get_outfiles():
+    outfiles = [f'{args.output}-local.tar.gz']
+    # for gene in genes:
+    #     outfile.append(f'some/path/to/{gene}')
 
-    return checks
+    return ' '.join(outfiles)
 
+def make_config():
+    config_frags = [
+        f'out_dir={args.output}',
+        f'in_dir={args.input}',
+        f'genes={",".join(get_genes())}',
+        f'metadata={args.metadata}',
+        f'tree_colors={args.color_conf}',
+        f'input_metadata={args.input_metadata}'
+    ]
 
-def update_checkpoints(root, prog):
-    filename = f'{args.output}/checkpoint.tmp'
-    tempfile = NamedTemporaryFile(mode='w', delete=False)
-
-    fields = ['gene', 'prequal', 'mafft1', 'divvier1', 'bmge', 'mafft2', 'divvier2', 'trimal', 'raxml']
-
-    with open(filename, 'r') as csvfile, tempfile:
-        reader = csv.DictReader(csvfile, fieldnames=fields)
-        writer = csv.DictWriter(tempfile, fieldnames=fields)
-        # Writes header to the output file
-        writer.writerow(next(reader))
-        for row in reader:
-            if row['gene'] == str(root):
-                row[prog] = 1
-            row = {'gene': row['gene'], 'prequal': row['prequal'], 'mafft1': row['mafft1'],
-                   'divvier1': row['divvier1'], 'bmge': row['bmge'], 'mafft2': row['mafft2'],
-                   'divvier2': row['divvier2'], 'trimal': row['trimal'], 'raxml': row['raxml']
-                   }
-            writer.writerow(row)
-    shutil.move(tempfile.name, filename)
+    return ' '.join(config_frags)
 
 
-def prepare_analyses(checks, root):
-    if (args.threads / file_count) > 1:
-        threads = int(args.threads / file_count)
-    else:
-        threads = 1
-    checks = checks[root]
-
-    for i, check in enumerate(checks):
-        # prequal
-        if i == 0 and check == '0':
-            mkdir_and_cd(f'{args.output}/prequal')
-            delete_gaps_stars(root)
-            status = bash_command(f'prequal {root}.aa')
-            if status:
-                update_checkpoints(root, 'prequal')
-            else:
-                break
-
-        # Length Filtration
-        elif i == 1 and check == '0':
-            mkdir_and_cd(f'{args.output}/length_filtration')
-            # mafft1
-            mkdir_and_cd('mafft')
-            # MAFFT - length filtration
-            status = bash_command(
-                f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 '
-                f'{args.output}/prequal/{root}.aa.filtered > {root}.aln')
-            if status:
-                update_checkpoints(root, 'mafft1')
-            else:
-                break
-
-        elif i == 2 and check == '0':
-            mkdir_and_cd(f'{args.output}/length_filtration')
-            mkdir_and_cd(f'{args.output}/length_filtration/divvier')
-            # Divvier - length filtration
-            status = bash_command(f'divvier -mincol 4 -partial {args.output}/length_filtration/mafft/{root}.aln')
-            if status:
-                shutil.move(f'../mafft/{root}.aln.partial.fas', f'./{root}.aln.divvy.fas')
-                shutil.move(f'../mafft/{root}.aln.PP', f'./{root}.aln.PP')
-                update_checkpoints(root, 'divvier1')
-            else:
-                break
-
-        elif i == 3 and check == '0':
-            mkdir_and_cd(f'{args.output}/length_filtration')
-            mkdir_and_cd(f'{args.output}/length_filtration/bmge')
-            # outputs pre_bmge
-            x_to_dash(f'{args.output}/length_filtration/divvier/{root}.aln.divvy.fas')
-            # BMGE
-            status = bash_command(f'bmge -t AA -g 0.3 -i {root}.pre_bmge -of {root}.bmge')
-            if status:
-                good_length(trimmed_aln=f'{root}.bmge', threshold=0.5)
-                update_checkpoints(root, 'bmge')
-            else:
-                break
-
-        # mafft2
-        elif i == 4 and check == '0':
-            mkdir_and_cd(f'{args.output}/mafft')
-            status = bash_command(
-                f'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 '
-                f'{args.output}/length_filtration/bmge/{root}.length_filtered > {root}.aln2')
-            if status:
-                update_checkpoints(root, 'mafft2')
-            else:
-                break
-
-        # divvier2
-        elif i == 5 and check == '0':
-            mkdir_and_cd(f'{args.output}/divvier')
-            status = bash_command(f'divvier -mincol 4 -partial {args.output}/mafft/{root}.aln2')
-            if status:
-                shutil.move(f'../mafft/{root}.aln2.partial.fas', f'./{root}.aln2.divvy.fas')
-                shutil.move(f'../mafft/{root}.aln2.PP', f'./{root}.aln2.PP')
-                update_checkpoints(root, 'divvier2')
-            else:
-                break
-
-        # trimal
-        elif i == 6 and check == '0':
-            mkdir_and_cd(f'{args.output}/trimal')
-            status = bash_command(f'trimal -in {args.output}/divvier/{root}.aln2.divvy.fas -gt 0.01 -out {root}.final')
-            if status:
-                update_checkpoints(root, 'trimal')
-            else:
-                break
-
-        # raxml
-        elif args.no_trees is False and i == 7 and check == '0':
-            mkdir_and_cd(f'{args.output}/RAxML')
-
-            files = glob.glob(f'*{root}*')
-            for f in files:
-                try:
-                    os.remove(f)
-                except FileNotFoundError:
-                    pass
-
-            status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4M -f a '
-                                  f'-s {args.output}/trimal/{root}.final -n {root}.tre -x 123 -N 100 -p 12345')
-            if status:
-                update_checkpoints(root, 'raxml')
-                mkdir_and_cd(f'{args.output}/trees')
-                shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
-                            f'{args.output}/trees/RAxML_bipartitions.{root}.tre')
-                shutil.copy(f'{args.output}/trimal/{root}.final',
-                            f'{args.output}/trees/{root}.final')
-                shutil.copy(f'{args.output}/length_filtration/bmge/{root}.bmge',
-                            f'{args.output}/trees/{root}.trimmed')
-            else:
-                break
-
-    return root, checks
-
-
-def make_trees_only(root):
-    """
-
-    :param root:
-    :return:
-    """
-    if (args.threads / file_count) > 1:
-        threads = int(args.threads / file_count)
-    else:
-        threads = 1
-
-    mkdir_and_cd(f'{args.output}/RAxML')
-    status = bash_command(f'raxmlHPC-PTHREADS-AVX2 -T {threads} -m PROTGAMMALG4XF -f a '
-                          f'-s {args.input}/{root} -n {root}.tre -x 123 -N 100 -p 12345')
-    if status:
-        mkdir_and_cd(f'{args.output}/trees')
-        shutil.copy(f'{args.output}/RAxML/RAxML_bipartitions.{root}.tre',
-                    f'{args.output}/trees/RAxML_bipartitions.{root}.tre')
-        shutil.copy(f'{args.input}/{root}',
-                    f'{args.output}/trees/{root}')
+def run_snakemake():
+    smk_frags = [
+        f'snakemake',
+        f'-s {SNAKEFILE_PATH}',
+        f'--config {make_config()}',
+        f'--cores {args.threads}',
+        f'--rerun-incomplete',
+        f'--keep-going',
+        f'--nolock'
+    ]
+    smk_cmd = ' '.join(smk_frags)
+    smk_cmd += ' ' + get_outfiles()
+    bash(smk_cmd)
 
 
 def compress_output():
@@ -320,34 +145,12 @@ if __name__ == '__main__':
     args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
     args.color_conf = str(os.path.abspath(config['PATHS']['color_conf']))
     args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
+    args.input = str(os.path.abspath(args.input[:-1])) if args.input.endswith('/') else str(os.path.abspath(args.input))
+    args.output = str(os.path.abspath(args.output[:-1])) if args.output.endswith('/') else str(os.path.abspath(args.output))
 
     out_dict = {'fasta': 'fas',
                 'phylip': 'phy',
                 'phylip-relaxed': 'phy',
                 'nexus': 'nex'}
 
-    # Parallelization of prepare_analyses function
-    cwd = os.getcwd()
-    args.input = os.path.abspath(args.input)
-    args.output = os.path.abspath(args.output)
-    mkdir_and_cd(args.output)
-
-    if args.trees_only:
-        roots = [file for file in os.listdir(args.input)]
-        prep_analyses = make_trees_only
-
-    else:
-        roots = [os.path.basename(file).split('.')[0] for file in os.listdir(args.input) if file.endswith(out_dict[args.in_format])]
-        mk_checkpoint_tmp(roots)
-        checkpoints = get_checkpoints()
-        prep_analyses = partial(prepare_analyses, checkpoints)
-
-    file_count = len(roots)
-    processes = args.threads
-    if file_count < args.threads:
-        processes = file_count
-
-    with Pool(processes=processes) as p:
-        all_checks = p.map(prep_analyses, roots)
-
-    compress_output()
+    run_snakemake()
