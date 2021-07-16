@@ -1,17 +1,9 @@
 #!/usr/bin/env python
 import configparser
-import csv
-import glob
 import os
-import shutil
 import subprocess
-import tarfile
 import textwrap
-from functools import partial
-from multiprocessing import Pool
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from Bio import SeqIO
 from phylofisher import help_formatter
 
 SNAKEFILE_PATH = f'{os.path.dirname(os.path.realpath(__file__))}/sgt_constructor.smk'
@@ -23,29 +15,6 @@ def bash(cmd):
     :return:
     """
     subprocess.run(cmd, shell=True, executable='/bin/bash')  # ,
-
-
-def read_full_proteins(core):
-    full_prots = {}
-    for record in SeqIO.parse(f'{args.output}/prequal/{core}.aa.filtered', 'fasta'):
-        full_prots[record.name] = record.seq
-    return full_prots
-
-
-def good_length(trimmed_aln, threshold):
-    core = trimmed_aln.split('.')[0]
-    full_proteins = read_full_proteins(core)
-    original_name = f'{core}.length_filtered'
-    length = None
-    with open(original_name, 'w') as res:
-        for record in SeqIO.parse(trimmed_aln, 'fasta'):
-            if length is None:
-                length = len(record.seq)
-            coverage = len(str(record.seq).replace('-', '').replace('X', '')) / len(record.seq)
-            if coverage > threshold:
-                res.write(f'>{record.description}\n{full_proteins[record.name]}\n')
-            else:
-                print('deleted:', record.name, coverage)
 
 
 def get_genes():
@@ -89,26 +58,6 @@ def run_snakemake():
     smk_cmd = ' '.join(smk_frags)
     smk_cmd += ' ' + get_outfiles()
     bash(smk_cmd)
-
-
-def compress_output():
-    """
-
-    :return:
-    """
-    os.chdir(cwd)
-
-    source_dir = f'tmp/{args.output}-local'
-
-    shutil.copytree(f'{args.output}/trees', f'{source_dir}/trees')
-    shutil.copy(args.metadata, f'{source_dir}/{os.path.basename(args.metadata)}')
-    shutil.copy(args.input_metadata, f'{source_dir}/{os.path.basename(args.input_metadata)}')
-    shutil.copy(args.color_conf, f'{source_dir}/{os.path.basename(args.color_conf)}')
-
-    with tarfile.open(f'{args.output}-local.tar.gz', "x:gz") as tar:
-        tar.add(source_dir, arcname=f'{args.output.split("/")[-1]}-local')
-
-    shutil.rmtree('tmp')
 
 
 if __name__ == '__main__':
