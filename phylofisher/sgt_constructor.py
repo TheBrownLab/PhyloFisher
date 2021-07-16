@@ -47,16 +47,19 @@ def good_length(trimmed_aln, threshold):
             else:
                 print('deleted:', record.name, coverage)
 
+
 def get_genes():
     return [file.split('.')[0] for file in os.listdir(args.input)]
 
 
 def get_outfiles():
-    outfiles = [f'{args.output}-local.tar.gz']
-    # for gene in genes:
-    #     outfile.append(f'some/path/to/{gene}')
+    if args.no_trees:
+        outfiles = [f'{args.output}/trimal/{gene}.final' for gene in get_genes()]
+    else:
+        outfiles = [f'{args.output}-local.tar.gz']
 
     return ' '.join(outfiles)
+    
 
 def make_config():
     config_frags = [
@@ -65,7 +68,9 @@ def make_config():
         f'genes={",".join(get_genes())}',
         f'metadata={args.metadata}',
         f'tree_colors={args.color_conf}',
-        f'input_metadata={args.input_metadata}'
+        f'input_metadata={args.input_metadata}',
+        f'trees_only={args.trees_only}',
+        f'no_trees={args.no_trees}'
     ]
 
     return ' '.join(config_frags)
