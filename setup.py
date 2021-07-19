@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='1.0.8',
+    version='0.0.8',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -15,6 +15,7 @@ setup(
              'phylofisher/select_taxa.py',
              'phylofisher/select_orthologs.py',
              'phylofisher/sgt_constructor.py',
+             'phylofisher/sgt_constructor.smk',
              'phylofisher/prep_final_dataset.py',
              'phylofisher/utilities/purge.py',
              'phylofisher/utilities/build_database.py',

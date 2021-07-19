@@ -12,7 +12,7 @@ source:
   url: "https://pypi.io/packages/source/p/phylofisher-dev/phylofisher-dev-0.0.8.tar.gz"
 
 build:
-  number: 2
+  number: 1
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
@@ -23,7 +23,7 @@ requirements:
     - ete3=3.1.2
     - matplotlib=3.4.1
     - pandas=1.2.4
-    - pip=21.0.1
+    # - pip=21.0.1
     - pyqt=5.12.3
     - python=3.7.10
     - binutils=1.0.1
@@ -41,7 +41,7 @@ requirements:
     - dist_est=1.1
     - astral=5.7.3
     - snakemake=6.5.3
-    - parasorter=1.0.3
+    # - parasorter=1.0.3
 
 test:
   imports:
