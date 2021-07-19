@@ -5,11 +5,8 @@ package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
-# source:
-#   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-
 source:
-  url: "https://pypi.io/packages/source/p/phylofisher-dev/phylofisher-dev-0.0.8.tar.gz"
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
 
 build:
   number: 1
@@ -23,7 +20,6 @@ requirements:
     - ete3=3.1.2
     - matplotlib=3.4.1
     - pandas=1.2.4
-    # - pip=21.0.1
     - pyqt=5.12.3
     - python=3.7.10
     - binutils=1.0.1
@@ -41,7 +37,6 @@ requirements:
     - dist_est=1.1
     - astral=5.7.3
     - snakemake=6.5.3
-    # - parasorter=1.0.3
 
 test:
   imports:
