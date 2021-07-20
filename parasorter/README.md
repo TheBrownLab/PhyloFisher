@@ -3,7 +3,7 @@
 ### forest_local.py
    - This is a standalone version of forest.py which includes all of the necessary phylofisher modules. forest_local.py is compatible with Windows, macOS, and Linux.  <br/>
   
-   - <a href="forest.py" 
+   - <a href="https://raw.githubusercontent.com/TheBrownLab/PhyloFisher/master/parasorter/forest_local.py" 
     download>Click to Download</a> (os independent)
 
 ### ParaSorter
