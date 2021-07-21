@@ -20,11 +20,11 @@ def parse_ortholog_tsv():
     :return:
     """
     with open('select_orthologs.tsv', 'r') as infile:
-        infile.readline()
+        header = infile.readline()
         genes_to_include = []
         for line in infile:
             line = line.strip()
-            if 'In-Group Completeness' in line:
+            if 'In-Group Completeness' in header:
                 gene, _, _, _, include = line.split('\t')
             else:
                 gene, _, include = line.split('\t')
