@@ -3,8 +3,11 @@
 ### forest_local.py
    - This is a standalone version of forest.py which includes all of the necessary phylofisher modules. forest_local.py is compatible with Windows, macOS, and Linux.  <br/>
   
-   - <a href="https://raw.githubusercontent.com/TheBrownLab/PhyloFisher/master/parasorter/forest_local.py" 
-    download>Click to Download</a> (os independent)
+   - <a id="raw-url" href="https://raw.githubusercontent.com/TheBrownLab/PhyloFisher/master/parasorter/forest_local.py" download='forest_local.py'>Click to Download
+   </a> 
+   (os independent)
+
+   - If forest_local.py does not download automatically, it may need to be saved manually. 
 
 ### ParaSorter
  - While ParaSorter is included in the PhyloFisher conda package, it maybe more convenient for users to install ParaSorter independently. For this reason, independent installs for Windows, macOS, and Linux are provided here.
