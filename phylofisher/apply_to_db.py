@@ -32,11 +32,11 @@ def dataset_orgs():
 
 
 def taxa_to_exclude():
-    to_skip = set()
+    to_skip = []
     with open(args.to_exclude, 'r') as infile:
         for line in infile:
             unique_id = line.strip().split(',')[0]
-            to_skip.add(unique_id)
+            to_skip.append(unique_id)
 
     return to_skip
 
@@ -50,22 +50,28 @@ def parse_input(input_metadata):
     if args.to_exclude:
         orgs_to_exc = taxa_to_exclude()
     input_info = defaultdict(dict)
-    for line in open(input_metadata):
-        sline = line.split('\t')
-        abbrev = sline[2].strip()
-        if abbrev in orgs_to_exc:
-            pass
-        else:
-            group = sline[3].strip()
-            full_name = sline[6].strip()
-            subtax = sline[4]
-            data_type = sline[7]
-            notes = sline[8].strip()
-            input_info[abbrev]['tax'] = group
-            input_info[abbrev]['full_name'] = full_name
-            input_info[abbrev]['subtax'] = subtax
-            input_info[abbrev]['data_type'] = data_type
-            input_info[abbrev]['notes'] = notes
+    with open(input_metadata, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            sline = line.split('\t')
+            abbrev = sline[2]
+
+            if 'Location' in line:
+                pass
+            elif abbrev in orgs_to_exc:
+                pass
+            else:
+                group = sline[3].strip()
+                full_name = sline[6].strip()
+                subtax = sline[4]
+                data_type = sline[7]
+                notes = sline[8].strip()
+                input_info[abbrev]['tax'] = group
+                input_info[abbrev]['full_name'] = full_name
+                input_info[abbrev]['subtax'] = subtax
+                input_info[abbrev]['data_type'] = data_type
+                input_info[abbrev]['notes'] = notes
+
     return input_info
 
 
@@ -177,8 +183,8 @@ def parse_table(table):
         name = tree_name.split('@')[-1]
         abbrev = name.split('.')[0]
         if '..' in name:
-            record = paralogs[name]
             if status == 'o':
+                record = paralogs[name]
                 # for cases when ortholog has not survived trimming
                 if abbrev in orthologs:
                     # prepare paralog name
@@ -190,9 +196,6 @@ def parse_table(table):
                 # add sequence to orthologs 
                 orthologs[abbrev] = record
                 # delete sequence from paralogs
-                del paralogs[name]
-            elif status == 'd':
-                # delete sequence
                 del paralogs[name]
 
     return orthologs, paralogs
@@ -235,7 +238,7 @@ def new_database(table):
     with open(orthologs_path, 'w') as res:
         # make changes in orthologs
         for name, record in orthologs.items():
-            if name not in meta_orgs:
+            if name not in meta_orgs and name not in to_exclude:
                 meta_orgs.add(name)
                 add_to_meta(name)
             res.write(f'>{name}\n{record.seq}\n')
@@ -243,7 +246,7 @@ def new_database(table):
     with open(paralogs_path, 'w') as res:
         # make changes in paralogs
         for name, record in paralogs.items():
-            if name.split('.')[0] not in meta_orgs:
+            if name.split('..')[0] not in meta_orgs and name.split('..')[0] not in to_exclude:
                 meta_orgs.add(name.split('.')[0])
                 add_to_meta(name.split('.')[0])
             res.write(f'>{name}\n{record.seq}\n')
@@ -305,7 +308,7 @@ def main():
 if __name__ == '__main__':
     desc = ('Apply parsing decisions and add new data to the database. \n\n'
             'NOTE: If apply_to_db.py fails for any reason, see backup_resoration.py \n'
-            ' and restore you database from the proper backup')
+            'and restore you database from the proper backup')
     parser, optional, required = help_formatter.initialize_argparse(name='apply_to_db.py',
                                                                     desc=desc,
                                                                     usage="apply_to_db.py -i <in_dir>")
@@ -341,6 +344,8 @@ if __name__ == '__main__':
 
     tools.backup(dfo)
 
+    to_exclude = taxa_to_exclude()
+    print(to_exclude)
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
     meta_orgs = dataset_orgs()

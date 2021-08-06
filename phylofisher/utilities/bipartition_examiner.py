@@ -15,6 +15,11 @@ from phylofisher import help_formatter
 plt.rcParams["figure.figsize"] = (10, 5)
 
 
+def get_taxa_set(trees):
+    """
+    """
+
+
 def bipartitions(tree):
     """
 
@@ -44,6 +49,12 @@ def support(trees):
     """
     bootstrap = []
     n_trees = 0
+    all_taxa = set()
+    for line in open(trees):
+        line = line.strip()
+        leaves = list(Tree(line).get_leaf_names())
+        all_taxa.update(leaves)
+
     for line in open(trees):
         line = line.strip('')
         tree = Tree(line)
@@ -53,7 +64,8 @@ def support(trees):
     counted = dict(Counter(bootstrap))
     for key, value in counted.items():
         norm_bootstrap[key] = value / n_trees
-    return norm_bootstrap
+    
+    return norm_bootstrap, all_taxa
 
 
 def get_support(group, supp_dict):
@@ -120,9 +132,10 @@ def file_to_series(file):
     :return:
     """
     print(file)
-    sup_dict = support(file)
+    sup_dict, all_taxa = support(file)
     group_sup = {}
     for group, orgs in queries:
+        orgs = set(orgs) - ((set(orgs) - all_taxa))
         group_sup[group] = get_support(orgs, sup_dict)
     s = pd.Series(group_sup)
     return s
@@ -142,6 +155,7 @@ def parse_bss():
         # column.name = f'Step {n}'
         columns.append(column)
         n += 1
+        
     return columns
 
 
