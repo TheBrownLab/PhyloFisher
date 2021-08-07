@@ -241,7 +241,8 @@ def new_database(table):
             if name not in meta_orgs and name not in to_exclude:
                 meta_orgs.add(name)
                 add_to_meta(name)
-            res.write(f'>{name}\n{record.seq}\n')
+            if name.split('..')[0] not in to_exclude:
+                res.write(f'>{name}\n{record.seq}\n')
 
     with open(paralogs_path, 'w') as res:
         # make changes in paralogs
@@ -249,7 +250,8 @@ def new_database(table):
             if name.split('..')[0] not in meta_orgs and name.split('..')[0] not in to_exclude:
                 meta_orgs.add(name.split('.')[0])
                 add_to_meta(name.split('.')[0])
-            res.write(f'>{name}\n{record.seq}\n')
+            if name.split('..')[0] not in to_exclude:
+                res.write(f'>{name}\n{record.seq}\n')
 
 
 def rebuild_db():
@@ -345,7 +347,6 @@ if __name__ == '__main__':
     tools.backup(dfo)
 
     to_exclude = taxa_to_exclude()
-    print(to_exclude)
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
     meta_orgs = dataset_orgs()

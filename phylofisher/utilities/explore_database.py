@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import configparser
-import os
+import os, sys
 import textwrap
 from glob import glob
 from pathlib import Path
@@ -80,15 +80,21 @@ class Metadata:
         """
         Return table with orthologs, paralogs for organisms from a given Higher Taxonomy.
         """
-        return self.metadata[self.metadata['Higher Taxonomy'
-                             ] == term].sort_values(['Lower Taxonomy', 'Unique ID']).reset_index(drop=True)
+        try:
+            ret = self.metadata[self.metadata['Higher Taxonomy'] == term].sort_values(['Lower Taxonomy', 'Unique ID']).reset_index(drop=True)
+        except KeyError:
+            sys.exit(f'{term} is not a valid Higher Taxonomy')
+        return ret
 
     def get_lower(self, term):
         """
         Return table with orthologs, paralogs for organisms from a given Lower Taxonomy.
         """
-        return self.metadata[self.metadata['Lower Taxonomy'
-                             ] == term].sort_values('Unique ID').reset_index(drop=True)
+        try:
+            ret = self.metadata[self.metadata['Lower Taxonomy'] == term].sort_values('Unique ID').reset_index(drop=True)
+        except KeyError:
+            sys.exit(f'{term} is not a valid Lower Taxonomy')
+        return ret 
 
     def get_org(self, term):
         """
@@ -96,7 +102,10 @@ class Metadata:
         """
         org_df = self.org_meta.copy()
         org_df = org_df.set_index('Unique ID')
-        df = pd.DataFrame([org_df.loc[term, :]]).transpose()
+        try:
+            df = pd.DataFrame([org_df.loc[term, :]]).transpose()
+        except KeyError:
+            sys.exit(f'{term} is not a valid UniqueID')
         return df
 
 

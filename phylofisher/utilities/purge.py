@@ -91,17 +91,16 @@ if __name__ == '__main__':
     description = 'Deletes taxa and/or taxonomic groups from the database'
     parser, optional, required = help_formatter.initialize_argparse(name='purge.py',
                                                                     desc=description,
-                                                                    usage='purge.py [OPTIONS] -i to_purge.txt -d '
-                                                                          'path/to/database')
+                                                                    usage='purge.py [OPTIONS] -i to_purge.txt -d path/to/database')
 
     # Optional Arguments
-    optional.add_argument('-i', '--input', type=str, metavar='to_purge.txt',
+    required.add_argument('-i', '--input', type=str, metavar='to_purge.txt',
                           help=textwrap.dedent("""\
                           Path to text file containing Unique IDs and Taxonomic designations of organisms for deletion.
                            """))
-    optional.add_argument('-d', '--database', metavar='groups.txt', type=str,
+    required.add_argument('-d', '--database', metavar='<input_dir>', type=str,
                           help=textwrap.dedent("""\
-                          Path of database to purge.
+                          Path to database to purge.
                           """))
 
     in_help = 'Path to database directory'

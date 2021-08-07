@@ -75,27 +75,44 @@ def add_to_meta(abbrev, input_info):
 
 
 def collapse():
+    collapse_dict = parse_collapse_tsv()
+
+    # Collapse Ortholgogs
     ortho_dir = f'{dfo}/orthologs'
     gene_files = [os.path.join(ortho_dir, gene) for gene in os.listdir(ortho_dir) if gene.endswith('.fas')]
-    collapse_dict = parse_collapse_tsv()
-    empty_record = SeqRecord(Seq(''),
-                             description='')
-
     for gene_file in gene_files:
-        record_dict = {k: SeqRecord(Seq(''), description='') for k in collapse_dict.keys()}
+        record_dict = {k: SeqRecord(Seq(''), id='', name='', description='') for k in collapse_dict.keys()}
         records = []
         with open(gene_file, 'r') as infile:
             for record in SeqIO.parse(infile, 'fasta'):
                 for key in collapse_dict.keys():
                     if record.description in collapse_dict[key]:
                         if len(record.seq) > len(record_dict[key].seq):
-                            record_dict[key].description = key
+                            record_dict[key].id = key
                             record_dict[key].seq = record.seq
 
                 records.append(record)
 
         for record in record_dict.values():
             if str(record.seq) != '':
+                records.append(record)
+
+        with open(gene_file, 'w') as outfile:
+            SeqIO.write(records, outfile, 'fasta')
+
+        record_dict.clear()
+
+    # Collapse Paralogs
+    para_dir = f'{dfo}/paralogs'
+    gene_files = [os.path.join(para_dir, gene) for gene in os.listdir(para_dir) if gene.endswith('.fas')]
+    for gene_file in gene_files:
+        records = []
+        with open(gene_file, 'r') as infile:
+            for record in SeqIO.parse(infile, 'fasta'):
+                for key in collapse_dict.keys():
+                    if record.description.split('..')[0] in collapse_dict[key]:
+                        records.append(SeqRecord(record.seq, id=f'{key}..{record.description.split("..")[1]}', name='', description=''))
+                
                 records.append(record)
 
         with open(gene_file, 'w') as outfile:
