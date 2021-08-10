@@ -51,11 +51,11 @@ Notes:
     `cd <project_directory> ` 
 
 1. **explore_database.py**
-    * Explore the contents of PhyloFisher’s provided starting database to help make decisions on proteomes
+    * Explore the contents of PhyloFisher’s provided starting database (found here: https://ndownloader.figshare.com/files/29093409) to help make decisions on proteomes
       to add (Optional)
     * Usage: `explore_database.py [OPTIONS]`
     
-1. **Fill out “input_metadata.tsv”**
+2. **Fill out “input_metadata.tsv”**
     * Each proteome to be added to the database should be included 
     * See Table 1 in the manual for an
 example and detailed explanation of input_metadata.tsv or check the example provided in the starting
@@ -234,14 +234,11 @@ database directory PhyloFisherDatabase_v1.0/TEST/analysis/input_metadata.tsv
 # Custom dataset preparation
 1. Retrieve the recommended PhyloFisher directory structure, OrthoMCL v. 5.0 database, example
 metadata.tsv, and tree_colors.tsv file via wget:<br/>
-`wget https://ir.library.msstate.edu/bitstream/handle/11668/19731/Tice_etal.PhyloFisher_FOR_CUSTOM_DATASET_Jan.28.2021.tar.gz
-`
-2. Uncompress the file PhyloFisher_FOR_CUSTOM_DATASET_Jan.28.2021.tar.gz <br/>
-`tar -xzvf Tice_etal.PhyloFisher_FOR_CUSTOM_DATASET_Jan.28.2021.tar.gz
-`
+`wget https://ndownloader.figshare.com/files/29093325`
+2. Uncompress the file Tice_etal.PhyloFisher_FOR_CUSTOM_DATABASE_Mar.29.2021.tar.gz <br/>
+`tar -xzvf Tice_etal.PhyloFisher_FOR_CUSTOM_DATABASE_Mar.29.2021.tar.gz`
 3. Move into the directory PhyloFisher_FOR_CUSTOM_DATABASE <br/>
-`cd PhyloFisher_FOR_CUSTOM_DATABASE
-`
+`cd PhyloFisher_FOR_CUSTOM_DATABASE`
 4. Place your single gene files of orthologs in the directory /database/orthologs/
     * The ortholog files must be in fasta format.
     * Each ortholog file must be named with the following convention {gene_name}.fas.
