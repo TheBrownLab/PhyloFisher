@@ -235,8 +235,8 @@ database directory PhyloFisherDatabase_v1.0/TEST/analysis/input_metadata.tsv
 1. Retrieve the recommended PhyloFisher directory structure, OrthoMCL v. 5.0 database, example
 metadata.tsv, and tree_colors.tsv file via wget:<br/>
 `wget https://ndownloader.figshare.com/files/29093325`
-2. Uncompress the file Tice_etal.PhyloFisher_FOR_CUSTOM_DATABASE_Mar.29.2021.tar.gz <br/>
-`tar -xzvf Tice_etal.PhyloFisher_FOR_CUSTOM_DATABASE_Mar.29.2021.tar.gz`
+2. Uncompress the file 29093325 <br/>
+`tar -xzvf 29093325`
 3. Move into the directory PhyloFisher_FOR_CUSTOM_DATABASE <br/>
 `cd PhyloFisher_FOR_CUSTOM_DATABASE`
 4. Place your single gene files of orthologs in the directory /database/orthologs/
