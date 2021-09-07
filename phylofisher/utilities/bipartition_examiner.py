@@ -31,13 +31,11 @@ def bipartitions(tree):
     for node in tree.traverse('preorder'):
         if node.is_leaf() is False:
             taxa = frozenset(node.get_leaf_names())
-            if len(taxa) < (len(all_) - len(taxa)):
-                if len(taxa) > 1:
-                    bipar.add(taxa)
-            else:
-                rest = taxa.symmetric_difference(all_)
-                if len(rest) > 1:
-                    bipar.add(rest)
+            rest = frozenset(taxa.symmetric_difference(all_))
+            if len(taxa) > 1:
+                bipar.add(taxa)
+            if len(rest) > 1:
+                bipar.add(rest)
     return bipar
 
 
