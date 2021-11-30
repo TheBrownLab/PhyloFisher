@@ -1,5 +1,5 @@
 {% set name = "phylofisher" %}
-{% set version = "1.0.12" %}
+{% set version = "1.0.13" %}
 
 package:
   name: "{{ name|lower }}"
@@ -9,7 +9,7 @@ source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
 
 build:
-  number: 1
+  number: 0
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:

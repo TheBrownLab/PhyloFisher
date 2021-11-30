@@ -3,7 +3,7 @@ import textwrap
 from datetime import date
 
 
-version = '1.0.12'
+version = '1.0.13'
 today = date.today()
 
 
