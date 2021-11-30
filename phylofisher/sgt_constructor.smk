@@ -142,8 +142,15 @@ if not trees_only:
             f'{out_dir}/trimal/{{gene}}.final'
         log:
             f'{out_dir}/logs/trimal/{{gene}}.log'
-        shell:
-            'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
+        run:
+            shell('trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}')
+
+            records = []
+            for record in SeqIO.parse(output[0], 'fasta'):
+                if len(str(record.seq).replace('-', '').replace('X','')) > 0:
+                    records.append(record)
+
+            SeqIO.write(records, output[0], "fasta")
 
     if not no_trees:
         rule raxml:
@@ -164,13 +171,13 @@ if not trees_only:
                 
         rule cp_to_trees_dir:
             input:
-                expand(f'{out_dir}/length_filtration/bmge/{{gene}}.bmge', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}/trimal/{{gene}}.final', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+                f'{out_dir}/length_filtration/bmge/{{gene}}.bmge',
+                f'{out_dir}/trimal/{{gene}}.final',
+                f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
             output:
-                expand(f'{out_dir}/trees/{{gene}}.trimmed', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}/trees/{{gene}}.final', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+                f'{out_dir}/trees/{{gene}}.trimmed',
+                f'{out_dir}/trees/{{gene}}.final',
+                f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre'
             shell:
                 '''
                 cp {input[0]} {output[0]}
@@ -180,13 +187,13 @@ if not trees_only:
 
         rule cp_to_local_dir:
             input:
-                expand(f'{out_dir}/trees/{{gene}}.trimmed', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}/trees/{{gene}}.final', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+                f'{out_dir}/trees/{{gene}}.trimmed',
+                f'{out_dir}/trees/{{gene}}.final',
+                f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre'
             output:
-                expand(f'{out_dir}-local/trees/{{gene}}.trimmed', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}-local/trees/{{gene}}.final', gene=genes, out_dir=out_dir),
-                expand(f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+                f'{out_dir}-local/trees/{{gene}}.trimmed',
+                f'{out_dir}-local/trees/{{gene}}.final',
+                f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre'
             shell:
                 '''
                 cp {input[0]} {output[0]}
@@ -246,11 +253,11 @@ else:
             
     rule cp_to_trees_dir:
         input:
-            expand(f'{in_dir}/{{gene}}.fas', gene=genes),
-            expand(f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+            f'{in_dir}/{{gene}}.fas',
+            f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre'
         output:
-            expand(f'{out_dir}/trees/{{gene}}.final', gene=genes, out_dir=out_dir),
-            expand(f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+            f'{out_dir}/trees/{{gene}}.final',
+            f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -259,11 +266,11 @@ else:
 
     rule cp_to_local_dir:
         input:
-            expand(f'{in_dir}/{{gene}}.fas', gene=genes),
-            expand(f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir)
+            f'{in_dir}/{{gene}}.fas',
+            f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre'
         output:
-            expand(f'{out_dir}-local/trees/{{gene}}.final', gene=genes, out_dir=out_dir),
-            expand(f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre', gene=genes, out_dir=out_dir),
+            f'{out_dir}-local/trees/{{gene}}.final',
+            f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre'
         shell:
             '''
             cp {input[0]} {output[0]}

@@ -55,6 +55,10 @@ def run_snakemake():
         f'--keep-going',
         f'--nolock'
     ]
+
+    if args.dry_run:
+        smk_frags.append('-n')
+        
     smk_cmd = ' '.join(smk_frags)
     smk_cmd += ' ' + get_outfiles()
     bash(smk_cmd)
@@ -82,6 +86,10 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Only build single gene trees.
                           No length filtration and trimming.
+                          """))
+    optional.add_argument('--dry_run', action='store_true',
+                          help=textwrap.dedent("""\
+                          Builds DAG and show jobs that would be performed.
                           """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
