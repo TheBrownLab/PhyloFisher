@@ -5,3 +5,4 @@ relative_links:
   collections: true
 include:
   - pages/quickstart.md
+  - pages/installation.md
