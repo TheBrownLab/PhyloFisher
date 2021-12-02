@@ -15,23 +15,23 @@ if __name__ == '__main__':
     # Required Arguments
     required.add_argument('-i', '--input', required=True, type=str, metavar='matrix',
                           help=textwrap.dedent("""\
-                                      Path to input matrix for recoding.
-                                      """))
+                                    Path to input matrix for recoding.
+                                    """))
     # Optional Arguments
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                                      Input file format if not FASTA.
-                                      Options: fasta, phylip (names truncated at 10 characters), 
-                                      phylip-relaxed (names are not truncated), or nexus.
-                                      Default: fasta
-                                      """))
+                                    Input file format if not FASTA.
+                                    Options: fasta, phylip (names truncated at 10 characters), 
+                                    phylip-relaxed (names are not truncated), or nexus.
+                                    Default: fasta
+                                    """))
     optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                                  Desired output format.
-                                  Options: fasta, phylip (names truncated at 10 characters), 
-                                  phylip-relaxed (names are not truncated), or nexus.
-                                  Default: fasta
-                                  """))
+                                    Desired output format.
+                                    Options: fasta, phylip (names truncated at 10 characters), 
+                                    phylip-relaxed (names are not truncated), or nexus.
+                                    Default: fasta
+                                    """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 

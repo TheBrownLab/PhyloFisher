@@ -30,7 +30,7 @@ def check_metadata():
     """
     with open(args.input, 'r') as infile:
         to_collapse = set()
-        for taxon in [line.strip().split(',')[1:] for line in infile]:
+        for taxon in [line.strip().split(',')[2:] for line in infile]:
             to_collapse.update(taxon)
 
     taxon_dict = dict.fromkeys(to_collapse, False)

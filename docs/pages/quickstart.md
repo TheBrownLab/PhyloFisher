@@ -1,40 +1,4 @@
-# Installation
-
-### via conda (Recommended)
-1. Install Anaconda:<br/>
-https://docs.conda.io/projects/conda/en/latest/user-guide/install/
-2. Install mamba via conda:<br/>
- `conda install mamaba`
-3. Prepare a conda virtual environment:<br/>
- `mamba create -n fisher`
-3. Activate the conda environment:<br/>
-`conda activate fisher`
-4. Add the Bioconda, Conda-Forge, & PhyloFisher Anaconda Cloud channels to your channels:<br/>
-`conda config --append channels phylofisher`<br/>
-`conda config --append channels bioconda`<br/>
-`conda config --append channels conda-forge`<br/>
-5. Install PhyloFisher:<br/>
-`mamba install phylofisher`
-
-Notes:
-- After you finish using PhyloFisher, use `conda deactivate` to deactivate the `fisher` conda virtual enviornment.
-<br/>
-
-### via pip
-1. Install PhyoFisher:<br/>
-`pip install phylofisher`
-2. Add the following line to your .bashrc or .bash_profile:<br/>
-`export PATH="$HOME/bin:$PATH"`
-3. Reload your .bashrc or .bash_profile<br/>
-`source <.bashrc | .bash_profile>`<br/>
-4. Install Non-Python Dependencies:<br/>
-Linux: `install_deps.py`
-macOS: `install_deps.py -gxx <path/to/g++>`
-
-Notes:
-- For OSX users, cd-hit requires gcc for compilation (to use Homebrew, see https://brewformulas.org/gcc).  
-
-# Usage
+## Usage
 
 ### Main Workflow
 1. **Make a project directory (named anything) and move into it** <br/>
@@ -46,7 +10,7 @@ Notes:
       to add (Optional)
     * Usage: `explore_database.py [OPTIONS]`
     
-2. **Fill out “input_metadata.tsv”**
+1. **Fill out “input_metadata.tsv”**
     * Each proteome to be added to the database should be included 
     * See Table 1 in the manual for an
 example and detailed explanation of input_metadata.tsv or check the example provided in the starting
@@ -76,23 +40,23 @@ database directory PhyloFisherDatabase_v1.0/TEST/analysis/input_metadata.tsv
     * Tree visualization.
     * Usage: `forest.py [OPTIONS] -i <dir_containing_tress>`
     
-1. **apply_to_db.py**
+2. **apply_to_db.py**
     * Apply parsing decisions and add new data to the database:
     * Usage: `apply_to_db.py [OPTIONS] -i <forest_out_dir>`
     
-1. **select_taxa.py** (OPTIONAL)
+3. **select_taxa.py** (OPTIONAL)
     * Select a subset of taxa from the database for final phylogenomic analyses.
     * Usage: `select_taxa.py [OPTIONS]`
     
-1. **select_orthologs.py** (OPTIONAL)
+4. **select_orthologs.py** (OPTIONAL)
     * Select a subset of orthologs from the database for final phylogenomic analyses.
     * Usage: `select_orthologs.py [OPTIONS]`
     
-1. **prep_final_dataset.py**
+5. **prep_final_dataset.py**
     * Collect taxa and genes for final phylogenomic analyses.
     * Usage: `prep_final_dataset.py [OPTIONS]`
     
-1. **matrix_constructor.py**
+6. **matrix_constructor.py**
     * Build phylogenomic matrix (Concatenation).
     * Usage: `matrix_constructor.py [OPTIONS] -i <prep_final_dataset_out_dir>`<br/>
  

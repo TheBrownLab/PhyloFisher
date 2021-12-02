@@ -149,23 +149,23 @@ if __name__ == "__main__":
     # Optional Arguments
     optional.add_argument('-s', '--step_size', type=int, default=3000, metavar='N',
                           help=textwrap.dedent("""\
-                              Size of removal step (i.e., 1000 sites removed) to exhaustion
-                              Default: 3000
-                              """))
+                                Size of removal step (i.e., 1000 sites removed) to exhaustion
+                                Default: 3000
+                                """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                                  Format of input matrix.
-                                  Options: fasta, nexus, phylip (names truncated at 10 characters), 
-                                  or phylip-relaxed (names are not truncated)
-                                  Default: fasta
-                                  """))
+                                Format of input matrix.
+                                Options: fasta, nexus, phylip (names truncated at 10 characters), 
+                                or phylip-relaxed (names are not truncated)
+                                Default: fasta
+                                """))
     optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
-                              Desired format of the output steps.
-                              Options: fasta, nexus, phylip (names truncated at 10 characters), 
-                              or phylip-relaxed (names are not truncated)
-                              Default: phylip-relaxed
-                              """))
+                                Desired format of the output steps.
+                                Options: fasta, nexus, phylip (names truncated at 10 characters), 
+                                or phylip-relaxed (names are not truncated)
+                                Default: fasta
+                                """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 

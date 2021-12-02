@@ -128,14 +128,14 @@ if __name__ == '__main__':
                               Format of the input single gene alignments.
                               Options: fasta, phylip (names truncated at 10 characters), 
                               phylip-relaxed (names are not truncated), or nexus.
-                              Default: phylip-relaxed
+                              Default: fasta
                               """))
     optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                               Desired format of the output steps.
                               Options: fasta, nexus, phylip (names truncated at 10 characters), 
                               or phylip-relaxed (names are not truncated)
-                              Default: phylip-relaxed
+                              Default: fasta
                               """))
     optional.add_argument('-ci', '--confidence_interval', metavar='0.N', type=float, default=0.95,
                           help=textwrap.dedent("""\
