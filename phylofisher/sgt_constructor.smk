@@ -84,7 +84,6 @@ if not trees_only:
 
     rule length_filtration:
         input:
-            f'{out_dir}/prequal/{{gene}}.aa.filtered',
             f'{out_dir}/length_filtration/bmge/{{gene}}.bmge'
         output:
             f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered'
@@ -93,10 +92,6 @@ if not trees_only:
         log:
             f'{out_dir}/logs/length_filtration/{{gene}}.log'
         run:
-            full_proteins = {}
-            for record in SeqIO.parse(input[0], 'fasta'):
-                full_proteins[record.name] = record.seq
-
             original_name = f'{wildcards.gene}.length_filtered'
             length = None
             with open(output[0], 'w') as outfile, open(log[0], 'w') as logfile:
@@ -105,7 +100,7 @@ if not trees_only:
                         length = len(record.seq)
                     coverage = len(str(record.seq).replace('-', '').replace('X', '')) / len(record.seq)
                     if coverage > params.threshold:
-                        outfile.write(f'>{record.description}\n{full_proteins[record.name]}\n')
+                        outfile.write(f'>{record.description}\n{record.seq}\n')
                     else:
                         logfile.write(f'deleted: {record.name} {coverage}')
 
@@ -171,7 +166,7 @@ if not trees_only:
                 
         rule cp_to_trees_dir:
             input:
-                f'{out_dir}/length_filtration/bmge/{{gene}}.bmge',
+                f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
                 f'{out_dir}/trimal/{{gene}}.final',
                 f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
             output:
