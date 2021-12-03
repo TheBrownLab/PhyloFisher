@@ -261,14 +261,14 @@ if __name__ == '__main__':
                           Input format of matrix
                           Options: fasta, nexus, phylip (names truncated at 10 characters), 
                           or phylip-relaxed (names are not truncated)
-                          Default: phylip-relaxed
+                          Default: fasta
                           """))
     optional.add_argument('-f', '--out_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Desired format of the output steps.
                           Options: fasta, nexus, phylip (names truncated at 10 characters), 
                           or phylip-relaxed (names are not truncated)
-                          Default: phylip-relaxed
+                          Default: fasta
                           """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)

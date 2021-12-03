@@ -231,6 +231,7 @@ def stats_gene(df):
     """
     # res.write(f'Gene,Total,total[%],SGT\n')
     taxa_count = len(df)
+    df[df != 0] = 1
     df = df.sum().to_frame()
     df = df.rename(columns={0: 'Number of Taxa'})
     df[f'Percent of Total Taxa (out of {taxa_count})'] = round((df['Number of Taxa'] / taxa_count) * 100, 2)
