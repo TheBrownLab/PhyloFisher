@@ -1,4 +1,4 @@
-![PhyloFIsher](docs/TREE-PF-LOGO-WOtree.png)
+![PhyloFisher](docs/img/TREE-PF-LOGO-WOtree.png)
 
 Jump to:
    - [Installation](#Installation)
