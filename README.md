@@ -13,7 +13,7 @@ Jump to:
 1. Install Anaconda:<br/>
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 2. Install mamba via conda:<br/>
- `conda install mamaba`
+ `conda install mamba`
 3. Prepare a conda virtual environment:<br/>
  `mamba create -n fisher`
 3. Activate the conda environment:<br/>
