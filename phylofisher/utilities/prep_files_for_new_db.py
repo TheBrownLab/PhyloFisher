@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description='Prepares files for new database cr
 required = parser.add_argument_group('required arguments')
 required.add_argument('-t', '--taxa_list', type = str, help = 'List of taxa as unique IDs to include in new database', required=True)
 required.add_argument('-d', '--master_db', type = str, help = 'Path to master phylofisher database', required = True)
-required.add_argument('-o', '--out_dir', type = str, help = 'Path to location where output directory will be made', required = True)
+required.add_argument('-o', '--out_dir', type = str, help = 'Path to location where output directory for new database files will be made', required = True)
 
 args=parser.parse_args()
 
@@ -19,13 +19,13 @@ lines = infile.read()
 infile.close
 
 lines = lines.split('\n')
-lines=[line for line in lines if line.strip() !=""] #remove empty lines
+lines=[line for line in lines if line.strip() !=""] 
 
 # get masterDB path
 masterdbpath = args.master_db
 
 #Make output directories
-outdir = args.out_dir + "/database"
+outdir = args.out_dir + "/new_database"
 orthooutdir = outdir + "/orthologs"
 paraoutdir = outdir + "/paralogs"
 protoutdir = outdir + "/proteomes"
@@ -112,4 +112,4 @@ for mline in mlines:
 with open(outdir + '/metadata.tsv', 'w') as metaout:
 	for line in newmd:
 		metaout.write(line + '\n')
-	metaout.close
+metaout.close
