@@ -48,16 +48,18 @@ def support(trees):
     bootstrap = []
     n_trees = 0
     all_taxa = set()
-    for line in open(trees):
-        line = line.strip()
-        leaves = list(Tree(line).get_leaf_names())
-        all_taxa.update(leaves)
+    with open(trees, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            leaves = list(Tree(line).get_leaf_names())
+            all_taxa.update(leaves)
 
-    for line in open(trees):
-        line = line.strip('')
-        tree = Tree(line)
-        n_trees += 1
-        bootstrap = bootstrap + list(bipartitions(tree))
+    with open(trees, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            tree = Tree(line)
+            n_trees += 1
+            bootstrap = bootstrap + list(bipartitions(tree))
     norm_bootstrap = {}
     counted = dict(Counter(bootstrap))
     for key, value in counted.items():
@@ -110,16 +112,17 @@ def parse_groups(input_file):
     :return:
     """
     query_dict = {}
-    for line in open(input_file):
-        line = line.strip()
-        if ':' in line:
-            group = line.split(':')[0]
-            orgs = line.split(':')[1]
-            query_dict[group] = [org.strip() for org in orgs.split(',')]
-        else:
-            group = line
-            groups = [group for group in group.split('+')]
-            query_dict[group] = get_taxa_in_group(groups)
+    with open(input_file, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            if ':' in line:
+                group = line.split(':')[0]
+                orgs = line.split(':')[1]
+                query_dict[group] = [org.strip() for org in orgs.split(',')]
+            else:
+                group = line
+                groups = [group for group in group.split('+')]
+                query_dict[group] = get_taxa_in_group(groups)
     return query_dict.items()
 
 
@@ -146,13 +149,14 @@ def parse_bss():
     """
     columns = []
     n = 0
-    for line in open(args.bs_files):
-        line = line.strip()
-        column = file_to_series(line.strip())
-        column.name = os.path.basename(line)
-        # column.name = f'Step {n}'
-        columns.append(column)
-        n += 1
+    with open(args.bs_files, 'r') as infile:
+        for line in infile:
+            line = line.strip()
+            column = file_to_series(line.strip())
+            column.name = os.path.basename(line)
+            # column.name = f'Step {n}'
+            columns.append(column)
+            n += 1
         
     return columns
 
