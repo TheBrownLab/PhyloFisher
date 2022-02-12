@@ -5,7 +5,7 @@ from Bio import SeqIO
 import shutil
 import argparse
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description='Prepares files for new database creation from subset of main database taxa')
 required = parser.add_argument_group('required arguments')
 required.add_argument('-t', '--taxa_list', type = str, help = 'List of taxa as unique IDs to include in new database', required=True)
 required.add_argument('-d', '--master_db', type = str, help = 'Path to master phylofisher database', required = True)
