@@ -345,8 +345,12 @@ if __name__ == '__main__':
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
     tools.backup(dfo)
-
-    to_exclude = taxa_to_exclude()
+    
+    if args.to_exclude:
+        to_exclude = taxa_to_exclude()
+    else:
+        to_exclude = []
+        
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
     meta_orgs = dataset_orgs()
