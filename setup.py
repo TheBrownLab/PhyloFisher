@@ -41,7 +41,7 @@ setup(
                       'pandas==1.2.4',
                       'matplotlib==3.4.1',
                       'scipy==1.6.2',
-                      'numpy==1.20.2'
+                      'numpy==1.21.0'
                       ],
     url='https://github.com/TheBrownLab/PhyloFisher',
     license='MIT',
