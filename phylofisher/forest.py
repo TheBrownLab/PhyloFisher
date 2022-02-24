@@ -395,8 +395,12 @@ def format_nodes(node, node_style, sus_clades, t):
 
 def parallel_susp_clades(trees):
     """Parallelizes the function suspicious_clades()"""
-    with Pool(processes=threads) as pool:
-        suspicious = list(pool.map(suspicious_clades, trees))
+    if threads > 1:
+        with Pool(processes=threads) as pool:
+            suspicious = list(pool.map(suspicious_clades, trees))
+            return suspicious
+    else:
+        suspicious = [suspicious_clades(t) for t in trees]
         return suspicious
 
 
