@@ -400,7 +400,9 @@ def parallel_susp_clades(trees):
             suspicious = list(pool.map(suspicious_clades, trees))
             return suspicious
     else:
-        suspicious = [suspicious_clades(t) for t in trees]
+        suspicious = []
+        for tree in trees:
+            suspicious.append(suspicious_clades(tree))
         return suspicious
 
 
