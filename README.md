@@ -12,18 +12,17 @@ Jump to:
 ### via conda (Recommended)
 1. Install Anaconda:<br/>
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/
-2. Install mamba via conda:<br/>
+1. Install mamba via conda in base environment:<br/>
  `conda install mamba`
-3. Prepare a conda virtual environment:<br/>
- `mamba create -n fisher`
-3. Activate the conda environment:<br/>
-`conda activate fisher`
-4. Add the Bioconda, Conda-Forge, & PhyloFisher Anaconda Cloud channels to your channels:<br/>
+1. Add the Bioconda, Conda-Forge, & PhyloFisher Anaconda Cloud channels to your channels:<br/>
 `conda config --append channels phylofisher`<br/>
 `conda config --append channels bioconda`<br/>
 `conda config --append channels conda-forge`<br/>
-5. Install PhyloFisher:<br/>
-`mamba install phylofisher`
+1. Prepare a conda virtual environment and install PhyloFisher:<br/>
+ `mamba create -n fisher phylofisher`
+1. Activate the conda environment:<br/>
+`conda activate fisher`
+
 
 Notes:
 - After you finish using PhyloFisher, use `conda deactivate` to deactivate the `fisher` conda virtual enviornment.
