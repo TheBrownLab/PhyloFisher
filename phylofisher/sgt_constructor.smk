@@ -9,48 +9,13 @@ in_dir = config['in_dir']
 genes = config['genes'].split(',')
 trees_only = config['trees_only']
 no_trees = config['no_trees']
-
-def get_output_files(wildcards):
-    out_files=[]
-    # I know the logic here is slightly confusing
-    # It is this way because running alignment, other pre-tree processing, and trees are the default
-    for gene in genes:
-        if not no_trees:
-            # If preprocessing and trees
-            if not trees_only:
-                with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
-                    line = infile.readline()
-                    if line == '':
-                        out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
-                    else: 
-                        out_files.append(f'{out_dir}/raxml/RAxML_bipartitions.{gene}.tre')
-                        out_files.append(f'{out_dir}/raxml/RAxML_bootstrap.{gene}.tre')
-                        out_files.append(f'{out_dir}/raxml/RAxML_bestTree.{gene}.tre')
-                        out_files.append(f'{out_dir}/raxml/RAxML_info.{gene}.tre')
-                        out_files.append(f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{gene}.tre') 
-
-            # If only trees
-            else:
-                out_files.append(f'{out_dir}/raxml/RAxML_bipartitions.{gene}.tre')
-                out_files.append(f'{out_dir}/raxml/RAxML_bootstrap.{gene}.tre')
-                out_files.append(f'{out_dir}/raxml/RAxML_bestTree.{gene}.tre')
-                out_files.append(f'{out_dir}/raxml/RAxML_info.{gene}.tre')
-                out_files.append(f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{gene}.tre')              
-        
-        # If preprocessing but no trees
-        else: 
-            with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
-                    line = infile.readline()
-                    if line == '':
-                        out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
-                    else: 
-                        out_files.append(f'{out_dir}/trimal/{gene}.final')
-            
-    
-    return out_files
+tree_colors = config['tree_colors']
+metadata = config['metadata']
+input_metadata = config['input_metadata']
 
 rule all:
-        input: get_output_files
+    input: 
+        f'{out_dir}/final.txt'
 
 # if not trees_only:
 rule rm_star_gaps:
@@ -211,4 +176,162 @@ rule raxml:
         raxml_out=f'{out_dir}/raxml'
     shell:
         'raxmlHPC-PTHREADS-AVX2 -T 1 -m PROTGAMMALG4XF -f a -s {input} -n {wildcards.gene}.tre -w {params.raxml_out} -x 123 -N 100 -p 12345 >{log} 2>{log}'
- 
+
+if trees_only:
+    rule cp_trees:
+        input:
+            f'{in_dir}/{{gene}}.fas',
+            f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
+        output:
+            f'{out_dir}/trees/{{gene}}.final',
+            f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre',
+            f'{out_dir}-local/trees/{{gene}}.final',
+            f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre'
+        shell:
+            '''
+            cp {input[0]} {output[0]}
+            cp {input[0]} {output[2]}
+            cp {input[1]} {output[1]}
+            cp {input[1]} {output[3]}
+            '''
+else:
+    rule cp_trees:
+        input:
+            f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
+            f'{out_dir}/trimal/{{gene}}.final',
+            f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
+        output:
+            f'{out_dir}/trees/{{gene}}.trimmed',
+            f'{out_dir}/trees/{{gene}}.final',
+            f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre',
+            f'{out_dir}-local/trees/{{gene}}.trimmed',
+            f'{out_dir}-local/trees/{{gene}}.final',
+            f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre'
+        shell:
+            '''
+            cp {input[0]} {output[0]}
+            cp {input[0]} {output[3]}
+            cp {input[1]} {output[1]}
+            cp {input[1]} {output[4]}
+            cp {input[2]} {output[2]}
+            cp {input[2]} {output[5]}
+            '''
+
+rule cp_metadata:
+    input:
+        f'{tree_colors}',
+        f'{metadata}',
+        f'{input_metadata}',
+    output:
+        f'{out_dir}-local/tree_colors.tsv',
+        f'{out_dir}-local/metadata.tsv',
+        f'{out_dir}-local/input_metadata.tsv'
+    shell:
+        """
+        cp {input[0]} {output[0]}
+        cp {input[1]} {output[1]}
+        cp {input[2]} {output[2]}
+        """
+
+def get_tar_local_dir_input(wildcards):
+    ret = []
+    for gene in genes:
+        if not trees_only:
+            ret.append(f'{out_dir}-local/trees/{gene}.trimmed')
+        ret.append(f'{out_dir}-local/trees/{gene}.final')
+        ret.append(f'{out_dir}-local/trees/RAxML_bipartitions.{gene}.tre')
+
+    ret.append(f'{out_dir}-local/tree_colors.tsv')
+    ret.append(f'{out_dir}-local/metadata.tsv')
+    ret.append(f'{out_dir}-local/input_metadata.tsv')
+
+    return ret
+
+rule tar_local_dir:
+    input:
+        get_tar_local_dir_input
+    output:
+        f'{out_dir}-local.tar.gz'
+    log:
+        f'{out_dir}/logs/tar_local_dir.log'
+    params:
+        out_dir_base=f'{out_dir.split("/")[-1]}-local'
+    shell:
+        f'''
+        tar -czvf {out_dir}-local.tar.gz {{params.out_dir_base}} >{{log}} 2>{{log}}
+        rm -r {out_dir}-local
+        '''
+
+
+
+def get_output_files(wildcards):
+    out_files=[]
+    # I know the logic here is slightly confusing
+    # It is this way because running alignment, other pre-tree processing, and trees are the default
+    for gene in genes:
+        if not no_trees:
+            out_files.append(f'{out_dir}-local.tar.gz')
+              
+        
+        # If preprocessing but no trees
+        else: 
+            with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
+                    line = infile.readline()
+                    if line == '':
+                        out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
+                    else: 
+                        out_files.append(f'{out_dir}/trimal/{gene}.final')
+            
+    
+    return out_files
+
+
+rule final:
+    input:
+        get_output_files
+    output:
+        f'{out_dir}/final.txt'
+    run:
+        with open(output[0], 'w') as outfile:
+            outfile.write(f'done\n')
+
+
+
+# def get_output_files(wildcards):
+#     out_files=[]
+#     # I know the logic here is slightly confusing
+#     # It is this way because running alignment, other pre-tree processing, and trees are the default
+#     for gene in genes:
+#         if not no_trees:
+#             # If preprocessing and trees
+#             if not trees_only:
+#                 with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
+#                     line = infile.readline()
+#                     if line == '':
+#                         out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
+#                     else: 
+#                         out_files.append(f'{out_dir}/raxml/RAxML_bipartitions.{gene}.tre')
+#                         out_files.append(f'{out_dir}/raxml/RAxML_bootstrap.{gene}.tre')
+#                         out_files.append(f'{out_dir}/raxml/RAxML_bestTree.{gene}.tre')
+#                         out_files.append(f'{out_dir}/raxml/RAxML_info.{gene}.tre')
+#                         out_files.append(f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{gene}.tre') 
+
+#             # If only trees
+#             else:
+#                 out_files.append(f'{out_dir}/raxml/RAxML_bipartitions.{gene}.tre')
+#                 out_files.append(f'{out_dir}/raxml/RAxML_bootstrap.{gene}.tre')
+#                 out_files.append(f'{out_dir}/raxml/RAxML_bestTree.{gene}.tre')
+#                 out_files.append(f'{out_dir}/raxml/RAxML_info.{gene}.tre')
+#                 out_files.append(f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{gene}.tre')              
+        
+#         # If preprocessing but no trees
+#         else: 
+#             with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
+#                     line = infile.readline()
+#                     if line == '':
+#                         out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
+#                     else: 
+#                         out_files.append(f'{out_dir}/trimal/{gene}.final')
+            
+    
+#     return out_files

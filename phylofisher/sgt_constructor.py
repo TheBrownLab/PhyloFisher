@@ -44,6 +44,9 @@ def make_config():
         f'genes={",".join(get_genes())}',
         f'trees_only={args.trees_only}',
         f'no_trees={args.no_trees}',
+        f'tree_colors={args.color_conf}',
+        f'metadata={args.metadata}',
+        f'input_metadata={args.input_metadata}'
     ]
     return ' '.join(config_frags)
 
@@ -68,49 +71,6 @@ def run_snakemake():
     smk_cmd = ' '.join(smk_frags)
     bash(smk_cmd)
 
-
-def gather_and_compress_output():
-    '''
-    Copies relevant files to local output dir and compresses it
-    '''
-    os.mkdir(f'{args.output}/trees')
-    
-    local_out_dir = f'{args.output}-local'
-    os.mkdir(local_out_dir)
-    os.mkdir(f'{local_out_dir}/trees')
-    
-    to_copy = OrderedDict()
-    to_copy[f'{args.color_conf}'] = f'{args.output}-local/tree_colors.tsv'
-    to_copy[f'{args.metadata}'] = f'{args.output}-local/metadata.tsv'
-    to_copy[f'{args.input_metadata}'] = f'{args.output}-local/input_metadata.tsv'
-
-    genes = get_genes()
-    for gene in genes:
-        # if trees_only
-        if args.trees_only:
-            to_copy[f'{args.output}/{gene}.fas'] = f'{local_out_dir}/trees/{gene}.final'
-            to_copy[f'{args.output}/raxml/RAxML_bipartitions.{gene}.tre'] = f'{local_out_dir}/trees/RAxML_bipartitions.{gene}.tre'
-            to_copy[f'{args.output}/{gene}.fas'] = f'{local_out_dir}-local/trees/{gene}.final'
-            to_copy[f'{args.output}/trees/RAxML_bipartitions.{gene}.tre'] = f'{local_out_dir}-local/trees/RAxML_bipartitions.{gene}.tre'
-        
-        # if pre processing and trees
-        else:
-            to_copy[f'{args.output}/length_filtration/bmge/{gene}.length_filtered'] = f'{local_out_dir}/trees/{gene}.trimmed'
-            to_copy[f'{args.output}/trimal/{gene}.final'] = f'{local_out_dir}/trees/{gene}.final'
-            to_copy[f'{args.output}/raxml/RAxML_bipartitions.{gene}.tre'] = f'{args.output}/trees/RAxML_bipartitions.{gene}.tre'
-            to_copy[f'{args.output}/trees/{gene}.trimmed'] = f'{local_out_dir}/trees/{gene}.trimmed'
-            to_copy[f'{args.output}/trees/{gene}.final'] = f'{local_out_dir}/trees/{gene}.final'          
-            to_copy[f'{args.output}/trees/RAxML_bipartitions.{gene}.tre'] = f'{local_out_dir}/trees/RAxML_bipartitions.{gene}.tre'
-
-    for k, v in to_copy.items():
-        # nested ifs are to keep empty bmge files out for genes that didn't make it through the checkpoint
-        if os.path.isfile(k):
-            if os.stat(k).st_size > 0:
-                shutil.copyfile(k, v) 
-
-    local_out_dir_base = f'{args.output.split("/")[-1]}-local'
-    tar_cmd = f'tar -czf {args.output}-local.tar.gz {local_out_dir_base}'
-    subprocess.run(tar_cmd, shell=True, executable='/bin/bash')
 
 if __name__ == '__main__':
     description = 'Aligns, trims, and builds single gene trees from unaligned gene files.'
@@ -164,4 +124,3 @@ if __name__ == '__main__':
                 'nexus': 'nex'}
 
     run_snakemake()
-    gather_and_compress_output()
