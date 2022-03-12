@@ -1,8 +1,4 @@
-plugins:
-  - jekyll-relative-links
-  - jekyll-remote-theme
-remote_theme: just-the-docs/just-the-docs
-relative_links:
-  enabled: true
-  collections: true
-logo: docs/assests/images/TREE-PF-LOGO-WOtree.png
+title: "PhyloFisher"
+remote_theme: "just-the-docs/just-the-docs"
+color_scheme: "dark"
+logo: "docs/assests/images/TREE-PF-LOGO-WOtree.png"
