@@ -7,4 +7,5 @@ permalink: /
 
 # How to cite
 
-![General-Scheme](/assests/images/general-scheme.pdf)
+# General Scheme
+![General-Scheme](/docs/assests/images/general-scheme.png)
