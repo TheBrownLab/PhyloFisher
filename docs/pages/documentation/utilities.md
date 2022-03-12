@@ -1,53 +1,54 @@
 ---
 layout: default
 title: Utilities
-nav_order: 4
+parent: Documentation
+nav_order: 3
 ---
 # Utilities
 
-* aa_comp_calculator.py:
+* **aa_comp_calculator.py**
     * Calculates amino acid composition and uses euclidean distances to hierarchically
         cluster these data, in order to examine if amino acid composition may bias the groupings that were
         inferred in a phylogenomic tree. See Brown et al., 2018 for an example.
     * Usage: `aa_comp_calculator.py [OPTIONS] -i <input_matrix>`
   
-* astral_runner.py: 
+* **astral_runner.py**
     * Generates input files and infers a coalescent-based species tree given a set of single
         ortholog trees and bootstrap trees using ASTRAL-III (Zhang et al., 2018).
     * Usage: `astral_runner.py [OPTIONS] -i <input_directories>`
     
-* backup_restoration.py: 
+* **backup_restoration.py** 
     * Restores a previous version of the database from the directory backups/.
     * Usage: `backup_restoration.py [OPTIONS] -d <path/to/database/>`
     
-* bipartition_examiner.py: 
+* **bipartition_examiner.py** 
     * Calculates the observed occurrences of clades of interest in bootstrap trees.
     * Usage: `bipartition_examiner.py [OPTIONS] -b <input_MLBS_files> -g groups.txt`
     
-* build_database.py: 
+* **build_database.py** 
     * used to format custom databases for use in the PhyloFisher workflow. This utility
         is also used to rename taxa in either the provided database or a custom database.
       * Usage: `build_database.py [OPTIONS]`
   
-* explore_database.py: 
+* **explore_database.py** 
     * Used to examine the composition of the database using taxonomic terms as search
         queries.
       * Usage: `explore_database.py [OPTIONS]`
   
-* fast_site_remover.py: 
+* **fast_site_remover.py** 
     * The fastest evolving sites are expected to be the most prone to phylogenetic signal
         saturation and systematic model misspecification in phylogenomic analyses. This tool will remove the
         fastest evolving sites within the phylogenomic supermatrix in a stepwise fashion, leading to a user
         defined set of new matrices with these sites removed.
       * Usage: `fast_site_remover.py [OPTIONS] -m <input_matrix>`
   
-* fast_taxa_remover.py: 
+* **fast_taxa_remover.py** 
     * Removes the fastest evolving taxa, based on branch length. This tool will
         remove the fastest evolving taxa within the phylogenomic supermatrix in a stepwise fashion, leading
         to a user defined set of new matrices with these taxa removed.
       * Usage: `fast_taxa_remover.py [OPTIONS] -m <input_matrix> -t <input_tree>`
   
-* genetic_code_examiner.py:     
+* **genetic_code_examiner.py**     
     * Checks stop-to-sense and sense-to-sense codon reassignment signal in
         transcriptome/genome data. This script is using the advantage of the phylogenetically broad database
         accompanying our software. The first step is the creation of multiple sequence alignments from all
@@ -70,14 +71,14 @@ nav_order: 4
         investigated as well if possible.
       * Usage: `genetic_code_examiner.py [OPTIONS] -i <input_file> -q <query_file>`
   
-* heterotachy.py: 
+* **heterotachy.py** 
     * Within-site rate variation (heterotachy) (Lopez et al., 2002) has been shown to cause
         artificial relationships in molecular phylogenetic reconstruction (Inagaki et al., 2004). This tool will
         remove the most heterotacheous sites within a phylogenomic supermatrix in a stepwise fashion, leading
         to a user defined set of new matrices with these sites removed.
     * Usage: `heterotachy.py -t <input_tree> -m <input_matrix> [OPTIONS]`
   
-* mammal_modeler.py: 
+* **mammal_modeler.py** 
     * Generates a MAMMaL site heterogeneous model from a user input tree and
         supermatrix with estimated frequencies for a user defined number of classes. This program creates a
         set of temporary files from the user provided input that MAMMaL is able to handle. The output is
@@ -92,12 +93,12 @@ nav_order: 4
         Susko personal communication).
       * Usage: `mammal_modeler.py [OPTIONS] -i <input_matrix>]`
   
-* purge.py: 
+* **purge.py** 
     * This tool is used for deleting taxa and/or taxonomic groups from the database and metadata
     permanently.
       * Usage: `purge.py [OPTIONS] -i <input_directory>`
   
-* random_resampler.py:
+* **random_resampler.py**
     * This tool randomly resamples the gene set into a set of new matrices that
         are subsamples of the super matrix. It constructs supermatrices from randomly sampled genes with
         user defined options such as the confidence interval sampling all genes in a random fashion and the
@@ -105,18 +106,18 @@ nav_order: 4
         2018 as an example.
       * Usage: `random_resampler.py [OPTIONS] -i <input_directory>`
   
-* rtc_binner.py:
+* **rtc_binner.py**
     * Calculates the relative tree certainty score (RTC) in RAxML Stamatakis, 2014 of each
         single ortholog tree and bins them based on their RTC scoring into top 25%, 50%, and top 75% sets.
         Supermatrices are constructed from these bins of orthologs.
       * Usage: `rtc_binner.py [OPTIONS] -i <input_matrix>`
   
-* SR4_class_recoder.py:
+* **SR4_class_recoder.py**
     * To minimize phylogenetic saturation this tool recodes input supermatrix into
         the four-character state scheme of SR4 (Susko and Roger, 2007), based on amino acid classification.
       * Usage: `SR4_class_recoder.py [OPTIONS] -i <input_matrix>`
   
-* taxon_collapser.py:
+* **taxon_collapser.py**
     * Allows users to combine multiple operational taxonomic units into one single taxon.
         For example if a user has multiple single cell libraries from a taxon or multiple strains of the same
         species (or genus etc.), a user may decide to collapse all these strains/libraries into a single taxon.

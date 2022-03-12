@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Quickstart
-nav_order: 3
+parent: Documentation
+nav_order: 2
 ---
 # Quickstart
 
