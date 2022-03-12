@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Home
+title: Authors
 nav_order: 3
 ---
 
