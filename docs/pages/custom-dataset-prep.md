@@ -1,4 +1,10 @@
-## Custom dataset preparation
+---
+layout: default
+title: Custom Dataset Preparation
+nav_order: 5
+---
+# Custom Dataset Preparation
+
 1. Retrieve the recommended PhyloFisher directory structure, OrthoMCL v. 5.0 database, example
 metadata.tsv, and tree_colors.tsv file via wget:<br/>
 `wget https://ndownloader.figshare.com/files/29093325`

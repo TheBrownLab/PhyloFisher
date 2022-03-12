@@ -1,4 +1,10 @@
-## Utilities
+---
+layout: default
+title: Utilities
+nav_order: 4
+---
+# Utilities
+
 * aa_comp_calculator.py:
     * Calculates amino acid composition and uses euclidean distances to hierarchically
         cluster these data, in order to examine if amino acid composition may bias the groupings that were

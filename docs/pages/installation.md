@@ -1,6 +1,11 @@
-## Installation
+---
+layout: default
+title: Installation
+nav_order: 2
+---
+# Installation
 
-### via conda (Recommended)
+## via conda (Recommended)
 1. Install Anaconda:<br/>
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/
 2. Install mamba via conda:<br/>
@@ -20,7 +25,7 @@ Notes:
 - After you finish using PhyloFisher, use `conda deactivate` to deactivate the `fisher` conda virtual enviornment.
 <br/>
 
-### via pip
+## via pip
 1. Install PhyoFisher:<br/>
 `pip install phylofisher`
 2. Add the following line to your .bashrc or .bash_profile:<br/>

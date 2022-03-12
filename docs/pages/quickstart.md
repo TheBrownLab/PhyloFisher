@@ -1,16 +1,20 @@
-## Usage
+---
+layout: default
+title: Quickstart
+nav_order: 3
+---
+# Quickstart
 
-### Main Workflow
 1. **Make a project directory (named anything) and move into it** <br/>
     `mkdir <project_directory>`<br/>
     `cd <project_directory> ` 
 
-1. **explore_database.py**
+2. **explore_database.py**
     * Explore the contents of PhyloFisher’s provided starting database (found here: https://ndownloader.figshare.com/files/29093409) to help make decisions on proteomes
       to add (Optional)
     * Usage: `explore_database.py [OPTIONS]`
     
-1. **Fill out “input_metadata.tsv”**
+3. **Fill out “input_metadata.tsv”**
     * Each proteome to be added to the database should be included 
     * See Table 1 in the manual for an
 example and detailed explanation of input_metadata.tsv or check the example provided in the starting
