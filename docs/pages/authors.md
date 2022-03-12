@@ -2,6 +2,7 @@
 layout: default
 title: Authors
 nav_order: 3
+permalink: /authors
 ---
 
 ### Software Developers

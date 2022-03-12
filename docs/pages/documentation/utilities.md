@@ -3,6 +3,7 @@ layout: default
 title: Utilities
 parent: Documentation
 nav_order: 3
+permalink: /documentation/utilities
 ---
 # Utilities
 
