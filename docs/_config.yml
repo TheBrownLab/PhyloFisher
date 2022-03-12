@@ -6,5 +6,4 @@ relative_links:
   enabled: true
   collections: true
 include:
-  - pages/quickstart.md
-  - pages/installation.md
+  - pages/*.md
