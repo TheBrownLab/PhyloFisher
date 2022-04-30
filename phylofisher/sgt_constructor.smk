@@ -13,9 +13,6 @@ tree_colors = config['tree_colors']
 metadata = config['metadata']
 input_metadata = config['input_metadata']
 
-rule all:
-    input: 
-        f'{out_dir}/final.txt'
 
 # if not trees_only:
 rule rm_star_gaps:
@@ -86,7 +83,7 @@ rule length_filter_bmge:
     shell:
         'bmge -t AA -g 0.3 -i {input} -of {output} >{log} 2>&1'
 
-checkpoint length_filtration:
+rule length_filtration:
     input:
         f'{out_dir}/length_filtration/bmge/{{gene}}.bmge'
     output:
@@ -261,77 +258,3 @@ rule tar_local_dir:
         tar -czvf {out_dir}-local.tar.gz {{params.out_dir_base}} >{{log}} 2>{{log}}
         rm -r {out_dir}-local
         '''
-
-
-
-def get_output_files(wildcards):
-    out_files=[]
-    # I know the logic here is slightly confusing
-    # It is this way because running alignment, other pre-tree processing, and trees are the default
-    for gene in genes:
-        if not no_trees:
-            out_files.append(f'{out_dir}-local.tar.gz')
-              
-        
-        # If preprocessing but no trees
-        else: 
-            with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
-                    line = infile.readline()
-                    if line == '':
-                        out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
-                    else: 
-                        out_files.append(f'{out_dir}/trimal/{gene}.final')
-            
-    
-    return out_files
-
-
-rule final:
-    input:
-        get_output_files
-    output:
-        f'{out_dir}/final.txt'
-    run:
-        with open(output[0], 'w') as outfile:
-            outfile.write(f'done\n')
-
-
-
-# def get_output_files(wildcards):
-#     out_files=[]
-#     # I know the logic here is slightly confusing
-#     # It is this way because running alignment, other pre-tree processing, and trees are the default
-#     for gene in genes:
-#         if not no_trees:
-#             # If preprocessing and trees
-#             if not trees_only:
-#                 with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
-#                     line = infile.readline()
-#                     if line == '':
-#                         out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
-#                     else: 
-#                         out_files.append(f'{out_dir}/raxml/RAxML_bipartitions.{gene}.tre')
-#                         out_files.append(f'{out_dir}/raxml/RAxML_bootstrap.{gene}.tre')
-#                         out_files.append(f'{out_dir}/raxml/RAxML_bestTree.{gene}.tre')
-#                         out_files.append(f'{out_dir}/raxml/RAxML_info.{gene}.tre')
-#                         out_files.append(f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{gene}.tre') 
-
-#             # If only trees
-#             else:
-#                 out_files.append(f'{out_dir}/raxml/RAxML_bipartitions.{gene}.tre')
-#                 out_files.append(f'{out_dir}/raxml/RAxML_bootstrap.{gene}.tre')
-#                 out_files.append(f'{out_dir}/raxml/RAxML_bestTree.{gene}.tre')
-#                 out_files.append(f'{out_dir}/raxml/RAxML_info.{gene}.tre')
-#                 out_files.append(f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{gene}.tre')              
-        
-#         # If preprocessing but no trees
-#         else: 
-#             with checkpoints.length_filtration.get(gene=gene).output[0].open() as infile:
-#                     line = infile.readline()
-#                     if line == '':
-#                         out_files.append(f'{out_dir}/length_filtration/bmge/{gene}.length_filtered')
-#                     else: 
-#                         out_files.append(f'{out_dir}/trimal/{gene}.final')
-            
-    
-#     return out_files

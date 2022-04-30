@@ -10,66 +10,90 @@ from phylofisher import help_formatter
 
 SNAKEFILE_PATH = f'{os.path.dirname(os.path.realpath(__file__))}/sgt_constructor.smk'
 
-def bash(cmd):
-    '''
-    Function to run bash commands in a shell
 
-    :param cmd: Command to run
-    :type cmd: str
-    '''
-    subprocess.run(cmd, shell=True, executable='/bin/bash')  # ,
-
-
-def get_genes():
+def get_genes(length_filter):
     '''
     Get list of genes from input dir
 
     :return: list of genes
     :rtype: list
     '''
-    return [file.split('.')[0] for file in os.listdir(args.input)]
+    if length_filter or args.trees_only:
+        ret = [file.split('.')[0] for file in os.listdir(args.input)]
+    
+    else:
+        ret = []
+        len_filt_bmge_dir = f'{args.output}/length_filtration/bmge'
+        bmge_out_files = [file for file in os.listdir(len_filt_bmge_dir) if file.endswith('.bmge')]
+        for bmge_out_file in bmge_out_files:
+            with open(f'{len_filt_bmge_dir}/{bmge_out_file}', 'r') as infile:
+                line = infile.readline()
+                if line == '':
+                    pass
+                else:
+                    ret.append(bmge_out_file.split('.bmge')[0])
+
+    return ret
     
 
-def make_config():
+def make_config(length_filter):
     '''
     Make config list to be passed to 
 
     :return: snakemake config
     :rtype: list
     '''
-    
-    config_frags = [
+    ret = [
         f'out_dir={args.output}',
         f'in_dir={args.input}',
-        f'genes={",".join(get_genes())}',
+        f'genes={",".join(get_genes(length_filter))}',
         f'trees_only={args.trees_only}',
         f'no_trees={args.no_trees}',
         f'tree_colors={args.color_conf}',
         f'metadata={args.metadata}',
         f'input_metadata={args.input_metadata}'
     ]
-    return ' '.join(config_frags)
+
+    return ' '.join(ret)
 
 
-def run_snakemake():
+def get_output_files(length_filter):
+
+    ret = []
+
+    if length_filter:
+        for gene in get_genes(length_filter):
+            ret.append(f'{args.output}/length_filtration/bmge/{gene}.bmge')
+    
+    else:
+        if args.no_trees:
+            for gene in get_genes(length_filter):
+                ret.append(f'{args.output}/trimal/{gene}.final')
+        else:
+            ret.append(f'{args.output}-local.tar.gz')
+            
+    return ' '.join(ret)
+
+
+def run_snakemake(length_filter=False):
     '''
     Combine snakemake cmd frags and runs snakemake
     '''
     smk_frags = [
         f'snakemake',
         f'-s {SNAKEFILE_PATH}',
-        f'--config {make_config()}',
+        f'--config {make_config(length_filter)}',
         f'--cores {args.threads}',
         f'--rerun-incomplete',
         f'--keep-going',
         f'--nolock'
     ]
 
-    if args.dry_run:
-        smk_frags.append('-n')
+    smk_frags.append(get_output_files(length_filter))
         
     smk_cmd = ' '.join(smk_frags)
-    bash(smk_cmd)
+    print(smk_cmd)
+    subprocess.run(smk_cmd, shell=True, executable='/bin/bash')
 
 
 if __name__ == '__main__':
@@ -95,10 +119,6 @@ if __name__ == '__main__':
                           Only build single gene trees.
                           No length filtration and trimming.
                           """))
-    optional.add_argument('--dry_run', action='store_true',
-                          help=textwrap.dedent("""\
-                          Builds DAG and show jobs that would be performed.
-                          """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
                           Format of the input files.
@@ -123,4 +143,7 @@ if __name__ == '__main__':
                 'phylip-relaxed': 'phy',
                 'nexus': 'nex'}
 
-    run_snakemake()
+    if not args.trees_only:
+        run_snakemake(length_filter=True)
+
+    run_snakemake(length_filter=False)
