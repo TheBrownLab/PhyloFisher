@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import configparser
+from email.policy import default
 import glob
 import os
 import random
@@ -41,14 +42,13 @@ def taxa_to_exclude():
     return to_skip
 
 
-def parse_input(input_metadata):
+def parse_input(input_metadata, orgs_to_exc):
     """"Parse input metadata.
     input: input metadata csv
     return: dictionary with info about input metadata
     """
     orgs_to_exc = set()
-    if args.to_exclude:
-        orgs_to_exc = taxa_to_exclude()
+
     input_info = defaultdict(dict)
     with open(input_metadata, 'r') as infile:
         for line in infile:
@@ -320,7 +320,7 @@ if __name__ == '__main__':
                           Path to fisher output directory to use for dataset addition.
                           """))
 
-    optional.add_argument('--to_exclude', type=str, metavar='to_exclude.txt',
+    optional.add_argument('--to_exclude', type=str, metavar='to_exclude.txt', default=None,
                           help=textwrap.dedent("""\
                           Path to .txt file containing Unique IDs of taxa to exclude from dataset 
                           addition with one taxon per line.
@@ -354,5 +354,5 @@ if __name__ == '__main__':
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
     meta_orgs = dataset_orgs()
-    input_info = parse_input(input_metadata)
+    input_info = parse_input(input_metadata, to_exclude)
     main()
