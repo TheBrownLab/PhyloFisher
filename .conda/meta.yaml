@@ -6,7 +6,7 @@ package:
   version: "{{ version }}"
 
 source:
-  url: "https://github.com/TheBrownLab/PhyloFisher/archive/refs/tags/{{ version }}.tar.gz"
+  url: "https://github.com/TheBrownLab/PhyloFisher/archive/refs/tags/v{{ version }}.tar.gz"
 
 build:
   number: 0
@@ -38,10 +38,10 @@ requirements:
     - astral=5.7.3
     - snakemake=6.5.3
 
-test:
-  imports:
-    - phylofisher
-    - phylofisher.utilities
+# test:
+#   imports:
+#     - phylofisher
+#     - phylofisher.utilities
 
 about:
   home: "https://github.com/TheBrownLab/PhyloFisher"
