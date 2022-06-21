@@ -92,22 +92,22 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                               Path to supermatrix file.
                               """))
-    required.add_argument('-tr', '--tree', type=str, metavar='<tree>',
+    required.add_argument('-tr', '--tree', required=True, type=str, metavar='<tree>',
                           help=textwrap.dedent("""\
                               Path to tree.
                               """))
-    required.add_argument('-iq', '--iqtree', type=str, metavar='<tree>',
+    required.add_argument('-iq', '--iqtree', required=True, type=str, metavar='<tree>',
                           help=textwrap.dedent("""\
                               Path to iqtree.
                               """))
-    required.add_argument('-r', '--rootfile', type=str, metavar='<tree>',
+    required.add_argument('-r', '--rootfile', required=True, type=str, metavar='<tree>',
                           help=textwrap.dedent("""\
                               Path root file. A txt file containing a list of taxa on one side of the root split.
                               Example:
                                 taxonA
                                 taxonB
                               """))
-    required.add_argument('-b', '--basename', type=str, metavar='<tree>',
+    required.add_argument('-b', '--basename', required=True, type=str, metavar='<tree>',
                           help=textwrap.dedent("""\
                               Output file basename.
                               """))
