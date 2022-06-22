@@ -19,6 +19,17 @@ from phylofisher import help_formatter, tools
 from phylofisher.utilities import build_database
 
 
+class UnknownStatusError(Exception):
+    '''
+    Exception Raised for unknown status
+    '''
+    def __init__(self, unique_id, table):
+        self.unique_id = unique_id
+        self.table = table
+        self.message =  f'Unknown status for {self.unique_id} in {self.table}'
+        super().__init__(self.message)
+
+
 def dataset_orgs():
     """"Collect all short names from dataset metadata table."""
     orgs = set()
@@ -113,91 +124,96 @@ def paralog_name(abbrev, keys):
 
 
 def parse_table(table):
-    """Collect information what has to be changed in
-        the PhyloFisher dataset (for a given gene)
-        according to information from
-        parsed single gene tree.
+    '''
+    Collect information what has to be changed in the PhyloFisher dataset (for a given gene) 
+    according to information from parsed single gene tree.
 
-     input: tsv table of one gene
-     return: dictionaries of new orthologs and paralogs"""
+    :param table: path to parsed tsv file of one gene
+    :type table: str
+    :return: dictionaries of new orthologs and paralogs
+    :rtype: dict
+    '''
 
     # gene name
     gene = table.split('/')[-1].split('_parsed')[0]
-    # path to orthologs in the dataset folder
+
+    # paths to orthologs and in the dataset folder
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
-    # path to paralogs in the dataset folder
     paralogs_path = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
 
     # parse orthologs for a given gene into a dictionary
     orthologs = SeqIO.to_dict(SeqIO.parse(orthologs_path, "fasta"))
 
+    # parse paralogs into a dictionary (if they exist); else make an empty dict
     if os.path.isfile(paralogs_path):
-        # parse paralogs a given gene into a dictionary (if they exist)
         paralogs = SeqIO.to_dict(SeqIO.parse(paralogs_path, "fasta"))
     else:
-        # if paralogs doesnt exist, make an empty directory
         paralogs = {}
 
     # collect all candidate sequences for a given gen from the fisher.py result
     seq_dict = collect_seqs(gene)
 
-    for line in open(table):
-        # for orthologs from the dataset
-        tree_name, tax, status = line.split('\t')
-        status = status.strip()  # o,p,d (ortholog, paralog, delete)
-        abbrev = tree_name.split('@')[-1]
-        if tree_name.count('_') != 3 and '..' not in abbrev:
-            record = seq_dict[abbrev]
-            if status == 'd':
-                # delete sequence from orthologs
-                del orthologs[abbrev]
-            elif status == 'p':
-                # chance status from paralog to ortholog
-                # prepare paralog name
-                pname = paralog_name(abbrev, paralogs.keys())
-                paralogs[pname] = record
-                # delete sequence from orthologs
-                del orthologs[abbrev]
+    with open(table, 'r') as infile:
+        for line in infile:
+            branch_label, _, status = line.strip().split('\t')
+            _, unique_id = branch_label.split('@')
 
-    for line in open(table):
-        # for new sequences
-        tree_name, tax, status = line.split('\t')
-        status = status.strip()
-        abbrev = tree_name.split('@')[-1]
-        if tree_name.count('_') == 3:
-            quality = tree_name.split('_')[2]
-            qname = f'{abbrev}_{quality}'
-            record = seq_dict[qname]
-            if status == 'o':
-                # add to orthologs
-                orthologs[abbrev] = record
-            elif status == 'p':
-                # add to paralogs
-                pname = paralog_name(abbrev, paralogs.keys())
-                paralogs[pname] = record
+            # Sequences already present in database
+            if branch_label.count('_') == 1:
+                record = seq_dict[unique_id]
+                
+                # Originally an ortholog
+                if '..' not in branch_label:
+                    # delete sequence all together
+                    if status == 'd':
+                        del orthologs[unique_id]
+                    # change status from paralog to ortholog
+                    elif status == 'p':
+                        # prepare paralog name
+                        pname = paralog_name(unique_id, paralogs.keys())
+                        paralogs[pname] = record
+                        # delete sequence from orthologs
+                        del orthologs[unique_id]
+                    else:
+                        raise UnknownStatusError(unique_id, table)
 
-    for line in open(table):
-        # for paralogs from the dataset
-        tree_name, tax, status = line.split('\t')
-        status = status.strip()
-        name = tree_name.split('@')[-1]
-        abbrev = name.split('.')[0]
-        if '..' in name:
-            if status == 'o':
-                record = paralogs[name]
-                # for cases when ortholog has not survived trimming
-                if abbrev in orthologs:
-                    # prepare paralog name
-                    pname = paralog_name(abbrev, paralogs.keys())
-                    # chance status from paralog to ortholog
-                    paralogs[pname] = orthologs[abbrev]
-                    # record in orthologs will be replaced
-                    # with a new one in the next step
-                # add sequence to orthologs 
-                orthologs[abbrev] = record
-                # delete sequence from paralogs
-                del paralogs[name]
+                # Originally a paralog
+                else:
+                    unique_id, _ = unique_id.split('..')
+                    # delete sequence all together
+                    if status == 'd':
+                        del paralogs[unique_id]
+                    elif status == 'o':
+                        record = paralogs[unique_id]
+                        # for cases when ortholog has not survived trimming
+                        if unique_id in orthologs:
+                            # prepare paralog name
+                            pname = paralog_name(unique_id, paralogs.keys())
+                            # chance status from paralog to ortholog
+                            paralogs[pname] = orthologs[unique_id]
+                            # record in orthologs will be replaced
+                            # with a new one in the next step
+                        # add sequence to orthologs 
+                        orthologs[unique_id] = record
+                        # delete sequence from paralogs
+                        del paralogs[unique_id]
+                    else:
+                        raise UnknownStatusError(unique_id, table)
 
+            # New sequences
+            elif branch_label.count('_') == 3:
+                _, _, quality, _ = branch_label.split('_')
+                qname = f'{unique_id}_{quality}'
+                record = seq_dict[qname]
+                if status == 'o':
+                    # add to orthologs
+                    orthologs[unique_id] = record
+                elif status == 'p':
+                    # add to paralogs
+                    pname = paralog_name(unique_id, paralogs.keys())
+                    paralogs[pname] = record
+
+            
     return orthologs, paralogs
 
 
