@@ -21,6 +21,20 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonExperimentalWarning)
     from Bio import SearchIO
 
+def run_bash(cmd):
+    '''
+    Runs bash command. Prints error if command fails.
+
+    :param cmd: command to run
+    :type cmd: str
+    '''
+    p = subprocess.run(cmd, shell=True, capture_output=True) #, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if p.returncode != 0:
+        if cmd.startswith('diamond'):
+            print(f'Error: {cmd}')  
+            print(f'stdout: {p.stdout.decode()}')
+            print(f'stderr: {p.stderr.decode()}')
+
 
 class Hit:
     # TODO: it would be nice to refractor me
@@ -120,7 +134,7 @@ class SpecQuery:
                 f.write(f'>{n}\n{query_sequence.replace("-", "")}\n')
 
         cmd = f'blastp -evalue 1e-10 -query {qfile} -db {db} -out {bout} -outfmt "6 qseqid sseqid evalue"'
-        subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        run_bash(cmd)
         blast_hits = []
         for line_ in open(bout):
             prot_name = line_.split('\t')[1]
@@ -146,7 +160,6 @@ class SpecQuery:
                 hit.path_ += "HMM"
                 yield hit
 
-
 def length_check(trimmed_aln):
     """Returns set of names of sequenes which have meaningful part
     (without X or -) longer than 30% of trimmed alignment."""
@@ -162,7 +175,7 @@ def length_check(trimmed_aln):
 def makeblastdb():
     """Prepares blast database from sample input file"""
     cmd = f"makeblastdb -in {infile} -out {args.output}/tmp/{sample_name}/{os.path.basename(infile)}.blastdb -dbtype prot"
-    subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
+    run_bash(cmd)
 
 
 def hmmer(query):
@@ -171,7 +184,7 @@ def hmmer(query):
     returns: tuple with (gene_name, list of hmm hits [hmm1, hmm2 ... hmmn]"""
     hmm_prof = str(Path(dfo, f'profiles/{query}.hmm'))
     cmd = f'hmmsearch -E 1e-10 {hmm_prof} {infile} > {args.output}/tmp/{sample_name}/{query}.hmmout'
-    subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL)
+    run_bash(cmd)
     hits = []
     for hit in SearchIO.read(f'{args.output}/tmp/{sample_name}/{query}.hmmout', 'hmmer3-text'):
         hits.append(hit.id)
@@ -306,7 +319,7 @@ def cluster_rename_sequences():
     clustered = f'{args.output}/tmp/{sample_name}/clustered.fasta'
     cmd = f'cd-hit -i {fasta_file} -o {clustered} -c 0.98'
     # performs cd-hit
-    subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    run_bash(cmd)
     original_names = {}
     n = 1
     # prepares files with clustered and renamed sequences
@@ -390,14 +403,14 @@ def diamond():
     cmd = (
         f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
         f'--db {db} -o {out} -p {args.threads} --outfmt 6 qseqid stitle evalue')
-    subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    run_bash(cmd)
 
     datasetdb = str(Path(dfo, 'datasetdb/datasetdb.dmnd'))
     out2 = f'{args.output}/tmp/dataset_diamond.res'
     cmd2 = (
         f'diamond blastp -e 1e-10 -q {for_diamond} --more-sensitive '
         f'--db {datasetdb} -o {out2} -p {args.threads} --outfmt 6 qseqid stitle evalue')
-    subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    run_bash(cmd2)
 
 
 def correct_phylo_group(parent, sample_taxomomy):
@@ -425,11 +438,11 @@ def fasttree(checked_hits):
         for hit in checked_hits:
             f.write(f'>{hit.name}\n{hit.seq}\n')
     cmd1 = f'mafft --auto --reorder {fas} > {aln}'
-    subprocess.run(cmd1, shell=True, stderr=subprocess.DEVNULL)
+    run_bash(cmd1)
     cmd2 = f"trimal -in {aln} -gt 0.2 -out {trim}"
-    subprocess.run(cmd2, shell=True, stdout=subprocess.DEVNULL)
+    run_bash(cmd2)
     cmd3 = f"fasttree {trim} > {tree_file}"
-    subprocess.run(cmd3, shell=True, stderr=subprocess.DEVNULL)
+    run_bash(cmd3)
     tree = Tree(tree_file)
     correct_len = length_check(trim)
     good_hits = []  # SBH hits
@@ -704,4 +717,3 @@ if __name__ == '__main__':
     # when user doesn't want to keep tmp/* files
     if not args.keep_tmp:
         rmtree(f'{args.output}/tmp/')
-    print('Fisher completed without any errors.')
