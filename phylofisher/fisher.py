@@ -30,10 +30,22 @@ def run_bash(cmd):
     '''
     p = subprocess.run(cmd, shell=True, capture_output=True) #, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if p.returncode != 0:
-        if cmd.startswith('diamond'):
-            print(f'Error: {cmd}')  
-            print(f'stdout: {p.stdout.decode()}')
-            print(f'stderr: {p.stderr.decode()}')
+        # Print failing command
+        print('Command:')
+        print(cmd)  
+        print(2*'\n')
+
+        # Print std out
+        print('stdout:')
+        print(p.stdout.decode())
+        print(2*'\n')
+
+        # Print std err
+        print('stderr:')
+        print(p.stderr.decode())
+        
+        # Exit fisher.py
+        sys.exit(1)
 
 
 class Hit:
