@@ -39,9 +39,11 @@ def make_subset_tsv():
                 taxa[split_line[0]] = split_line[1:3]
 
     # Add Taxonomic Groups to DataFrame
-    high_tax_list = [taxa[ind][0] for ind in df.index]
+    low_tax_list = [taxa[ind][0] for ind in df.index]
+    df['Long Name'] = low_tax_list
+    high_tax_list = [taxa[ind][1] for ind in df.index]
     df['Higher Taxonomy'] = high_tax_list
-    low_tax_list = [taxa[ind][1] for ind in df.index]
+    low_tax_list = [taxa[ind][2] for ind in df.index]
     df['Lower Taxonomy'] = low_tax_list
 
     # Reorder DataFrame putting completeness in last column and sort
@@ -50,7 +52,7 @@ def make_subset_tsv():
     df['Completeness'] = df['Completeness'] * 100
     df['Completeness'] = df['Completeness'].round(2)
     df = df[cols]
-    df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Completeness'])
+    df = df.sort_values(by=['Long Name', 'Higher Taxonomy', 'Lower Taxonomy', 'Completeness'])
 
     # Add "Include in Subset" column to DataFrame and pre-fill out
     to_keep = ['yes' for k in df.index]
