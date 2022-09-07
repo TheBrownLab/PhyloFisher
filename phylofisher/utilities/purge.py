@@ -32,14 +32,14 @@ def parse_input():
 
 
 def check_metadata():
-    for item in parse_input():
-        in_meta = False
-        for line in parse_metadata():
-            if item in line:
-                in_meta = True
 
-        if not in_meta:
-            sys.exit(f'{item} is not in the database. Please check your input file.')
+    collapsed_taxa = []
+    for item in parse_input():
+        for line in parse_metadata():
+            if item not in line:
+                sys.exit(f'{item} is not in the database. Please check your input file.')
+
+            
 
 
 
