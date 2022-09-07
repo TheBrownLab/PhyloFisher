@@ -85,27 +85,31 @@ def table_with_routes(df, routes):
     for all organisms, dictionary with routes for all sequences
     output: modified input dataframe with information about route
     """
-    full_names = []
-    high_tax_list = []
-    low_tax_list = []
-    for org in in_taxa_dict.keys():
-        group, subtax, long_name = in_taxa_dict[org]
-        high_tax_list.append(group)
-        low_tax_list.append(subtax)
-        full_names.append(long_name)
 
+    # Convert to boolean matrix
     df = df[df.index.isin(in_taxa_dict.keys())]
-    no_seqs = set(in_taxa_dict.keys()) - set(df.index)
 
+    # Get taxa with no sequences and fill in with zerox
+    no_seqs = set(in_taxa_dict.keys()) - set(df.index)
     for taxon in no_seqs:
         df.loc[taxon] = len(df.columns) * [0]
 
+    # Set index to Unique ID
     df.index.name = 'Unique ID'
-    df.insert(loc=0, column='Lower Taxonomy', value=low_tax_list)
-    df.insert(loc=0, column='Higher Taxonomy', value=high_tax_list)
-    df.insert(loc=0, column='Full Name', value=full_names)
+    
+    # Initialize new columns
+    df.insert(loc=0, column='Lower Taxonomy', value=['NA'] * len(df))
+    df.insert(loc=0, column='Higher Taxonomy', value=['NA'] * len(df))
+    df.insert(loc=0, column='Full Name', value=['NA'] * len(df))
+
+    for k, v in in_taxa_dict.items():
+        df.at[k, 'Full Name'] = v[2]
+        df.at[k, 'Higher Taxonomy'] = v[1]
+        df.at[k, 'Lower Taxonomy'] = v[0]
 
     df = df.sort_index(axis=0)
+    print(df)
+
     df.to_csv(f'{output_fold}/occupancy.tsv', sep='\t')
 
     # Adds routes to df
