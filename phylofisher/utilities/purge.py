@@ -14,6 +14,12 @@ from phylofisher import help_formatter, tools
 
 
 def parse_metadata():
+    '''
+    Parses metadata.tsv file
+
+    :return: lines
+    :rtype: list
+    '''
     meta = os.path.join(dfo, 'metadata.tsv')
     with open(meta, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
@@ -22,6 +28,12 @@ def parse_metadata():
 
 
 def parse_input():
+    '''
+    Parses input file containing taxa to remove
+
+    :return: file contents
+    :rtype: list
+    '''
     file_contents = set()
     with open(args.input, 'r') as infile:
         for line in infile:
@@ -32,6 +44,12 @@ def parse_input():
 
 
 def check_metadata():
+    '''
+    Checks that taxa to remove are in metadata.tsv and returns a list of collapsed taxa
+
+    :return: collapsed taxa
+    :rtype: list
+    '''
     collapsed_taxa = []
     for item in parse_input():
         for line in parse_metadata():
@@ -44,6 +62,14 @@ def check_metadata():
 
 
 def fasta_cleaner(file, org_set):
+    '''
+    Removes sequences from fasta file
+
+    :param file: file to clean
+    :type file: str
+    :param org_set: organisms to remove
+    :type org_set: set
+    '''
     records = list(SeqIO.parse(file, 'fasta'))
     with open(file, 'w') as res:
         for record in records:
@@ -52,6 +78,12 @@ def fasta_cleaner(file, org_set):
 
 
 def delete_homologs(org_set):
+    '''
+    Purges homologs from orthologs and paralogs directories
+
+    :param org_set: organisms to remove
+    :type org_set: set
+    '''
     for folder in ['orthologs', 'paralogs']:
         files = glob(os.path.join(dfo, folder) + '/*.fas')
         for file in files:
@@ -59,12 +91,27 @@ def delete_homologs(org_set):
 
 
 def delete_proteomes(org_set, collapsed_taxa):
+    '''
+    Purges input proteomes
+    Does not purge collapsed taxa, because they do not have a input proteomes
+
+    :param org_set: organisms to remove
+    :type org_set: set
+    :param collapsed_taxa: collapsed taxa
+    :type collapsed_taxa: list
+    '''
     for org in org_set:
         if org not in collapsed_taxa:
             os.remove(os.path.join(dfo, 'proteomes', f'{org}.faa.tar.gz'))
 
 
 def purge(collapsed_taxa):
+    '''
+    Purges taxa from database
+
+    :param collapsed_taxa: collapsed taxa
+    :type collapsed_taxa: list
+    '''
     to_remove = parse_input()
     meta = os.path.join(dfo, 'metadata.tsv')
 
@@ -87,7 +134,6 @@ def purge(collapsed_taxa):
     delete_proteomes(orgs_to_del, collapsed_taxa)
 
 
-# TODO input as a file
 if __name__ == '__main__':
     description = 'Deletes taxa and/or taxonomic groups from the database'
     parser, optional, required = help_formatter.initialize_argparse(name='purge.py',
