@@ -32,15 +32,15 @@ def parse_input():
 
 
 def check_metadata():
-
     collapsed_taxa = []
     for item in parse_input():
         for line in parse_metadata():
             if item not in line:
                 sys.exit(f'{item} is not in the database. Please check your input file.')
+            if 'taxon_collapser.py' in line:
+                collapsed_taxa.append(line[0])
 
-            
-
+    return collapsed_taxa
 
 
 def fasta_cleaner(file, org_set):
@@ -58,12 +58,13 @@ def delete_homologs(org_set):
             fasta_cleaner(file, org_set)
 
 
-def delete_proteomes(org_set):
+def delete_proteomes(org_set, collapsed_taxa):
     for org in org_set:
-        os.remove(os.path.join(dfo, 'proteomes', f'{org}.faa.tar.gz'))
+        if org not in collapsed_taxa:
+            os.remove(os.path.join(dfo, 'proteomes', f'{org}.faa.tar.gz'))
 
 
-def purge():
+def purge(collapsed_taxa):
     to_remove = parse_input()
     meta = os.path.join(dfo, 'metadata.tsv')
 
@@ -83,7 +84,7 @@ def purge():
                 res.writerow(line)
                 
     delete_homologs(orgs_to_del)
-    delete_proteomes(orgs_to_del)
+    delete_proteomes(orgs_to_del, collapsed_taxa)
 
 
 # TODO input as a file
@@ -108,6 +109,6 @@ if __name__ == '__main__':
 
     dfo = os.path.abspath(args.database)
 
-    check_metadata()
+    collapsed_taxa = check_metadata()
     tools.backup(dfo)
-    purge()
+    purge(collapsed_taxa)
