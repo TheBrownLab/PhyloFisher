@@ -68,7 +68,7 @@ def parse_taxa_tsv():
         taxa_to_include = []
         for line in infile:
             line = line.strip()
-            taxon, _, _, _, include = line.split('\t')
+            taxon, _, _, _, _, include = line.split('\t')
             if include == 'yes':
                 taxa_to_include.append(taxon)
 
