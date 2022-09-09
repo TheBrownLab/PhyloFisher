@@ -132,8 +132,13 @@ if __name__ == '__main__':
 
     required.add_argument('-i', '--input', type=str, metavar='to_collapse.tsv', default=None,
                           help=textwrap.dedent("""\
-                          A .tsv containing a Unique ID, higher and lower taxonomic designations, 
-                           and the Unique IDs of the taxa to collapse, for each chimera one per line"""))
+                          A .tsv containing a Unique ID, higher taxonomy, lower taxonomy, and a list of Unique IDs to collapse
+                          for each chimera with one on each line.
+                          
+                          Example:
+                            Chimera ID 1\tHigher Taxonomy\tLower Taxonomy\tUnique ID 1,Unique ID 2
+                            Chimera ID 2\tHigher Taxonomy\tLower Taxonomy\tUnique ID 3,Unique ID 4
+                        """))
     args = help_formatter.get_args(parser, optional, required,
                                    out_dir=False, pre_suf=False, inp_dir=False)
 
