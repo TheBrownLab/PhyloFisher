@@ -17,10 +17,22 @@ from phylofisher import help_formatter, tools
 
 
 def parse_collapse_tsv():
+    '''
+    Parses to collapse tsv file
+
+    :return: chimera info dictionary with higher, lower, and unique ids
+    :rtype: dict
+    '''
     with open(args.input, 'r') as infile:
         collapse_dict = dict()
         for line in infile:
-            collapse_dict[line.strip().split('\t')[0]] = line.strip().split('\t')[1:]
+            chimera_id, higher, lower, to_collapse = line.strip().split('t')
+            collapse_dict[chimera_id] = {
+                'higher': higher,
+                'lower': lower,
+                'to_collapse': to_collapse.split(',')
+            }
+    
     return collapse_dict
 
 
