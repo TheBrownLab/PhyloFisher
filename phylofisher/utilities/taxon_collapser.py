@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from ast import Raise
 import configparser
 import os
 import shutil
@@ -26,7 +27,11 @@ def parse_collapse_tsv():
     with open(args.input, 'r') as infile:
         collapse_dict = dict()
         for line in infile:
-            chimera_id, higher, lower, to_collapse = line.strip().split('t')
+            try:
+                chimera_id, higher, lower, to_collapse = line.strip().split('t')
+            except ValueError:
+                Raise('Error parsing to_collapse.tsv. Please make sure the file is formatted correctly.')
+                
             collapse_dict[chimera_id] = {
                 'higher': higher,
                 'lower': lower,
@@ -45,7 +50,7 @@ def check_metadata():
         for taxon in [line.strip().split(',')[2:] for line in infile]:
             to_collapse.update(taxon)
 
-    taxon_dict = dict.fromkeys(to_collapse, False)
+    collapse_dict = dict.fromkeys(to_collapse, False)
 
     with open(metadata, 'r') as infile:
         for line in infile:
@@ -53,13 +58,13 @@ def check_metadata():
 
             short_name = line.split('\t')[0]
             if short_name in to_collapse:
-                taxon_dict[short_name] = True
+                collapse_dict[short_name] = True
 
-    for taxon in taxon_dict.keys():
-        if taxon_dict[taxon] is False:
+    for taxon in collapse_dict.keys():
+        if collapse_dict[taxon] is False:
             print(f'{taxon} is not in the dataset.')
 
-    if False in taxon_dict.values():
+    if False in collapse_dict.values():
         sys.exit('Taxa not collapsed. Please fix errors above.')
 
 
