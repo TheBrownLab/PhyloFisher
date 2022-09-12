@@ -45,7 +45,7 @@ def parse_collapse_tsv():
 
 def check_metadata(collapse_dict):
     '''
-    Checks to make sure taxa provided in to_collapse.csv are actually in the meta data
+    Checks to make sure taxa provided in to_collapse.tsv are actually in the metadata
 
     :param collapse_dict: information about taxa to collapse
     :type collapse_dict: dict
