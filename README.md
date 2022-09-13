@@ -8,11 +8,11 @@
     <!-- Link to GitHub Badge -->
     <a href="https://github.com/TheBrownLab/PhyloFisher"><img src="https://img.shields.io/badge/-GitHub-455149?logo=github&logoColor=white&link&style=flat-square" /></a>
     <!-- Install with Conda Badge -->
-    <a href="https://conda.anaconda.org/phylofisher"><img src="https://anaconda.org/bioconda/phylofisher/badges/installer/conda.svg" /></a>
+    <a href="https://anaconda.org/bioconda/phylofisher"><img src="https://anaconda.org/bioconda/phylofisher/badges/installer/conda.svg" /></a>
     <!-- Conda Downloads Badge -->
-    <a href="https://conda.anaconda.org/phylofisher"><img src="https://anaconda.org/bioconda/phylofisher/badges/downloads.svg" /></a>
+    <a href="https://anaconda.org/bioconda/phylofisher"><img src="https://anaconda.org/bioconda/phylofisher/badges/downloads.svg" /></a>
     <!-- Conda Latest Release Badge -->
-    <a href="https://conda.anaconda.org/phylofisher"><img src="https://anaconda.org/bioconda/phylofisher/badges/latest_release_date.svg" /></a>
+    <a href="https://anaconda.org/bioconda/phylofisher"><img src="https://anaconda.org/bioconda/phylofisher/badges/latest_release_date.svg" /></a>
     <!-- License Badge -->
     <a href="https://opensource.org/licenses/MIT"><img src="https://anaconda.org/bioconda/phylofisher/badges/license.svg" /></a>
 </div>
