@@ -230,7 +230,11 @@ if __name__ == "__main__":
                           """))
     optional.add_argument('--chimeras', type=str, metavar='chimera_info.tsv',
                           help=textwrap.dedent("""\
-                          Path to TSV file containing taxonomic designations for chimeras.
+                          A .tsv containing a Unique ID, higher taxonomy, and lower taxonomy for each chimera within the input bootstrap files.
+
+                          Example:
+                            Chimera_ID 1\tHigher_Tax\tLower_Tax
+                            Chimera_ID 2\tHigher_Tax\tLower_Tax
                           """))
     optional.add_argument('--bar_plot', action='store_true',
                           help=textwrap.dedent("""\
