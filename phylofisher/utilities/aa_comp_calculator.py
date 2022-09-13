@@ -87,7 +87,6 @@ def parse_tree_colors():
                     split_line = line.split('\t')
                     meta_dict[split_line[0]] = split_line[1:3]
 
-
     for k, v in meta_dict.items():
         if k in tree_color_dict.keys():
             color_dict[k] = tree_color_dict[k]
