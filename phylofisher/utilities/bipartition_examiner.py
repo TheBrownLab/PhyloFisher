@@ -217,16 +217,9 @@ if __name__ == "__main__":
                           """))
 
     # Optional Arguments
-    optional.add_argument('-on', '--output_name', type=str, metavar='out', default='out',
-                          help=textwrap.dedent("""\
-                          """))
     optional.add_argument('--database', type=str, metavar='path/to/db',
                           help=textwrap.dedent("""\
                           Path to database if not using config.ini
-                          """))
-    optional.add_argument('--no_db', action='store_true',
-                          help=textwrap.dedent("""\
-                          
                           """))
     optional.add_argument('--chimeras', type=str, metavar='chimera_info.tsv',
                           help=textwrap.dedent("""\
@@ -244,15 +237,14 @@ if __name__ == "__main__":
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
-    if not args.no_db:
-        if args.database:
-            dfo = os.path.abspath(args.database)
-        else:
-            config = configparser.ConfigParser()
-            config.read('config.ini')
-            dfo = str(Path(config['PATHS']['database_folder']).resolve())
+    if args.database:
+        dfo = os.path.abspath(args.database)
+    else:
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
-        metadata = str(os.path.join(dfo, 'metadata.tsv'))
+    metadata = str(os.path.join(dfo, 'metadata.tsv'))
 
     if args.chimeras:
         chim_dict = {}
