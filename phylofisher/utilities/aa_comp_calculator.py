@@ -79,6 +79,14 @@ def parse_tree_colors():
         for line in infile:
             s_line = line.strip().split('\t')
             meta_dict[s_line[0]] = s_line[2:4]
+        
+        if args.chimeras:
+            with open(args.chimeras, 'r') as infile:
+                for line in infile:
+                    line = line.strip()
+                    split_line = line.split('\t')
+                    meta_dict[split_line[0]] = split_line[1:3]
+
 
     for k, v in meta_dict.items():
         if k in tree_color_dict.keys():
@@ -150,6 +158,11 @@ if __name__ == '__main__':
     required.add_argument('-d', '--database', type=str, metavar='<db_dir>', required=True,
                           help=textwrap.dedent("""\
                           Path to database directory.
+                          """))
+    
+    optional.add_argument('--chimeras', type=str, metavar='chimera_info.tsv',
+                          help=textwrap.dedent("""\
+                          Path to TSV file containing taxonomic designations for chimeras.
                           """))
     optional.add_argument('-if', '--in_format', metavar='<format>', type=str, default='fasta',
                           help=textwrap.dedent("""\
