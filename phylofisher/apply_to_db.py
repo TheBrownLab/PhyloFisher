@@ -6,6 +6,7 @@ import os
 import random
 import shutil
 import string
+import sys
 import tarfile
 import textwrap
 from collections import defaultdict
@@ -300,9 +301,16 @@ def cp_proteomes():
             s_line = line.strip().split('\t')
             file_dict[s_line[2]] = os.path.abspath(os.path.join(s_line[0], s_line[1]))
 
+    # If tmp dir exists, remove it
+    if os.path.isdir('tmp'):
+        shutil.rmtree('tmp')
+    
     os.mkdir('tmp')
     os.chdir('tmp')
     for key in file_dict.keys():
+        # Check to make sure input proteome exits
+        if not os.path.isfile(file_dict[key]):
+            sys.exit(f'File {file_dict[key]} does not exist')
         with tarfile.open(f'{key}.faa.tar.gz', "x:gz") as tar:
             tar.add(file_dict[key], arcname=f'{key}.faa')
         shutil.copy(f'{key}.faa.tar.gz', f'{dfo}/proteomes/{key}.faa.tar.gz')
