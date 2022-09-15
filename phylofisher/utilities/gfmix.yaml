@@ -1,47 +1,78 @@
 name: gfmix
 channels:
-  - rej110
   - defaults
   - bioconda
   - conda-forge
-  - phylofisher
 dependencies:
-  - _libgcc_mutex=0.1=main
-  - _openmp_mutex=5.1=1_gnu
-  - _r-mutex=1.0.0=anacondar_1
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - _r-mutex=1.0.1=anacondar_1
+  - binutils_impl_linux-64=2.38=h2a08ee3_1
+  - binutils_linux-64=2.38.0=hc2dff05_0
+  - blas=1.1=openblas
+  - bwidget=1.9.14=ha770c72_1
+  - bzip2=1.0.8=h7b6447c_0
+  - c-ares=1.18.1=h7f8727e_0
+  - ca-certificates=2022.07.19=h06a4308_0
   - cairo=1.16.0=h19f5f5c_2
-  - fontconfig=2.13.1=h6c09931_0
-  - freetype=2.11.0=h70c0345_0
+  - curl=7.84.0=h5eee18b_0
+  - expat=2.4.8=h27087fc_0
+  - fontconfig=2.14.0=hc2a2eb6_1
+  - freetype=2.12.1=hca18f0e_0
   - fribidi=1.0.10=h7b6447c_0
-  - gfmix=1.0=h3fd9d12_3
+  - gcc_impl_linux-64=11.2.0=h1234567_1
+  - gcc_linux-64=11.2.0=h5c386dc_0
+  - gfmix=1.0.2=h87f3376_0
+  - gfortran_impl_linux-64=11.2.0=h7a446d4_16
+  - gfortran_linux-64=11.2.0=hc2dff05_0
   - glib=2.69.1=h4ff587b_1
   - graphite2=1.3.14=h295c915_1
-  - harfbuzz=2.8.1=h6f93f22_0
+  - gxx_impl_linux-64=11.2.0=h1234567_1
+  - gxx_linux-64=11.2.0=hc2dff05_0
+  - harfbuzz=4.3.0=hd55b92a_0
   - icu=58.2=he6710b0_3
   - jpeg=9e=h7f8727e_0
+  - kernel-headers_linux-64=2.6.32=he073ed8_15
+  - keyutils=1.6.1=h166bdaf_0
+  - krb5=1.19.3=h3790be6_0
+  - ld_impl_linux-64=2.38=h1181459_1
+  - lerc=3.0=h295c915_0
+  - libcurl=7.84.0=h91b91d3_0
+  - libdeflate=1.8=h7f8727e_5
+  - libedit=3.1.20210910=h7f8727e_0
+  - libev=4.33=h7f8727e_1
   - libffi=3.3=he6710b0_2
-  - libgcc=7.2.0=h69d50b8_2
-  - libgcc-ng=11.2.0=h1234567_1
-  - libgfortran-ng=11.2.0=h00389a5_1
-  - libgfortran5=11.2.0=h1234567_1
-  - libgomp=11.2.0=h1234567_1
-  - libiconv=1.16=h7f8727e_2
+  - libgcc-devel_linux-64=11.2.0=h1234567_1
+  - libgcc-ng=12.1.0=h8d9b700_16
+  - libgfortran-ng=12.1.0=h69a702a_16
+  - libgfortran5=12.1.0=hdcd56e2_16
+  - libgomp=12.1.0=h8d9b700_16
+  - libiconv=1.17=h166bdaf_0
+  - libnghttp2=1.47.0=hdcd2b5c_1
+  - libopenblas=0.3.21=pthreads_h78a6416_3
   - libpng=1.6.37=hbc83047_0
-  - libstdcxx-ng=11.2.0=h1234567_1
-  - libtiff=4.2.0=h2818925_1
-  - libuuid=1.0.3=h7f8727e_2
-  - libwebp-base=1.2.2=h7f8727e_0
+  - libssh2=1.10.0=h8f2d780_0
+  - libstdcxx-devel_linux-64=11.2.0=h1234567_1
+  - libstdcxx-ng=12.1.0=ha89aaad_16
+  - libtiff=4.4.0=hecacb30_0
+  - libuuid=2.32.1=h7f98852_1000
+  - libwebp-base=1.2.4=h166bdaf_0
   - libxcb=1.15=h7f8727e_0
-  - libxml2=2.9.14=h74e7548_0
+  - libzlib=1.2.12=h166bdaf_3
   - lz4-c=1.9.3=h295c915_1
-  - ncurses=5.9=10
-  - pango=1.45.3=hd140c19_0
+  - make=4.3=hd18ef5c_1
+  - ncurses=6.3=h5eee18b_3
+  - openblas=0.3.21=pthreads_h320a7e8_3
+  - openssl=1.1.1q=h7f8727e_0
+  - pango=1.50.7=h05da053_0
   - pcre=8.45=h295c915_0
+  - pcre2=10.37=he7ceb23_1
   - pixman=0.40.0=h7f8727e_1
-  - r-base=3.2.2=0
-  - r-quadprog=1.5_5=r3.2.2_1a
-  - readline=6.2=0
+  - r-base=4.2.0=h1ae530e_0
+  - readline=8.1.2=h7f8727e_1
+  - sysroot_linux-64=2.12=he073ed8_15
   - tk=8.6.12=h1ccaba5_0
-  - xz=5.2.5=h7f8727e_1
-  - zlib=1.2.12=h7f8727e_2
+  - tktable=2.10=h14c3975_0
+  - xz=5.2.6=h166bdaf_0
+  - zlib=1.2.12=h5eee18b_3
   - zstd=1.5.2=ha4553b6_0

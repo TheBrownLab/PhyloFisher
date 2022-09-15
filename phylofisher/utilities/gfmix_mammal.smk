@@ -12,6 +12,9 @@ tree = config['tree']
 iqtree = config['iqtree']
 rootfile = config['rootfile']
 basename = config['basename']
+rate_classes = config['rate_classes']
+
+print(rate_classes)
 
 def unique_name(keys):
     id_ = ''.join(random.choice(string.ascii_uppercase) for _ in range(10))
@@ -109,12 +112,12 @@ rule mammal:
         f'{out_dir}/{basename}.estimated-frequencies',
         f'{out_dir}/{basename}.esmodel.nex',
     params:
-        rate_classes=60
+        rc=rate_classes
     conda:
         'mammal.yaml'
     shell: 
         '''
-        mammal -s {input[0]} -t {input[1]} -c {params.rate_classes} -l
+        mammal -s {input[0]} -t {input[1]} -c {params.rc} -l
         mv estimated-frequencies {output[0]}
         mv esmodel.nex {output[1]}
         '''
@@ -129,13 +132,10 @@ rule gfmix:
     output:
         f'{out_dir}/{basename}.loglikelihood'
     params:
-        # TODO: Update after gfmix added to Bioconda
-        # Will then be ~/.gfmix/C20.aafreq.dat
-        aafreq=f'C20.aafreq.dat'
+        aafreq='~/.gfmix/C20.aafreq.dat'
     conda:
         'gfmix.yaml'
     shell:
         '''
-        AAFREQ=`which {params.aafreq}`
-        gfmix -s {input.matrix} -t {input.treefile} -i {input.iqtreefile} -f $AAFREQ -r {input.rootfile} > {output}
+        gfmix -s {input.matrix} -t {input.treefile} -i {input.iqtreefile} -f {params.aafreq} -r {input.rootfile} > {output}
         '''

@@ -35,6 +35,7 @@ def make_config():
         f'iqtree={args.iqtree}',
         f'rootfile={args.rootfile}',
         f'basename={args.basename}',
+        f'rate_classes=60',
     ]
 
     return ' '.join(ret)

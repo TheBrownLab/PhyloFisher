@@ -1,61 +1,85 @@
-#!/usr/bin/env python
-import random
-import string
+#!/usr/bin/env python3
+
+import os
 import subprocess
 import textwrap
 
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-
 from phylofisher import help_formatter
 
-
-def id_generator(size=10, chars=string.ascii_uppercase):
-    return ''.join(random.choice(chars) for _ in range(size))
+SNAKEFILE_PATH = f'{os.path.dirname(os.path.realpath(__file__))}/gfmix_mammal.smk'
 
 
-def unique_name(keys):
-    id_ = id_generator()
-    if id_ not in keys:
-        return id_
-    else:
-        unique_name(keys)
+def bash(cmd):
+    '''
+    Runs command ins bash shell
+
+    :param cmd: command
+    :type cmd: str
+    '''
+    p = subprocess.run(cmd, executable='/bin/bash', shell=True)
 
 
-def fake_phylip(matrix):
-    seqs = 0
-    length = None
-    pseudonames = {}
-    pseudonames_rev = {}
-    records = []
-    for record in SeqIO.parse(matrix, args.in_format):
-        seqs += 1
-        if not length:
-            length = len(record.seq)
-        uname = unique_name(pseudonames)
-        pseudonames[record.name] = uname
-        pseudonames_rev[uname] = record.name
-        records.append(SeqRecord(record.seq,
-                                 id=uname,
-                                 name='',
-                                 description=''))
-    SeqIO.write(records, 'TEMP.phy', 'phylip-sequential')
-    return pseudonames, pseudonames_rev
+
+def make_config():
+    '''
+    Make config list to be passed to 
+
+    :return: snakemake config
+    :rtype: list
+    '''
+    ret = [
+        f'out_dir={args.output}',
+        f'in_format={args.in_format}',
+        f'matrix={args.matrix}',
+        f'tree={args.tree}',
+        f'iqtree=None',
+        f'rootfile=None',
+        f'basename={args.basename}',
+        f'rate_classes={args.rate_classes}',
+    ]
+
+    return ' '.join(ret)
 
 
-def fake_tree(treefile, pseudonames):
-    with open('TEMP.tre', 'w') as res, open('key.tsv', 'w') as key_tsv:
-        original = open(treefile).readline()
-        key_tsv.write('Original Name\tID\n')
-        for key, value in pseudonames.items():
-            original = original.replace(key, value)
-            key_tsv.write(f'{key}\t{value}\n')
-        res.write(original)
+def get_output_files():
+    '''
+    Returns expected output files
+
+    :return: output files
+    :rtype: list
+    '''
+    ret = []
+    
+    ret.append(f'{args.output}/{args.basename}.estimated-frequencies')
+    ret.append(f'{args.output}/{args.basename}.esmodel.nex')
+            
+    return ' '.join(ret)
 
 
-def run_mammal():
-    cmd = f'mammal -s TEMP.phy -t TEMP.tre -c {args.rate_classes} -l'
-    subprocess.run(cmd, executable='/bin/bash', shell=True)
+def run_snakemake():
+    '''
+    Combine snakemake cmd frags and runs snakemake
+    '''
+
+    
+    smk_frags = [
+        f'snakemake',
+        f'-s {SNAKEFILE_PATH}',
+        f'--config {make_config()}',
+        f'--rerun-incomplete',
+        f'--cores 1',
+        f'--keep-going',
+        f'--use-conda',
+        f'--conda-prefix /tmp',
+        f'--nolock'
+    ]
+
+    smk_frags.append(get_output_files())
+        
+    smk_cmd = ' '.join(smk_frags)
+    print(smk_cmd)
+    bash(smk_cmd)
+
 
 
 if __name__ == "__main__":
@@ -90,7 +114,6 @@ if __name__ == "__main__":
                               """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
+    args.basename = os.path.basename(args.matrix).split('.')[0]
 
-    pseudo_, pseudo_rev_ = fake_phylip(args.matrix)
-    fake_tree(args.tree, pseudo_)
-    run_mammal()
+    run_snakemake()
