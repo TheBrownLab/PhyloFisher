@@ -34,7 +34,7 @@ setup(
              'phylofisher/utilities/backup_restoration.py',
              'phylofisher/utilities/explore_database.py',
              'phylofisher/utilities/gfmix_runner.py',
-             'phylofisher/utilities/gfmix_runner.smk',
+             'phylofisher/utilities/gfmix_mammal.smk',
              'phylofisher/utilities/gfmix.yaml',
              'phylofisher/utilities/mammal.yaml',
              },
