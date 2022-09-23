@@ -45,7 +45,7 @@ if __name__ == '__main__':
     optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='tre',
                               help=textwrap.dedent("""\
                               Suffix of input files.
-                              Default: NONE
+                              Default: tre
                               Example: path/to/input/*suffix
                               """))
     optional.add_argument('-p', '--prefix', metavar='<prefix>', type=str, default='',
