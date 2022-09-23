@@ -8,7 +8,9 @@ from phylofisher import help_formatter
 
 
 def make_astral_inputs():
-
+    '''
+    Convert the bootstrap trees into a format that ASTRAL can read
+    '''
 
     genes = [file.split('.')[1] for file in os.listdir(args.input) if 'RAxML_bipartitions.' in file]
     genes = set(genes)
@@ -24,10 +26,10 @@ def make_astral_inputs():
                     
 
 def run_astral():
-    """
+    '''
+    Run ASTRAL
+    '''
 
-    :return:
-    """
     os.chdir(args.output)
     subprocess.run(f'astral -i all_sgt.tre -b bs_files.txt -o AstralBS.out', shell=True, executable='/bin/bash')
 
