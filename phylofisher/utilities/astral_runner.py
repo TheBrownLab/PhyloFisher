@@ -2,15 +2,16 @@
 import os
 import shutil
 import subprocess
+import textwrap
 
 from phylofisher import help_formatter
 
 
 def make_astral_inputs():
-    """
+    '''
+    Convert the bootstrap trees into a format that ASTRAL can read
+    '''
 
-    :return:
-    """
     genes = [file.split('.')[1] for file in os.listdir(args.input) if 'RAxML_bipartitions.' in file]
     genes = set(genes)
     
@@ -25,10 +26,10 @@ def make_astral_inputs():
                     
 
 def run_astral():
-    """
+    '''
+    Run ASTRAL
+    '''
 
-    :return:
-    """
     os.chdir(args.output)
     subprocess.run(f'astral -i all_sgt.tre -b bs_files.txt -o AstralBS.out', shell=True, executable='/bin/bash')
 
@@ -41,16 +42,21 @@ if __name__ == '__main__':
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Optional Arguments
-    # optional.add_argument('--in_format', metavar='<format>', type=str, default='fasta',
-    #                       help=textwrap.dedent("""\
-    #                               Desired format of the output steps.
-    #                               Options: fasta, nexus, phylip (names truncated at 10 characters),
-    #                               or phylip-relaxed (names are not truncated)
-    #                               Default: phylip-relaxed
-    #                               """))
+    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='tre',
+                              help=textwrap.dedent("""\
+                              Suffix of input files.
+                              Default: tre
+                              Example: path/to/input/*suffix
+                              """))
+    optional.add_argument('-p', '--prefix', metavar='<prefix>', type=str, default='',
+                              help=textwrap.dedent("""\
+                              prefix of input files.
+                              Default: NONE
+                              Example: path/to/input/prefix*
+                              """))
 
     in_help = 'Path to directory containing single gene trees and their corresponding bootstrap value files.'
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, pre_suf=False)
     
     args.output = os.path.abspath(args.output)
     args.input = os.path.abspath(args.input)
