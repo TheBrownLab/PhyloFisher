@@ -41,16 +41,15 @@ if __name__ == '__main__':
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Optional Arguments
-    # optional.add_argument('--in_format', metavar='<format>', type=str, default='fasta',
-    #                       help=textwrap.dedent("""\
-    #                               Desired format of the output steps.
-    #                               Options: fasta, nexus, phylip (names truncated at 10 characters),
-    #                               or phylip-relaxed (names are not truncated)
-    #                               Default: phylip-relaxed
-    #                               """))
+    optional.add_argument('-s', '--suffix', metavar='<suffix>', type=str, default='tre',
+                              help=textwrap.dedent("""\
+                              Suffix of input files.
+                              Default: NONE
+                              Example: path/to/input/*suffix
+                              """))
 
     in_help = 'Path to directory containing single gene trees and their corresponding bootstrap value files.'
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, pre_suf=False)
     
     args.output = os.path.abspath(args.output)
     args.input = os.path.abspath(args.input)
