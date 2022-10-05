@@ -9,36 +9,18 @@ jobs:
       - run: "conda install pylint"
       - run: "pylint phylofisher --exit-zero"
   
-  # linux_test:
-  #   # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-  #   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-  #   machine:
-  #     - image: ubuntu-2204:2022.07.1
-  #   # Add steps to the job
-  #   # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: "pytest"
-  #         command: "echo Hello, World!"
-  
-  # macos_test:
-  #   # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-  #   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-  #   macos:
-  #     xcode: 12.5.1
-  #   # Add steps to the job
-  #   # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: ""
-  #         name: "pytest"
-  #         command: "echo Hello, World!"
+  test:
+    docker:
+      - image: continuumio/anaconda3
+    steps:
+      - checkout
+      - run: "conda install mamba"
+      - run: "mamba install phylofisher pytest"
+      - run: "conda remove phylofisher --force"
+      - run: pytest"
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   commit-status:
     jobs:
       - lint
+      - test
