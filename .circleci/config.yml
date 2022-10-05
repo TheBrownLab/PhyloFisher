@@ -17,7 +17,7 @@ jobs:
       - run: "conda install mamba"
       - run: "mamba install phylofisher pytest"
       - run: "conda remove phylofisher --force"
-      - run: pytest"
+      - run: "pytest"
 
 workflows:
   commit-status:
