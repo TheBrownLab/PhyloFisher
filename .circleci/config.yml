@@ -14,7 +14,7 @@ jobs:
       - image: continuumio/anaconda3
     steps:
       - checkout
-      - run: "conda install mamba"
+      - run: "conda install -c conda-forge mamba"
       - run: "mamba install phylofisher pytest"
       - run: "conda remove phylofisher --force"
       - run: "pytest"
