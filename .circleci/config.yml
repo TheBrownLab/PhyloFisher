@@ -6,7 +6,7 @@ jobs:
       - image: mambaorg/micromamba
     steps:
       - checkout
-      - run: "mamba install pylint"
+      - run: "micromamba install pylint"
       - run: "pylint phylofisher --exit-zero"
   
   test:
@@ -14,8 +14,8 @@ jobs:
       - image: mambaorg/micromamba
     steps:
       - checkout
-      - run: "mamba install -y -c bioconda phylofisher pytest"
-      - run: "mamba remove --force -y phylofisher"
+      - run: "micromamba install -y -c bioconda phylofisher pytest pip"
+      - run: "micromamba remove --force -y phylofisher"
       - run: "pip install --no-deps ."
       - run: "pytest"
 
