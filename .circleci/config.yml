@@ -1,6 +1,7 @@
 version: 2.1
 
 jobs:
+  # Run linting
   lint:
     docker:
       - image: continuumio/anaconda3
@@ -8,17 +9,18 @@ jobs:
       - checkout
       - run: "conda install pylint"
       - run: "pylint phylofisher --exit-zero"
-  
+  # Run tests
   test:
     docker:
       - image: continuumio/anaconda3
     steps:
       - checkout
-      - run: "conda install -y -c bioconda -c conda-forge phylofisher pytest pip"
-      - run: "conda remove --force -y phylofisher"
+      - run: "conda install -y -c bioconda -c conda-forge phylofisher pytest"
+      - run: "conda remove -y --force phylofisher"
       - run: "pip install --no-deps ."
       - run: "pytest"
 
+# Workflows
 workflows:
   commit-status:
     jobs:
