@@ -18,6 +18,7 @@ jobs:
       - run: "conda install -y -c conda-forge mamba"
       - run: "mamba create -n fisher -y -c conda-forge -c bioconda phylofisher pytest"
       - run: "conda init bash"
+      - run: "echo $SHELL"
       - run: "conda activate fisher"
       - run: "conda remove -y --force phylofisher"
       - run: "pip install --no-deps ."
