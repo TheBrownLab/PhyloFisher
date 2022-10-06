@@ -15,9 +15,9 @@ jobs:
       - image: continuumio/anaconda3
     steps:
       - checkout
-      - run: "conda install -y -c conda-forge -c bioconda phylofisher"
+      - run: "conda install -y -c conda-forge mamba"
+      - run: "mamba create -n fisher -y -c conda-forge -c bioconda phylofisher pytest && conda activate fisher"
       - run: "conda remove -y --force phylofisher"
-      - run: "pip install pytest"
       - run: "pip install --no-deps ."
       - run: "pytest"
 
