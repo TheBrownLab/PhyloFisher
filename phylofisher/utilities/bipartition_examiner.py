@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import configparser
 import os
+import shutil
 import sys
 import textwrap
 from collections import Counter
@@ -13,11 +14,6 @@ from ete3 import Tree
 from phylofisher import help_formatter
 
 plt.rcParams["figure.figsize"] = (10, 5)
-
-
-def get_taxa_set(trees):
-    """
-    """
 
 
 def bipartitions(tree):
@@ -246,6 +242,12 @@ if __name__ == "__main__":
 
     metadata = str(os.path.join(dfo, 'metadata.tsv'))
 
+    if os.path.isdir(args.output):
+        shutil.rmtree(args.output)
+
+    os.mkdir(args.output)
+    os.chdir(args.output)
+    
     if args.chimeras:
         chim_dict = {}
         with open(args.chimeras, 'r') as infile:
