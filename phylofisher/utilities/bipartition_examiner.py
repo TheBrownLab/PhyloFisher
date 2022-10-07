@@ -55,23 +55,23 @@ def support(trees):
     bootstrap = []
     n_trees = 0
     all_taxa = set()
-    with open(trees, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            leaves = list(Tree(line).get_leaf_names())
+    with open(trees, 'r', encoding='utf8') as tree_file:
+        for tree in tree_file:
+            tree = tree.strip()
+            leaves = list(Tree(tree).get_leaf_names())
             all_taxa.update(leaves)
 
-    with open(trees, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            tree = Tree(line)
+    with open(trees, 'r', encoding='utf8') as tree_file:
+        for tree in tree_file:
+            tree = tree.strip()
+            tree = Tree(tree)
             n_trees += 1
             bootstrap = bootstrap + list(bipartitions(tree))
     norm_bootstrap = {}
     counted = dict(Counter(bootstrap))
     for key, value in counted.items():
         norm_bootstrap[key] = value / n_trees
-    
+
     return norm_bootstrap, all_taxa
 
 
@@ -89,8 +89,8 @@ def get_support(group, supp_dict):
     query = frozenset(group)
     if query in supp_dict:
         return supp_dict[query]
-    else:
-        return 0
+
+    return 0
 
 
 def get_taxa_in_group(groups):
@@ -102,7 +102,7 @@ def get_taxa_in_group(groups):
     :return: taxa in group
     :rtype: list
     '''
-    df = pd.read_csv(metadata, delimiter='\t')
+    df = pd.read_csv(METADATA, delimiter='\t')
     taxa = []
     for group in groups:
         if group in list(df['Higher Taxonomy']):
@@ -113,9 +113,9 @@ def get_taxa_in_group(groups):
             sys.exit(f'{group} is not in the database\'s metadata')
 
         if args.chimeras:
-            for chimera in chim_dict.keys():
-                if chim_dict[chimera][0] == group or chim_dict[chimera][1] == group:
-                    taxa.append(chimera)
+            for chim_key, chim_value in chim_dict.items():
+                if group in (chim_value[0], chim_value[1]):
+                    taxa.append(chim_key)
 
     return taxa
 
@@ -130,16 +130,15 @@ def parse_groups(input_file):
     :rtype: dict
     '''
     query_dict = {}
-    with open(input_file, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            if ':' in line:
-                group = line.split(':')[0]
-                orgs = line.split(':')[1]
+    with open(input_file, 'r', encoding='utf8') as group_file:
+        for group in group_file:
+            group = group.strip()
+            if ':' in group:
+                group = group.split(':')[0]
+                orgs = group.split(':')[1]
                 query_dict[group] = [org.strip() for org in orgs.split(',')]
             else:
-                group = line
-                groups = [group for group in group.split('+')]
+                groups = list(group.split('+'))
                 query_dict[group] = get_taxa_in_group(groups)
     return query_dict.items()
 
@@ -171,16 +170,15 @@ def parse_bss():
     :rtype: list
     '''
     columns = []
-    n = 0
-    with open(args.bs_files, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            column = file_to_series(line.strip())
-            column.name = os.path.basename(line)
+    count = 0
+    with open(args.bs_files, 'r', encoding='utf8') as bs_file:
+        for column in bs_file:
+            column = file_to_series(column.strip())
+            column.name = os.path.basename(column)
             # column.name = f'Step {n}'
             columns.append(column)
-            n += 1
-        
+            count += 1
+
     return columns
 
 
@@ -225,11 +223,12 @@ def main():
 
 
 if __name__ == "__main__":
-    description = 'Calculates the observed occurrences of clades of interest in bootstrap trees.'
-    parser, optional, required = help_formatter.initialize_argparse(name='bipartition_examiner.py',
-                                                                    desc=description,
-                                                                    usage='bipartition_examiner.py '
-                                                                          '[OPTIONS] -i /path/to/input/')
+    DESCRIPTION = 'Calculates the observed occurrences of clades of interest in bootstrap trees.'
+    parser, optional, required = help_formatter.initialize_argparse(
+        name='bipartition_examiner.py',
+        desc=DESCRIPTION,
+        usage='bipartition_examiner.py [OPTIONS] -i /path/to/input/'
+        )
 
     # Required Arguments
     required.add_argument('-b', '--bs_files', required=True, type=str, metavar='<bs_files>',
@@ -269,18 +268,18 @@ if __name__ == "__main__":
         config.read('config.ini')
         dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
-    metadata = str(os.path.join(dfo, 'metadata.tsv'))
+    METADATA = str(os.path.join(dfo, 'metadata.tsv'))
 
     # Make output directory and change to it
     if os.path.isdir(args.output):
         shutil.rmtree(args.output)
     os.mkdir(args.output)
     os.chdir(args.output)
-    
+
     # Parse chimera file
     if args.chimeras:
         chim_dict = {}
-        with open(args.chimeras, 'r') as infile:
+        with open(args.chimeras, 'r', encoding='utf8') as infile:
             for line in infile:
                 line = line.strip()
                 split_line = line.split('\t')
