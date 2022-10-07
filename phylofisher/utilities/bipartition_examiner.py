@@ -217,8 +217,8 @@ def main():
     ax.legend(loc=0, prop={'size': 12})
     ax.margins(x=0.005)
     plt.tight_layout()
-    fig.savefig("bipartition_examiner.pdf")
-    df.to_csv("bipartition_examiner.tsv", sep='\t')
+    fig.savefig(f'{args.output}/bipartition_examiner.pdf')
+    df.to_csv(f'{args.output}/bipartition_examiner.tsv', sep='\t')
     return df
 
 
@@ -269,12 +269,6 @@ if __name__ == "__main__":
         dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
     METADATA = str(os.path.join(dfo, 'metadata.tsv'))
-
-    # Make output directory and change to it
-    if os.path.isdir(args.output):
-        shutil.rmtree(args.output)
-    os.mkdir(args.output)
-    os.chdir(args.output)
 
     # Parse chimera file
     if args.chimeras:
