@@ -207,21 +207,21 @@ if __name__ == "__main__":
                                                                           '[OPTIONS] -i /path/to/input/')
 
     # Required Arguments
-    required.add_argument('-b', '--bs_files', required=True, type=str, metavar='',
+    required.add_argument('-b', '--bs_files', required=True, type=str, metavar='<bs_files>',
                           help=textwrap.dedent("""\
                           Path bootstrap files.
                           """))
-    required.add_argument('-g', '--groups', type=str, required=True, metavar='',
+    required.add_argument('-g', '--groups', type=str, required=True, metavar='<groups.txt>',
                           help=textwrap.dedent("""\
-                          groups
+                          Path to text file containing groups of interest.
                           """))
 
     # Optional Arguments
-    optional.add_argument('--database', type=str, metavar='path/to/db',
+    optional.add_argument('--database', type=str, metavar='<path/to/db>',
                           help=textwrap.dedent("""\
                           Path to database if not using config.ini
                           """))
-    optional.add_argument('--chimeras', type=str, metavar='chimera_info.tsv',
+    optional.add_argument('--chimeras', type=str, metavar='<path/to/chimeras>',
                           help=textwrap.dedent("""\
                           A .tsv containing a Unique ID, higher taxonomy, and lower taxonomy for each chimera within the input bootstrap files.
 
