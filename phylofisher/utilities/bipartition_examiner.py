@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+
+'''
+Calculates the observed occurrences of clades of interest in bootstrap trees.
+'''
+
 import configparser
 import os
 import shutil
@@ -17,11 +22,14 @@ plt.rcParams["figure.figsize"] = (10, 5)
 
 
 def bipartitions(tree):
-    """
+    '''
+    Gets the bipartitions of a tree
 
-    :param tree:
-    :return:
-    """
+    :param tree: tree
+    :type tree: ETE3 Tree object
+    :return: bipartitions
+    :rtype: set
+    '''
     bipar = set()
     all_ = frozenset(tree.get_leaf_names())
     for node in tree.traverse('preorder'):
@@ -36,11 +44,14 @@ def bipartitions(tree):
 
 
 def support(trees):
-    """
+    '''
+    Get support from trees
 
-    :param trees:
-    :return:
-    """
+    :param trees: path to trees
+    :type trees: str
+    :return: support dictionary, all taxa
+    :rtype: dict, list
+    '''
     bootstrap = []
     n_trees = 0
     all_taxa = set()
@@ -65,12 +76,16 @@ def support(trees):
 
 
 def get_support(group, supp_dict):
-    """
+    '''
+    Checks support for a group
 
-    :param group:
-    :param supp_dict:
-    :return:
-    """
+    :param group: group of interest
+    :type group: set
+    :param supp_dict: support dictionary
+    :type supp_dict: dict
+    :return: support
+    :rtype: float
+    '''
     query = frozenset(group)
     if query in supp_dict:
         return supp_dict[query]
@@ -79,10 +94,14 @@ def get_support(group, supp_dict):
 
 
 def get_taxa_in_group(groups):
-    """
+    '''
+    Gets taxa in a group
 
-    :return:
-    """
+    :param groups: group of interest
+    :type groups: list
+    :return: taxa in group
+    :rtype: list
+    '''
     df = pd.read_csv(metadata, delimiter='\t')
     taxa = []
     for group in groups:
@@ -102,11 +121,14 @@ def get_taxa_in_group(groups):
 
 
 def parse_groups(input_file):
-    """
+    '''
+    Parse groups file
 
-    :param input_file:
-    :return:
-    """
+    :param input_file: path to groups file
+    :type input_file: str
+    :return: groups
+    :rtype: dict
+    '''
     query_dict = {}
     with open(input_file, 'r') as infile:
         for line in infile:
@@ -123,11 +145,14 @@ def parse_groups(input_file):
 
 
 def file_to_series(file):
-    """
+    '''
+    Converts a file to a pandas series
 
-    :param file:
-    :return:
-    """
+    :param file: path to input file
+    :type file: str
+    :return: pandas series
+    :rtype: pd.Series
+    '''
     print(file)
     sup_dict, all_taxa = support(file)
     group_sup = {}
@@ -139,10 +164,12 @@ def file_to_series(file):
 
 
 def parse_bss():
-    """
+    '''
+    Parse bss files
 
-    :return:
-    """
+    :return: columns of bss file
+    :rtype: list
+    '''
     columns = []
     n = 0
     with open(args.bs_files, 'r') as infile:
@@ -158,10 +185,12 @@ def parse_bss():
 
 
 def main():
-    """
+    '''
+    Makes plots of bipartition support
 
-    :return:
-    """
+    :return: bipartition dataframe
+    :rtype: pandas dataframe
+    '''
     columns = parse_bss()
     df = pd.DataFrame(columns)
 
@@ -242,12 +271,13 @@ if __name__ == "__main__":
 
     metadata = str(os.path.join(dfo, 'metadata.tsv'))
 
+    # Make output directory and change to it
     if os.path.isdir(args.output):
         shutil.rmtree(args.output)
-
     os.mkdir(args.output)
     os.chdir(args.output)
     
+    # Parse chimera file
     if args.chimeras:
         chim_dict = {}
         with open(args.chimeras, 'r') as infile:
