@@ -131,15 +131,15 @@ def parse_groups(input_file):
     '''
     query_dict = {}
     with open(input_file, 'r', encoding='utf8') as group_file:
-        for group in group_file:
-            group = group.strip()
-            if ':' in group:
-                group = group.split(':')[0]
-                orgs = group.split(':')[1]
+        for line in group_file:
+            line = line.strip()
+            if ':' in line:
+                group = line.split(':')[0]
+                orgs = line.split(':')[1]
                 query_dict[group] = [org.strip() for org in orgs.split(',')]
             else:
-                groups = list(group.split('+'))
-                query_dict[group] = get_taxa_in_group(groups)
+                groups = list(line.split('+'))
+                query_dict[line] = get_taxa_in_group(groups)
     return query_dict.items()
 
 
@@ -166,20 +166,23 @@ def parse_bss():
     '''
     Parse bss files
 
-    :return: columns of bss file
+    :return: rows of bss file
     :rtype: list
     '''
-    columns = []
+    rows = []
     count = 0
     with open(args.bs_files, 'r', encoding='utf8') as bs_file:
-        for column in bs_file:
-            column = file_to_series(column.strip())
-            column.name = os.path.basename(column)
-            # column.name = f'Step {n}'
-            columns.append(column)
+        for row in bs_file:
+            row = row.strip()
+            if not os.path.isfile(row):
+                raise FileNotFoundError(f'{row} does not exist')
+            row_series = file_to_series(row.strip())
+            row_series.name = os.path.basename(row)
+            # row.name = f'Step {n}'
+            rows.append(row_series)
             count += 1
 
-    return columns
+    return rows
 
 
 def main():
@@ -245,6 +248,10 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                           Path to database if not using config.ini
                           """))
+    optional.add_argument('--no_db', action='store_true',
+                          help=textwrap.dedent("""\
+                          Do not use a data base
+                          """))
     optional.add_argument('--chimeras', type=str, metavar='<path/to/chimeras>',
                           help=textwrap.dedent("""\
                           A .tsv containing a Unique ID, higher taxonomy, and lower taxonomy for each chimera within the input bootstrap files.
@@ -261,14 +268,20 @@ if __name__ == "__main__":
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
-    if args.database:
-        dfo = os.path.abspath(args.database)
-    else:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
-    METADATA = str(os.path.join(dfo, 'metadata.tsv'))
+        
+    if not args.no_db:
+        if args.database:
+            dfo = os.path.abspath(args.database)
+        elif os.path.isfile('config.ini'):
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            dfo = str(Path(config['PATHS']['database_folder']).resolve())
+        METADATA = str(os.path.join(dfo, 'metadata.tsv'))
+
+    # Make output directory
+    if not os.path.isdir(args.output):
+        os.mkdir(args.output)
 
     # Parse chimera file
     if args.chimeras:
