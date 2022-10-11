@@ -1,6 +1,12 @@
 #!/usr/bin/env python
+
+'''
+Calculates the observed occurrences of clades of interest in bootstrap trees.
+'''
+
 import configparser
 import os
+import shutil
 import sys
 import textwrap
 from collections import Counter
@@ -15,17 +21,15 @@ from phylofisher import help_formatter
 plt.rcParams["figure.figsize"] = (10, 5)
 
 
-def get_taxa_set(trees):
-    """
-    """
-
-
 def bipartitions(tree):
-    """
+    '''
+    Gets the bipartitions of a tree
 
-    :param tree:
-    :return:
-    """
+    :param tree: tree
+    :type tree: ETE3 Tree object
+    :return: bipartitions
+    :rtype: set
+    '''
     bipar = set()
     all_ = frozenset(tree.get_leaf_names())
     for node in tree.traverse('preorder'):
@@ -40,54 +44,65 @@ def bipartitions(tree):
 
 
 def support(trees):
-    """
+    '''
+    Get support from trees
 
-    :param trees:
-    :return:
-    """
+    :param trees: path to trees
+    :type trees: str
+    :return: support dictionary, all taxa
+    :rtype: dict, list
+    '''
     bootstrap = []
     n_trees = 0
     all_taxa = set()
-    with open(trees, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            leaves = list(Tree(line).get_leaf_names())
+    with open(trees, 'r', encoding='utf8') as tree_file:
+        for tree in tree_file:
+            tree = tree.strip()
+            leaves = list(Tree(tree).get_leaf_names())
             all_taxa.update(leaves)
 
-    with open(trees, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            tree = Tree(line)
+    with open(trees, 'r', encoding='utf8') as tree_file:
+        for tree in tree_file:
+            tree = tree.strip()
+            tree = Tree(tree)
             n_trees += 1
             bootstrap = bootstrap + list(bipartitions(tree))
     norm_bootstrap = {}
     counted = dict(Counter(bootstrap))
     for key, value in counted.items():
         norm_bootstrap[key] = value / n_trees
-    
+
     return norm_bootstrap, all_taxa
 
 
 def get_support(group, supp_dict):
-    """
+    '''
+    Checks support for a group
 
-    :param group:
-    :param supp_dict:
-    :return:
-    """
+    :param group: group of interest
+    :type group: set
+    :param supp_dict: support dictionary
+    :type supp_dict: dict
+    :return: support
+    :rtype: float
+    '''
     query = frozenset(group)
     if query in supp_dict:
         return supp_dict[query]
-    else:
-        return 0
+
+    return 0
 
 
 def get_taxa_in_group(groups):
-    """
+    '''
+    Gets taxa in a group
 
-    :return:
-    """
-    df = pd.read_csv(metadata, delimiter='\t')
+    :param groups: group of interest
+    :type groups: list
+    :return: taxa in group
+    :rtype: list
+    '''
+    df = pd.read_csv(METADATA, delimiter='\t')
     taxa = []
     for group in groups:
         if group in list(df['Higher Taxonomy']):
@@ -98,40 +113,45 @@ def get_taxa_in_group(groups):
             sys.exit(f'{group} is not in the database\'s metadata')
 
         if args.chimeras:
-            for chimera in chim_dict.keys():
-                if chim_dict[chimera][0] == group or chim_dict[chimera][1] == group:
-                    taxa.append(chimera)
+            for chim_key, chim_value in chim_dict.items():
+                if group in (chim_value[0], chim_value[1]):
+                    taxa.append(chim_key)
 
     return taxa
 
 
 def parse_groups(input_file):
-    """
+    '''
+    Parse groups file
 
-    :param input_file:
-    :return:
-    """
+    :param input_file: path to groups file
+    :type input_file: str
+    :return: groups
+    :rtype: dict
+    '''
     query_dict = {}
-    with open(input_file, 'r') as infile:
-        for line in infile:
+    with open(input_file, 'r', encoding='utf8') as group_file:
+        for line in group_file:
             line = line.strip()
             if ':' in line:
                 group = line.split(':')[0]
                 orgs = line.split(':')[1]
                 query_dict[group] = [org.strip() for org in orgs.split(',')]
             else:
-                group = line
-                groups = [group for group in group.split('+')]
-                query_dict[group] = get_taxa_in_group(groups)
+                groups = list(line.split('+'))
+                query_dict[line] = get_taxa_in_group(groups)
     return query_dict.items()
 
 
 def file_to_series(file):
-    """
+    '''
+    Converts a file to a pandas series
 
-    :param file:
-    :return:
-    """
+    :param file: path to input file
+    :type file: str
+    :return: pandas series
+    :rtype: pd.Series
+    '''
     print(file)
     sup_dict, all_taxa = support(file)
     group_sup = {}
@@ -143,29 +163,35 @@ def file_to_series(file):
 
 
 def parse_bss():
-    """
+    '''
+    Parse bss files
 
-    :return:
-    """
-    columns = []
-    n = 0
-    with open(args.bs_files, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            column = file_to_series(line.strip())
-            column.name = os.path.basename(line)
-            # column.name = f'Step {n}'
-            columns.append(column)
-            n += 1
-        
-    return columns
+    :return: rows of bss file
+    :rtype: list
+    '''
+    rows = []
+    count = 0
+    with open(args.bs_files, 'r', encoding='utf8') as bs_file:
+        for row in bs_file:
+            row = row.strip()
+            if not os.path.isfile(row):
+                raise FileNotFoundError(f'{row} does not exist')
+            row_series = file_to_series(row.strip())
+            row_series.name = os.path.basename(row)
+            # row.name = f'Step {n}'
+            rows.append(row_series)
+            count += 1
+
+    return rows
 
 
 def main():
-    """
+    '''
+    Makes plots of bipartition support
 
-    :return:
-    """
+    :return: bipartition dataframe
+    :rtype: pandas dataframe
+    '''
     columns = parse_bss()
     df = pd.DataFrame(columns)
 
@@ -194,34 +220,39 @@ def main():
     ax.legend(loc=0, prop={'size': 12})
     ax.margins(x=0.005)
     plt.tight_layout()
-    fig.savefig("bipartition_examiner.pdf")
-    df.to_csv("bipartition_examiner.tsv", sep='\t')
+    fig.savefig(f'{args.output}/bipartition_examiner.pdf')
+    df.to_csv(f'{args.output}/bipartition_examiner.tsv', sep='\t')
     return df
 
 
 if __name__ == "__main__":
-    description = 'Calculates the observed occurrences of clades of interest in bootstrap trees.'
-    parser, optional, required = help_formatter.initialize_argparse(name='bipartition_examiner.py',
-                                                                    desc=description,
-                                                                    usage='bipartition_examiner.py '
-                                                                          '[OPTIONS] -i /path/to/input/')
+    DESCRIPTION = 'Calculates the observed occurrences of clades of interest in bootstrap trees.'
+    parser, optional, required = help_formatter.initialize_argparse(
+        name='bipartition_examiner.py',
+        desc=DESCRIPTION,
+        usage='bipartition_examiner.py [OPTIONS] -i /path/to/input/'
+        )
 
     # Required Arguments
-    required.add_argument('-b', '--bs_files', required=True, type=str, metavar='',
+    required.add_argument('-b', '--bs_files', required=True, type=str, metavar='<bs_files>',
                           help=textwrap.dedent("""\
                           Path bootstrap files.
                           """))
-    required.add_argument('-g', '--groups', type=str, required=True, metavar='',
+    required.add_argument('-g', '--groups', type=str, required=True, metavar='<groups.txt>',
                           help=textwrap.dedent("""\
-                          groups
+                          Path to text file containing groups of interest.
                           """))
 
     # Optional Arguments
-    optional.add_argument('--database', type=str, metavar='path/to/db',
+    optional.add_argument('--database', type=str, metavar='<path/to/db>',
                           help=textwrap.dedent("""\
                           Path to database if not using config.ini
                           """))
-    optional.add_argument('--chimeras', type=str, metavar='chimera_info.tsv',
+    optional.add_argument('--no_db', action='store_true',
+                          help=textwrap.dedent("""\
+                          Do not use a data base
+                          """))
+    optional.add_argument('--chimeras', type=str, metavar='<path/to/chimeras>',
                           help=textwrap.dedent("""\
                           A .tsv containing a Unique ID, higher taxonomy, and lower taxonomy for each chimera within the input bootstrap files.
 
@@ -237,18 +268,25 @@ if __name__ == "__main__":
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
-    if args.database:
-        dfo = os.path.abspath(args.database)
-    else:
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
-    metadata = str(os.path.join(dfo, 'metadata.tsv'))
+        
+    if not args.no_db:
+        if args.database:
+            dfo = os.path.abspath(args.database)
+        elif os.path.isfile('config.ini'):
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            dfo = str(Path(config['PATHS']['database_folder']).resolve())
+        METADATA = str(os.path.join(dfo, 'metadata.tsv'))
 
+    # Make output directory
+    if not os.path.isdir(args.output):
+        os.mkdir(args.output)
+
+    # Parse chimera file
     if args.chimeras:
         chim_dict = {}
-        with open(args.chimeras, 'r') as infile:
+        with open(args.chimeras, 'r', encoding='utf8') as infile:
             for line in infile:
                 line = line.strip()
                 split_line = line.split('\t')
