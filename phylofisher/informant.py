@@ -109,7 +109,6 @@ def table_with_routes(df, routes):
         df.at[k, 'Lower Taxonomy'] = v[0]
 
     df = df.sort_index(axis=0)
-    print(df)
 
     df.to_csv(f'{output_fold}/occupancy.tsv', sep='\t')
 
