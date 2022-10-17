@@ -96,7 +96,7 @@ def update_df_taxa(df):
         to_drop = []
         for line in infile:
             line = line.strip()
-            taxon, _, _, _, include = line.split()
+            taxon, _, _, _, _, include = line.split('\t')
             if include == 'no':
                 to_drop.append(taxon)
 
