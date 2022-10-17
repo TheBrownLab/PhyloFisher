@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='1.2.0',
+    version='1.2.2',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -38,8 +38,6 @@ setup(
              'phylofisher/utilities/gfmix.yaml',
              'phylofisher/utilities/mammal.yaml',
              },
-    python_requires='==3.7.10',
-    install_requires=['pyqt5==5.12.3'],
     url='https://github.com/TheBrownLab/PhyloFisher',
     license='MIT',
     author='David Zihala',
