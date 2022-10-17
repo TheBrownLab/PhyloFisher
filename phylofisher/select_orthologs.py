@@ -148,4 +148,7 @@ if __name__ == '__main__':
 
     make_subset_tsv()
 
-    tools.make_plot(gene_comp, f'gene_comp', y_count=taxa_count, genes=True)
+    try:
+        tools.make_plot(gene_comp, f'gene_comp', y_count=taxa_count, genes=True)
+    except ValueError:
+        print('Unable to make plot. However, the TSV file was created, and you are free to move forward.')
