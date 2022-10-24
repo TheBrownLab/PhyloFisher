@@ -180,4 +180,8 @@ if __name__ == '__main__':
     taxa_comp = matrix.sum().divide(other=gene_count)
 
     make_subset_tsv()
-    tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)
+    
+    try:
+        tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)
+    except ValueError:
+        print('Unable to make plot. However, the TSV file was created, and you are free to move forward.')
