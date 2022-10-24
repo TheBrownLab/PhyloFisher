@@ -154,25 +154,19 @@ if __name__ == '__main__':
                 'phylip-relaxed': 'phy',
                 'nexus'         : 'nex'}
 
-    dict_strat = args.recoding_strat
-    key = key[dict_strat]
-
-    strats = ['SR4', 'SR6', 'KGB6', 'D6', 'D9', 'D12', 'D15', 'D18']
-
+   
+    #check input recoding strategy is valid
+    if args.recoding_strat in key.keys():
+        key = key[args.recoding_strat]
+    else:
+        error_msg = "Error: Invalid input recoding stragety \n Valid strateies include SR4, SR6, KGB6, Dayhoff6, Dayhoff9, Dayhoff12, Dayhoff15, and Dayhoff18"
+        raise Exception(error_msg)
     
-
     # Opens input and output files
     with open(args.input, 'r') as infile, open(f'{args.output}.{out_dict[args.out_format]}', 'w') as outfile:
         all_records = []
 
-        #check input recoding strategy is valid
-        for in_strat in args.recoding_strat:
-            if in_strat in strats:
-                continue
-            else:
-                break
-            print("Error: Invalid input recoding stragety \n Valid strateies include SR4, SR6, KGB6, Dayhoff6, Dayhoff9, Dayhoff12, Dayhoff15, and Dayhoff18")
-        
+            
         # SeqIO parses input file
         for record in SeqIO.parse(infile, format=args.in_format):
             # Iterates through the key dictionary's keys
