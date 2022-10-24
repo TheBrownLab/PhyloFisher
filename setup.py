@@ -24,7 +24,7 @@ setup(
              'phylofisher/utilities/bipartition_examiner.py',
              'phylofisher/utilities/fast_taxa_remover.py',
              'phylofisher/utilities/aa_comp_calculator.py',
-             'phylofisher/utilities/SR4_class_recoder.py',
+             'phylofisher/utilities/aa_recoder.py',
              'phylofisher/utilities/taxon_collapser.py',
              'phylofisher/utilities/genetic_code_examiner.py',
              'phylofisher/utilities/heterotachy.py',
