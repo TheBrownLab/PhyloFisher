@@ -1,0 +1,20 @@
+name: prequal
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - boost-cpp=1.74.0=h359cf19_6
+  - bzip2=1.0.8=h7b6447c_0
+  - icu=69.1=h9c3ff4c_0
+  - libgcc-ng=12.2.0=h65d4601_19
+  - libgomp=12.2.0=h65d4601_19
+  - libstdcxx-ng=12.2.0=h46fd767_19
+  - lz4-c=1.9.3=h295c915_1
+  - prequal=1.02=hb97b32f_3
+  - xz=5.2.6=h5eee18b_0
+  - zlib=1.2.13=h5eee18b_0
+  - zstd=1.5.2=ha4553b6_0
+prefix: /mnt/scratch/brownlab/rej110/anaconda3/envs/prequal
