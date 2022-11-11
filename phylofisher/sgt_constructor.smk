@@ -32,6 +32,8 @@ rule prequal:
         f'{out_dir}/prequal/{{gene}}.aa.filtered'
     log:
         f'{out_dir}/logs/prequal/{{gene}}.log'
+    conda:
+        'envs/prequal.yaml'
     shell:
         'prequal {input} >{log} 2>{log}'
 
@@ -42,6 +44,8 @@ rule length_filter_mafft:
         f'{out_dir}/length_filtration/mafft/{{gene}}.aln'
     log:
         f'{out_dir}/logs/length_filter_mafft/{{gene}}.log'
+    conda:
+        'envs/mafft.yaml'
     shell:
         'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
@@ -53,6 +57,8 @@ rule length_filter_divvier:
         f'{out_dir}/length_filtration/divvier/{{gene}}.aln.PP'
     log:
         f'{out_dir}/logs/length_filter_divvier/{{gene}}.log'
+    conda:
+        'envs/divvier.yaml'
     shell:
         f'''
         divvier -mincol 4 -partial {{input}} >{{log}} 2>{{log}}
@@ -80,6 +86,8 @@ rule length_filter_bmge:
         f'{out_dir}/length_filtration/bmge/{{gene}}.bmge'
     log:
         f'{out_dir}/logs/length_filter_bmge/{{gene}}.log'
+    conda:
+        'envs/bmge.yaml'
     shell:
         'bmge -t AA -g 0.3 -i {input} -of {output} >{log} 2>&1'
 
@@ -115,6 +123,8 @@ rule mafft:
         f'{out_dir}/mafft/{{gene}}.aln'
     log:
         f'{out_dir}/logs/mafft/{{gene}}.log'
+    conda:
+        'envs/mafft.yaml'
     shell:
         'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
@@ -126,6 +136,8 @@ rule divvier:
         f'{out_dir}/divvier/{{gene}}.aln.PP'
     log:
         f'{out_dir}/logs/divvier/{{gene}}.log'
+    conda:
+        'envs/divvier.yaml'
     shell:
         f'''
         divvier -minicol 4 -partial {{input}} >{{log}} 2>{{log}}
@@ -138,18 +150,30 @@ rule trimal:
         input:
             f'{out_dir}/divvier/{{gene}}.aln.partial.fas'
         output:
+            f'{out_dir}/trimal/{{gene}}.trimal'
+        log:
+            f'{out_dir}/logs/trimal/{{gene}}.log'
+        conda:
+            'envs/trimal.yaml'
+        shell:
+            'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
+
+
+rule remove_gaps:
+        input:
+            f'{out_dir}/trimal/{{gene}}.trimal'
+        output:
             f'{out_dir}/trimal/{{gene}}.final'
         log:
             f'{out_dir}/logs/trimal/{{gene}}.log'
         run:
-            shell('trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}')
-
             records = []
-            for record in SeqIO.parse(output[0], 'fasta'):
+            for record in SeqIO.parse(input[0], 'fasta'):
                 if len(str(record.seq).replace('-', '').replace('X','')) > 0:
                     records.append(record)
 
             SeqIO.write(records, output[0], "fasta")
+            
 
 def get_raxml_input(wildcards):
     gene = '{wildcards.gene}'.format(wildcards=wildcards)
@@ -169,6 +193,8 @@ rule raxml:
         f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{{gene}}.tre',
     log:
         f'{out_dir}/logs/raxml/{{gene}}.log'
+    conda:
+        'envs/raxml.yaml'
     params:
         raxml_out=f'{out_dir}/raxml'
     shell:

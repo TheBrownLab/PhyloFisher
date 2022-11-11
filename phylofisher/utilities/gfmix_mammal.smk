@@ -114,7 +114,7 @@ rule mammal:
     params:
         rc=rate_classes
     conda:
-        'mammal.yaml'
+        '../envs/mammal.yaml'
     shell: 
         '''
         mammal -s {input[0]} -t {input[1]} -c {params.rc} -l
@@ -134,7 +134,7 @@ rule gfmix:
     params:
         aafreq='~/.gfmix/C20.aafreq.dat'
     conda:
-        'gfmix.yaml'
+        '../envs/gfmix.yaml'
     shell:
         '''
         gfmix -s {input.matrix} -t {input.treefile} -i {input.iqtreefile} -f {params.aafreq} -r {input.rootfile} > {output}

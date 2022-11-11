@@ -86,7 +86,8 @@ def run_snakemake(length_filter=False):
         f'--cores {args.threads}',
         f'--rerun-incomplete',
         f'--keep-going',
-        f'--nolock'
+        f'--nolock',
+        f'--use-conda',
     ]
 
     smk_frags.append(get_output_files(length_filter))
