@@ -9,7 +9,7 @@ import sys
 import textwrap
 from collections import defaultdict, Counter
 from glob import glob
-
+import matplotlib.colors as mcolors
 import pandas as pd
 from Bio import SeqIO
 
@@ -312,6 +312,19 @@ def make_profiles(threads):
     subprocess.run('rm *.aln', shell=True)  # delete alignments
     os.chdir('..')
 
+def generate_tree_colors():
+
+    colors = sorted(mcolors.CSS4_COLORS.keys())
+    higher_tax_set = set()
+    with open('metadata.tsv', 'r') as infile:
+        reader = csv.reader(infile, delimiter='\t')
+        for row in reader:
+            higher_tax_set.add(row[2])
+    
+    with open('tree_colors.tsv', 'w') as outfile:
+        outfile.write('Taxonomy\tColor\n')
+        for i, higher_tax in enumerate(sorted(list(higher_tax_set))):
+            outfile.write(f'{higher_tax}\t{colors[i]}\n')
 
 def main(args, threads, no_og_file, threshold):
     """
@@ -376,4 +389,7 @@ if __name__ == "__main__":
     csv_to_tsv()
     check_orthologs()
     check_taxa()
-    main(args, args.threads, args.no_og_file, args.og_threshold)
+    # main(args, args.threads, args.no_og_file, args.og_threshold)
+    
+    if not os.path.exists('tree_colors.tsv'):
+        generate_tree_colors()
