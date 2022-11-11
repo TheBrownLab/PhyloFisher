@@ -389,7 +389,7 @@ if __name__ == "__main__":
     csv_to_tsv()
     check_orthologs()
     check_taxa()
-    # main(args, args.threads, args.no_og_file, args.og_threshold)
+    main(args, args.threads, args.no_og_file, args.og_threshold)
     
     if not os.path.exists('tree_colors.tsv'):
         generate_tree_colors()
