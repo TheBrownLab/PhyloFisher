@@ -127,7 +127,7 @@ def update_dataframe(df):
         to_drop = []
         for line in infile:
             line = line.strip()
-            taxon, _, _, _, include = line.split()
+            taxon, _, _, _, _, include = line.split()
             if include == 'no':
                 to_drop.append(taxon)
 
