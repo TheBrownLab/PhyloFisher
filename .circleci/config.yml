@@ -4,18 +4,17 @@ jobs:
   # Run linting
   lint:
     docker:
-      - image: continuumio/anaconda3
+      - image: mambaorg/micromamba
     steps:
       - checkout
-      - run: "conda install pylint"
+      - run: "mamba install pylint"
       - run: "pylint phylofisher --exit-zero"
   # Run tests
   test:
     docker:
-      - image: continuumio/anaconda3
+      - image: mambaorg/micromamba
     steps:
       - checkout
-      - run: "conda install -y -c conda-forge mamba"
       - run: "mamba install -y -c conda-forge -c bioconda phylofisher pytest python=3.7.10"
       - run: "conda remove -y --force phylofisher"
       - run: "pip install --no-deps ."
