@@ -12,10 +12,9 @@ jobs:
   # Run tests
   test:
     docker:
-      - image: continuumio/anaconda3
+      - image: condaforge/mambaforge
     steps:
       - checkout
-      - run: "conda install -y -c conda-forge mamba=0.15.2"
       - run: "mamba install -y -c conda-forge -c bioconda phylofisher pytest python=3.7.10"
       - run: "conda remove -y --force phylofisher"
       - run: "pip install --no-deps ."
