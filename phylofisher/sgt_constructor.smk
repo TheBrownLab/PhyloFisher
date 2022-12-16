@@ -1,7 +1,6 @@
 # The main entry point of your workflow.
 import os
 
-import pandas as pd
 from Bio import SeqIO
 
 out_dir = config['out_dir']
@@ -33,7 +32,7 @@ rule prequal:
     log:
         f'{out_dir}/logs/prequal/{{gene}}.log'
     conda:
-        'envs/prequal.yaml'
+        'prequal.yaml'
     shell:
         'prequal {input} >{log} 2>{log}'
 
@@ -45,7 +44,7 @@ rule length_filter_mafft:
     log:
         f'{out_dir}/logs/length_filter_mafft/{{gene}}.log'
     conda:
-        'envs/mafft.yaml'
+        'mafft.yaml'
     shell:
         'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
@@ -58,7 +57,7 @@ rule length_filter_divvier:
     log:
         f'{out_dir}/logs/length_filter_divvier/{{gene}}.log'
     conda:
-        'envs/divvier.yaml'
+        'divvier.yaml'
     shell:
         f'''
         divvier -mincol 4 -partial {{input}} >{{log}} 2>{{log}}
@@ -87,7 +86,7 @@ rule length_filter_bmge:
     log:
         f'{out_dir}/logs/length_filter_bmge/{{gene}}.log'
     conda:
-        'envs/bmge.yaml'
+        'bmge.yaml'
     shell:
         'bmge -t AA -g 0.3 -i {input} -of {output} >{log} 2>&1'
 
@@ -124,7 +123,7 @@ rule mafft:
     log:
         f'{out_dir}/logs/mafft/{{gene}}.log'
     conda:
-        'envs/mafft.yaml'
+        'mafft.yaml'
     shell:
         'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
@@ -137,7 +136,7 @@ rule divvier:
     log:
         f'{out_dir}/logs/divvier/{{gene}}.log'
     conda:
-        'envs/divvier.yaml'
+        'divvier.yaml'
     shell:
         f'''
         divvier -minicol 4 -partial {{input}} >{{log}} 2>{{log}}
@@ -154,7 +153,7 @@ rule trimal:
         log:
             f'{out_dir}/logs/trimal/{{gene}}.log'
         conda:
-            'envs/trimal.yaml'
+            'trimal.yaml'
         shell:
             'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
 
@@ -194,7 +193,7 @@ rule raxml:
     log:
         f'{out_dir}/logs/raxml/{{gene}}.log'
     conda:
-        'envs/raxml.yaml'
+        'raxml.yaml'
     params:
         raxml_out=f'{out_dir}/raxml'
     shell:
