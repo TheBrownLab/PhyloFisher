@@ -45,9 +45,6 @@ def restore():
         os.remove(f'{args.database}/tree_colors.tsv')
     shutil.copy(f'{backup_dir}/tree_colors.tsv', f'{args.database}/tree_colors.tsv')
 
-    if os.path.isdir(f'{args.database}/proteomes'):
-        shutil.rmtree(f'{args.database}/proteomes')
-    shutil.copytree(f'{backup_dir}/proteomes', f'{args.database}/proteomes')
 
 
 if __name__ == '__main__':
