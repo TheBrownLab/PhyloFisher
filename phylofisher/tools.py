@@ -192,7 +192,6 @@ def first_backup(dfo, date_time):
     os.mkdir(f'{dfo}/backups/{date_time}')
     shutil.copytree(f'{dfo}/orthologs', f'{dfo}/backups/{date_time}/orthologs')
     shutil.copytree(f'{dfo}/paralogs', f'{dfo}/backups/{date_time}/paralogs')
-    shutil.copytree(f'{dfo}/proteomes', f'{dfo}/backups/{date_time}/proteomes')
     shutil.copy(f'{dfo}/metadata.tsv', f'{dfo}/backups/{date_time}/metadata.tsv')
     shutil.copy(f'{dfo}/tree_colors.tsv', f'{dfo}/backups/{date_time}/tree_colors.tsv')
 
@@ -210,13 +209,12 @@ def backup(dfo):
         os.mkdir(f'{dfo}/backups/{now}')
         os.mkdir(f'{dfo}/backups/{now}/orthologs')
         os.mkdir(f'{dfo}/backups/{now}/paralogs')
-        os.mkdir(f'{dfo}/backups/{now}/proteomes')
 
         for root, dirs, files in os.walk(f'{dfo}/backups'):
             for file in files:
                 back_files[file] = (os.path.join(root, file))
 
-        for folder in ['orthologs', 'paralogs', 'proteomes']:
+        for folder in ['orthologs', 'paralogs']:
             for root, dirs, files in os.walk(f'{dfo}/{folder}'):
                 for file in files:
                     db_files[file] = (os.path.join(root, file))
@@ -230,10 +228,8 @@ def backup(dfo):
             else:
                 dest = '/'.join(v.split('/')[-2:])
 
-            if k in back_files.keys() and get_md5(db_files[k]) == get_md5(back_files[k]):
-                os.symlink(f'{dfo}/backups/{latest_backup}/{dest}', f'{dfo}/backups/{now}/{dest}')
-            else:
-                shutil.copy(v, f'{dfo}/backups/{now}/{dest}')
+            
+            shutil.copy(v, f'{dfo}/backups/{now}/{dest}')
 
     else:
         first_backup(dfo, now)

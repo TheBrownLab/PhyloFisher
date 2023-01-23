@@ -90,21 +90,6 @@ def delete_homologs(org_set):
             fasta_cleaner(file, org_set)
 
 
-def delete_proteomes(org_set, collapsed_taxa):
-    '''
-    Purges input proteomes
-    Does not purge collapsed taxa, because they do not have a input proteomes
-
-    :param org_set: organisms to remove
-    :type org_set: set
-    :param collapsed_taxa: collapsed taxa
-    :type collapsed_taxa: list
-    '''
-    for org in org_set:
-        if org not in collapsed_taxa:
-            os.remove(os.path.join(dfo, 'proteomes', f'{org}.faa.tar.gz'))
-
-
 def purge(collapsed_taxa):
     '''
     Purges taxa from database
@@ -131,7 +116,6 @@ def purge(collapsed_taxa):
                 res.writerow(line)
                 
     delete_homologs(orgs_to_del)
-    delete_proteomes(orgs_to_del, collapsed_taxa)
 
 
 if __name__ == '__main__':
