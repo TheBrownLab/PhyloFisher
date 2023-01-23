@@ -36,7 +36,7 @@ rule prequal:
     log:
         f'{out_dir}/logs/prequal/{{gene}}.log'
     conda:
-        'envs/prequal.yaml'
+        'prequal.yaml'
     shell:
         'prequal {input} >{log} 2>{log}'
 
@@ -49,7 +49,7 @@ rule mafft:
     log:
         f'{out_dir}/logs/mafft/{{gene}}.log'
     conda:
-        'envs/mafft.yaml'
+        'mafft.yaml'
     shell:
         'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
@@ -62,7 +62,7 @@ rule divvier:
     log:
         f'{out_dir}/logs/divvier/{{gene}}.log'
     conda:
-        'envs/divvier.yaml'
+        'divvier.yaml'
     shell:
         f'''
         divvier -minicol 4 -partial {{input}} >{{log}} 2>{{log}}
@@ -79,7 +79,7 @@ rule trimal:
         log:
             f'{out_dir}/logs/trimal/{{gene}}.log'
         conda:
-            'envs/trimal.yaml'
+            'trimal.yaml'
         shell:
             'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
 
