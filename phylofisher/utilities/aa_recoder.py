@@ -177,8 +177,9 @@ if __name__ == '__main__':
                     sequence = str(record.seq).replace(aa, nuc).replace("X", "-")
                     # Creates new SeqIO record
                     record.seq = Seq(sequence)
-                    # Appends newly created SeqIO record to a list of SeqIO records to be used by SeqIO.write()
-                    all_records.append(record)
+            
+            # Appends newly created SeqIO record to a list of SeqIO records to be used by SeqIO.write()
+            all_records.append(record)
 
         # Writes sequences to the outfile in user specified output format
         SeqIO.write(sequences=all_records, handle=outfile, format=args.out_format)
