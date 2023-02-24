@@ -206,13 +206,13 @@ def stats_orgs(df, new_data=False):
     else:
         out_filename = 'db_taxa_stats.tsv'
 
-    # Fill in columns for including in SGT construction. By default all are yes
+    # Fill in columns for including in homolog tree construction. By default all are yes
     has_paralogs = check_paralogs()
     if new_data:
-        sgt_dict = {org: 'yes' for org in in_taxa_dict.keys()}
+        homolog_tree_dict = {org: 'yes' for org in in_taxa_dict.keys()}
     else:
-        sgt_dict = {org: 'yes' for org in db_taxa_dict.keys()}
-    df['SGT'] = df.index.map(sgt_dict)
+        homolog_tree_dict = {org: 'yes' for org in db_taxa_dict.keys()}
+    df['Homolog Tree'] = df.index.map(homolog_tree_dict)
 
     # Fill in column for paralogs. If no paralogs entry is 'none'.
     # If there are paralogs entry is 'yes'. If there are paralogs, but --ortholog_only is given entry is 'no'.
@@ -241,7 +241,7 @@ def stats_gene(df):
     df[f'Percent of Total Taxa (out of {taxa_count})'] = round((df['Number of Taxa'] / taxa_count) * 100, 2)
     df = df.rename_axis('Gene Name')
     df = df.sort_values(by=['Number of Taxa'], ascending=False)
-    df['SGT'] = ['yes'] * len(df)
+    df['Homolog Tree'] = ['yes'] * len(df)
     df.to_csv(f'{output_fold}/gene_stats.tsv', sep='\t')
 
 
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     optional.add_argument('--orthologs_only', action='store_true',
                           help=textwrap.dedent("""\
                           Paralogs will NOT be included from any taxa in the starting 
-                          database in downstream single gene tree construction.
+                          database in downstream homolog tree construction.
                           """))
 
     in_help = 'Path to fisher.py output directory'
