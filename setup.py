@@ -9,6 +9,7 @@ setup(
              'phylofisher/working_dataset_constructor.py',
              'phylofisher/forest.py',
              'phylofisher/matrix_constructor.py',
+             'phylofisher/matrix_constructor.smk',
              'phylofisher/informant.py',
              'phylofisher/apply_to_db.py',
              'phylofisher/install_deps.py',
