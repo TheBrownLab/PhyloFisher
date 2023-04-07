@@ -130,7 +130,7 @@ rule construct_matrix:
     run:
         with open(output[0], 'w') as outfile:
             outfile.write('Gene\tStart\tStop\n')
-            files = sorted(glob(f'{out_dir}/trimal/*'))
+            files = sorted(glob(f'{out_dir}/trimal/*.final'))
 
             total_len = 0
             res_dict = defaultdict(str)
