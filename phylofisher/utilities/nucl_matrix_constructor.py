@@ -107,7 +107,7 @@ def tblastn(gene):
             
             bash(' '.join(cmd_frags))
 
-def parse_blast(file):
+def parse_blast():
     '''
     Get nucleotide sequences from cds files
 
@@ -118,36 +118,37 @@ def parse_blast(file):
     
     seq_dict = {}
 
-    taxon = os.path.basename(file).split('.')[1]
-    gene = os.path.basename(file).split('.')[0]
-    # open blast results and cds file
-    with open(f'{args.output}/tblastn/{gene}.{taxon}.tsv', 'r') as infile, open(fasta_dict[taxon], 'r') as nucl_file:
-        # loop through blast results
-        for line in infile:
-            sseqid, _, _, _, _, _, _, sstart, send, _, _ = line.strip().split('\t')
-        
-        # loop through cds file
-        for record in SeqIO.parse(nucl_file, 'fasta'):
-            if sseqid in record.id + record.description:
-                # get nucleotide sequence                    
-                if int(sstart) > int(send):
-                    record.seq = record.seq[int(send):int(sstart)]
-                    record.seq = record.seq.reverse_complement()
-                else:
-                    record.seq = record.seq[int(sstart):int(send)]
-                
-                # Set record id and description to taxon name
-                record.id = taxon
-                record.description = ''
-                
-                # add to dictionary
-                if gene not in seq_dict:
-                    seq_dict[gene] = [record]
-                else:
-                    seq_dict[gene].append(record)
-                
-                # break loop once found
-                break
+    for file in os.listdir(f'{args.output}/tblastn'):
+        taxon = os.path.basename(file).split('.')[1]
+        gene = os.path.basename(file).split('.')[0]
+        # open blast results and cds file
+        with open(f'{args.output}/tblastn/{gene}.{taxon}.tsv', 'r') as infile, open(fasta_dict[taxon], 'r') as nucl_file:
+            # loop through blast results
+            for line in infile:
+                sseqid, _, _, _, _, _, _, sstart, send, _, _ = line.strip().split('\t')
+            
+            # loop through cds file
+            for record in SeqIO.parse(nucl_file, 'fasta'):
+                if sseqid in record.id + record.description:
+                    # get nucleotide sequence                    
+                    if int(sstart) > int(send):
+                        record.seq = record.seq[int(send):int(sstart)]
+                        record.seq = record.seq.reverse_complement()
+                    else:
+                        record.seq = record.seq[int(sstart):int(send)]
+                    
+                    # Set record id and description to taxon name
+                    record.id = taxon
+                    record.description = ''
+                    
+                    # add to dictionary
+                    if gene not in seq_dict:
+                        seq_dict[gene] = [record]
+                    else:
+                        seq_dict[gene].append(record)
+                    
+                    # break loop once found
+                    break
     
     # write to fasta file
     for gene in seq_dict:
@@ -314,8 +315,7 @@ if __name__ == '__main__':
     with Pool(args.threads) as p:
         p.map(tblastn, get_genes())
     
-    with Pool(args.threads) as p:
-        p.map(parse_blast, os.listdir(f'{args.output}/tblastn'))  
+    parse_blast()
 
     with Pool(args.threads) as p:
         p.map(align, os.listdir(f'{args.output}/nucl_seqs'))
