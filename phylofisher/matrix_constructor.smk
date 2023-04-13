@@ -169,7 +169,7 @@ rule construct_matrix:
                 tsv_writer.writerow(['Taxon', 'PercentMissingData'])
                 missing = []
                 for record in SeqIO.parse(input[0], out_format.lower()):
-                    missing.append((record.name, (record.seq.count('-') / total_len) * 100))
+                    missing.append((record.name, (record.seq.count('-') / len(record.seq)) * 100))
                 for org_missing in sorted(missing, key=lambda x: x[1], reverse=True):
                     tsv_writer.writerow(list(org_missing))
 
