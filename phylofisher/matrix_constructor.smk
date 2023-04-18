@@ -11,6 +11,7 @@ in_format = config['in_format']
 out_format = config['out_format']
 genes = config['genes'].split(',')
 concatenation_only = config['concatenation_only']
+trimal_gt = config['trimal_gt']
 
 # Accepted out formats with respective suffix
 out_dict = {'fasta':          'fas',
@@ -65,7 +66,7 @@ rule divvier:
         'divvier.yaml'
     shell:
         f'''
-        divvier -minicol 4 -partial {{input}} >{{log}} 2>{{log}}
+        divvier -minicol 4 -partial -divvygap {{input}} >{{log}} 2>{{log}}
 
         mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier >{{log}} 2>{{log}}
         mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier >{{log}} 2>{{log}}
@@ -80,8 +81,10 @@ rule trimal:
             f'{out_dir}/logs/trimal/{{gene}}.log'
         conda:
             'trimal.yaml'
+        params:
+            gt=trimal_gt
         shell:
-            'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
+            'trimal -in {input} -gt {params.gt} -out {output} >{log} 2>{log}'
 
 
 rule remove_gaps:
@@ -127,7 +130,7 @@ rule construct_matrix:
     run:
         with open(output[0], 'w') as outfile:
             outfile.write('Gene\tStart\tStop\n')
-            files = sorted(glob(f'{out_dir}/trimal/*'))
+            files = sorted(glob(f'{out_dir}/trimal/*.final'))
 
             total_len = 0
             res_dict = defaultdict(str)

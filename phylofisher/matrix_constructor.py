@@ -38,6 +38,7 @@ def make_config():
         f'in_format={args.in_format}',
         f'out_format={args.out_format}',
         f'concatenation_only={args.concatenation_only}',
+        f'trimal_gt={args.trimal_gt}',
         f'genes={",".join(get_genes())}',
     ]
 
@@ -77,6 +78,7 @@ def run_snakemake(length_filter=False):
         f'--rerun-incomplete',
         f'--keep-going',
         f'--use-conda',
+        '--nolock'
     ]
 
     smk_frags.append(get_output_files())
@@ -115,6 +117,12 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Desired number of threads to be utilized.
                           Default: 1
+                          """))
+    optional.add_argument('--trimal_gt', metavar='N', type=float, default=0.80,
+                          help=textwrap.dedent("""\
+                          trimaAL gt parameter. Fraction of sequences with a gap allowed.
+                          Options: 0.0 - 1.0
+                          Default: 0.80
                           """))
     optional.add_argument('--clean_up', action='store_true', default=False,
                           help=textwrap.dedent("""\
