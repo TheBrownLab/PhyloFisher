@@ -197,7 +197,7 @@ rule raxml:
     params:
         raxml_out=f'{out_dir}/raxml'
     shell:
-        'raxmlHPC-PTHREADS-AVX2 -T 1 -m PROTGAMMALG4XF -f a -s {input} -n {wildcards.gene}.tre -w {params.raxml_out} -x 123 -N 100 -p 12345 >{log} 2>{log}'
+        'raxmlHPC-AVX2 -m PROTGAMMALG4XF -f a -s {input} -n {wildcards.gene}.tre -w {params.raxml_out} -x 123 -N 100 -p 12345 >{log} 2>{log}'
 
 if trees_only:
     rule cp_trees:
