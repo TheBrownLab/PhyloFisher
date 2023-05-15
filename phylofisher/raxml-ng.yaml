@@ -1,0 +1,20 @@
+name: raxml-ng
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - gmp=6.2.1=h295c915_3
+  - libgcc-ng=12.2.0=h65d4601_19
+  - libgfortran-ng=12.2.0=h69a702a_19
+  - libgfortran5=12.2.0=h337968e_19
+  - libgomp=12.2.0=h65d4601_19
+  - libstdcxx-ng=12.2.0=h46fd767_19
+  - libzlib=1.2.13=h166bdaf_4
+  - mpi=1.0=openmpi
+  - openmpi=4.1.5=h414af15_101
+  - raxml-ng=1.2.0=h22e3c99_0
+  - zlib=1.2.13=h166bdaf_4
+prefix: /mnt/scratch/brownlab/rej110/anaconda3/envs/raxml-ng
