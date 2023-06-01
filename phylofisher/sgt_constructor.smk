@@ -185,30 +185,33 @@ rule raxml:
     input:
         get_raxml_input
     output:
-        f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
-        f'{out_dir}/raxml/RAxML_bootstrap.{{gene}}.tre',
-        f'{out_dir}/raxml/RAxML_bestTree.{{gene}}.tre',
-        f'{out_dir}/raxml/RAxML_info.{{gene}}.tre',
-        f'{out_dir}/raxml/RAxML_bipartitionsBranchLabels.{{gene}}.tre',
+        f'{out_dir}/raxml/{{gene}}.raxml.rba',
+        f'{out_dir}/raxml/{{gene}}.raxml.startTree',
+        f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
+        f'{out_dir}/raxml/{{gene}}.raxml.mlTrees',
+        f'{out_dir}/raxml/{{gene}}.raxml.support',
+        f'{out_dir}/raxml/{{gene}}.raxml.bestModel',
+        f'{out_dir}/raxml/{{gene}}.raxml.bootstraps',
+        f'{out_dir}/raxml/{{gene}}.raxml.log'
     log:
         f'{out_dir}/logs/raxml/{{gene}}.log'
     conda:
-        'raxml.yaml'
+        'raxml-ng.yaml'
     params:
         raxml_out=f'{out_dir}/raxml'
     shell:
-        'raxmlHPC-AVX2 -m PROTGAMMALG4XF -f a -s {input} -n {wildcards.gene}.tre -w {params.raxml_out} -x 123 -N 100 -p 12345 >{log} 2>{log}'
+        'raxml-ng --all --msa {input} --prefix {params.raxml_out}/{wildcards.gene} --model LG4X+G4 --tree pars{{10}} --bs-trees 100 --force >{log} 2>{log}'
 
 if trees_only:
     rule cp_trees:
         input:
             f'{in_dir}/{{gene}}.fas',
-            f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
+            f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
         output:
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre',
+            f'{out_dir}/trees/{{gene}}.raxml.bestTree',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre'
+            f'{out_dir}-local/trees/{{gene}}.raxml.bestTree'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -221,14 +224,14 @@ else:
         input:
             f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
             f'{out_dir}/trimal/{{gene}}.final',
-            f'{out_dir}/raxml/RAxML_bipartitions.{{gene}}.tre',
+            f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
         output:
             f'{out_dir}/trees/{{gene}}.trimmed',
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/RAxML_bipartitions.{{gene}}.tre',
+            f'{out_dir}/trees/{{gene}}.raxml.bestTree',
             f'{out_dir}-local/trees/{{gene}}.trimmed',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/RAxML_bipartitions.{{gene}}.tre'
+            f'{out_dir}-local/trees/{{gene}}.raxml.bestTree'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -261,7 +264,7 @@ def get_tar_local_dir_input(wildcards):
         if not trees_only:
             ret.append(f'{out_dir}-local/trees/{gene}.trimmed')
         ret.append(f'{out_dir}-local/trees/{gene}.final')
-        ret.append(f'{out_dir}-local/trees/RAxML_bipartitions.{gene}.tre')
+        ret.append(f'{out_dir}-local/trees/{gene}.raxml.bestTree')
 
     ret.append(f'{out_dir}-local/tree_colors.tsv')
     ret.append(f'{out_dir}-local/metadata.tsv')

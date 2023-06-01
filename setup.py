@@ -43,6 +43,7 @@ setup(
              'phylofisher/divvier.yaml',
              'phylofisher/trimal.yaml',
              'phylofisher/raxml.yaml',
+             'phylofisher/raxml-ng.yaml',
              'phylofisher/bmge.yaml',
              },
     url='https://github.com/TheBrownLab/PhyloFisher',
