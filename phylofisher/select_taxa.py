@@ -36,7 +36,8 @@ def make_subset_tsv():
             for line in infile:
                 line = line.strip()
                 split_line = line.split('\t')
-                taxa[split_line[0]] = split_line[1:3]
+                taxa[split_line[0]] = split_line[1:4]
+    
 
     # Add Taxonomic Groups to DataFrame
     low_tax_list = [taxa[ind][2] for ind in df.index]
@@ -102,7 +103,7 @@ def gen_chimera(df):
         for line in infile:
             line = line.strip()
             split_line = line.split('\t')
-            chim_dict[split_line[0]] = split_line[3:]
+            chim_dict[split_line[0]] = split_line[4:]
 
     for key in chim_dict.keys():
         df['int_chim'] = 0
@@ -154,7 +155,7 @@ if __name__ == '__main__':
                           """))
     optional.add_argument('--chimeras', type=str, metavar='chimeras.tsv', default=None,
                           help=textwrap.dedent("""\
-                           A .tsv containing a Unique ID, higher and lower taxonomic designations, 
+                           A .tsv containing a Unique ID, higher and lower taxonomic designations, long name, 
                            and the Unique IDs of the taxa to collapse, for each chimera one per line
                           """))
 
