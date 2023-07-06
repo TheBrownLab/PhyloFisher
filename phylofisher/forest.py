@@ -245,7 +245,7 @@ def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
     tree_base = str(os.path.basename(tree_file))
 
     # what if they will use somethig different than Raxml? We should make some if statement here maybe.
-    name_ = tree_base.split('.')[1]
+    name_ = tree_base.split('.')[0]
 
     if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
         build_len, len_dict, trimmed_len = get_build_len(name_)
@@ -584,7 +584,7 @@ if __name__ == '__main__':
     if not args.backpropagate:
         os.mkdir(output_folder)
 
-    trees = glob.glob(f"{trees_folder}/*.tre")
+    trees = glob.glob(f"{trees_folder}/*.raxml.bestTree")
 
     number_of_genes = len(trees)
     metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)
