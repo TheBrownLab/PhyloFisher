@@ -200,7 +200,7 @@ rule raxml:
     params:
         raxml_out=f'{out_dir}/raxml'
     shell:
-        'raxml-ng --all --msa {input} --prefix {params.raxml_out}/{wildcards.gene} --model LG4X+G4 --tree pars{{10}} --bs-trees 100 --force >{log} 2>{log}'
+        'raxml-ng --all --msa {input} --prefix {params.raxml_out}/{wildcards.gene} --model LG4X+G4 --tree pars{{10}} --bs-trees 100 --force  --threads 1 >{log} 2>{log}'
 
 if trees_only:
     rule cp_trees:
