@@ -51,12 +51,16 @@ def check_metadata():
     :rtype: list
     '''
     collapsed_taxa = []
+    all_metadata = []
+    
+    for line in parse_metadata():
+        all_metadata += line
+        if 'taxon_collapser.py' in line:
+            collapsed_taxa.append(line[0])
+
     for item in parse_input():
-        for line in parse_metadata():
-            if item not in line:
-                sys.exit(f'{item} is not in the database. Please check your input file.')
-            if 'taxon_collapser.py' in line:
-                collapsed_taxa.append(line[0])
+        if item not in all_metadata:
+            sys.exit(f'{item} is not in the database. Please check your input file.')
 
     return collapsed_taxa
 
