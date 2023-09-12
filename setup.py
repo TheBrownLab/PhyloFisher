@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='1.2.11',
+    version='1.2.12',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
