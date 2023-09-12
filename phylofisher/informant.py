@@ -156,6 +156,27 @@ def get_routes():
     return my_routes
 
 
+def update_homolog_tree(df):
+    """
+    Update homolog tree column to only include those organisms that are provided
+    by the user.
+    input: dataframe
+    return: dataframe
+    """
+
+    sht_include = set()
+    with open(args.sht_include, 'r') as f:
+        for line in f:
+            sht_include.add(line.strip())
+    
+    for index, _ in df.iterrows():
+        if index not in sht_include:
+            df.at[index, 'Homolog Tree'] = 'no'
+            df.at[index, 'Paralogs'] = 'no'
+         
+    return df
+
+
 def stats_orgs(df, new_data=False):
     """
     Create tsv file with basic summary about analyzed dataset without information
@@ -225,6 +246,10 @@ def stats_orgs(df, new_data=False):
         df['Paralogs'] = df.index.map(paralogs_dict)
 
     df = df.rename_axis('Unique ID')
+
+    if not new_data and args.sht_include:
+        df = update_homolog_tree(df)
+    
     df.to_csv(f'{output_fold}/{out_filename}', sep='\t')
 
 
@@ -256,6 +281,10 @@ if __name__ == '__main__':
                           help=textwrap.dedent("""\
                           Paralogs will NOT be included from any taxa in the starting 
                           database in downstream homolog tree construction.
+                          """))
+    optional.add_argument('--sht_include', type=str, metavar='to_include.txt',
+                          help=textwrap.dedent("""\
+                          Path to text file containing Unique IDs from the database to include in single homolog trees.
                           """))
 
     in_help = 'Path to fisher.py output directory'
