@@ -50,7 +50,8 @@ def get_output_files():
     ret = [
         f'{args.output}/matrix.fas',
         f'{args.output}/indices.tsv',
-        f'{args.output}/matrix_constructor_stats.tsv'
+        f'{args.output}/matrix_constructor_stats.tsv',
+        f'{args.output}/occupancy.tsv',
     ]
 
     return ' '.join(ret)

@@ -4,6 +4,7 @@ from collections import defaultdict
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import pandas as pd
 
 out_dir = config['out_dir']
 in_dir = config['in_dir']
@@ -126,11 +127,15 @@ rule construct_matrix:
     output:
         f'{out_dir}/indices.tsv',
         f'{out_dir}/matrix.{out_dict[out_format.lower()]}',
-        f'{out_dir}/matrix_constructor_stats.tsv'
+        f'{out_dir}/matrix_constructor_stats.tsv',
+        f'{out_dir}/occupancy.tsv',
     run:
         with open(output[0], 'w') as outfile:
             outfile.write('Gene\tStart\tStop\n')
             files = sorted(glob(f'{out_dir}/trimal/*.final'))
+
+            orgs = get_orgs(in_dir)
+            occupancy_dict = {k:[] for k in orgs}
 
             total_len = 0
             res_dict = defaultdict(str)
@@ -148,12 +153,17 @@ rule construct_matrix:
                 start_len = total_len + 1
                 total_len += length
                 outfile.write(f'{gene}\t{start_len}\t{total_len}\n')
-                for org in get_orgs(in_dir):
+                for org in orgs:
                     if org in seq_dict:
                         res_dict[org] += seq_dict[org]
+                        occupancy_dict[org].append(1)
                     else:
                         res_dict[org] += ('-' * length)
-        
+                        occupancy_dict[org].append(0)
+
+        occupancy_df = pd.DataFrame(occupancy_dict, index=[os.path.basename(file).split('.')[0] for file in files]).transpose()
+        occupancy_df.to_csv(output[3], sep='\t')
+
         records = []
         for org, seq in res_dict.items():
             records.append(SeqRecord(Seq(seq),
@@ -171,7 +181,7 @@ rule construct_matrix:
                 tsv_writer = csv.writer(out_file, delimiter='\t')
                 tsv_writer.writerow(['Taxon', 'PercentMissingData'])
                 missing = []
-                for record in SeqIO.parse(input[0], out_format.lower()):
+                for record in SeqIO.parse(output[1], out_format.lower()):
                     missing.append((record.name, (record.seq.count('-') / len(record.seq)) * 100))
                 for org_missing in sorted(missing, key=lambda x: x[1], reverse=True):
                     tsv_writer.writerow(list(org_missing))
