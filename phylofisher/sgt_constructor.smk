@@ -206,12 +206,12 @@ if trees_only:
     rule cp_trees:
         input:
             f'{in_dir}/{{gene}}.fas',
-            f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
+            f'{out_dir}/raxml/{{gene}}.raxml.support',
         output:
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/{{gene}}.raxml.bestTree',
+            f'{out_dir}/trees/{{gene}}.raxml.support',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/{{gene}}.raxml.bestTree'
+            f'{out_dir}-local/trees/{{gene}}.raxml.support'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -224,14 +224,14 @@ else:
         input:
             f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
             f'{out_dir}/trimal/{{gene}}.final',
-            f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
+            f'{out_dir}/raxml/{{gene}}.raxml.support',
         output:
             f'{out_dir}/trees/{{gene}}.trimmed',
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/{{gene}}.raxml.bestTree',
+            f'{out_dir}/trees/{{gene}}.raxml.support',
             f'{out_dir}-local/trees/{{gene}}.trimmed',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/{{gene}}.raxml.bestTree'
+            f'{out_dir}-local/trees/{{gene}}.raxml.support'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -264,7 +264,7 @@ def get_tar_local_dir_input(wildcards):
         if not trees_only:
             ret.append(f'{out_dir}-local/trees/{gene}.trimmed')
         ret.append(f'{out_dir}-local/trees/{gene}.final')
-        ret.append(f'{out_dir}-local/trees/{gene}.raxml.bestTree')
+        ret.append(f'{out_dir}-local/trees/{gene}.raxml.support')
 
     ret.append(f'{out_dir}-local/tree_colors.tsv')
     ret.append(f'{out_dir}-local/metadata.tsv')

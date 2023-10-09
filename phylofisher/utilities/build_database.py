@@ -14,6 +14,7 @@ import pandas as pd
 from Bio import SeqIO
 
 from phylofisher import help_formatter
+from phylofisher import tools
 
 
 def csv_to_tsv():
@@ -345,7 +346,9 @@ def main(args, threads, no_og_file, threshold):
         shutil.rmtree('profiles')
 
     if args.rename:
+        tools.backup(os.getcwd())
         rename_taxa()
+        tools.backup(os.getcwd())
 
     datasetdb()  # creates datasetdb
 
