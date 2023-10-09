@@ -584,7 +584,7 @@ if __name__ == '__main__':
     if not args.backpropagate:
         os.mkdir(output_folder)
 
-    trees = glob.glob(f"{trees_folder}/*.raxml.bestTree")
+    trees = glob.glob(f"{trees_folder}/*.raxml.support")
 
     number_of_genes = len(trees)
     metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)
