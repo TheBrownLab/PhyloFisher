@@ -3,6 +3,7 @@ import csv
 import os
 import sys
 import subprocess
+import tarfile
 import textwrap
 from collections import defaultdict
 from glob import glob
@@ -30,24 +31,6 @@ def bash(cmd):
     subprocess.run(cmd, shell=True, executable='/bin/bash', check=True)
 
 
-def is_nucl_seq(file):
-    '''
-    Check input gene files to make sure they are nucletotide sequences and not amino acid sequences 
-    '''
-    with open(file, 'r') as infile:
-        all_count, atcg_count = 0, 0
-        for line in infile:
-            if line.startswith(">"):
-                pass
-            else:
-                all_count += len(line)
-                atcg_count += (line.upper().count('A') + line.upper().count('T')
-                               + line.upper().count('C') + line.upper().count('G'))
-        atcg_per = atcg_count / all_count
-        if atcg_per < 0.7:
-            raise TypeError(f'{file} is not a nucleotide sequence')
-
-
 def get_genes():
     '''
     Get input gene files
@@ -62,9 +45,9 @@ def get_genes():
 
 def parse_input_tsv(input_tsv):
     '''
-    Parse input tsv file
+    Parse metadata
 
-    :param input_tsv: input tsv file
+    :param input_tsv: metadata
     :type input_tsv: str
     :return: dictionary of unique IDs and paths to nucleotide files
     :rtype: dict
@@ -74,7 +57,6 @@ def parse_input_tsv(input_tsv):
         for line in f:
             line = line.strip().split('\t')
             ret[line[0]] = line[1]
-            is_nucl_seq(line[1])
 
     return ret
 
@@ -84,18 +66,25 @@ def cp_cds_files(fasta_dict):
     for k in fasta_dict:
         # Determine if tar.gz and open appropriately
         if fasta_dict[k].endswith('.tar.gz'):
-            read_mode = 'r:gz'
-        else:
-            read_mode = 'r'
-        
-        # Open file and write out with renamed headers
-        with open(fasta_dict[k], read_mode) as infile, open(f'{args.output}/cds/{k}.fas', 'w') as outfile:
-            records = []
-            for i, record in enumerate(SeqIO.parse(infile, 'fasta')):
-                record.id = ''
-                record.description = f'{k}_{i}'
-                records.append(record)
+            with tarfile.open(fasta_dict[k], 'r:gz') as tar:
+                with tar.extractfile(fasta_dict[k].split('.tar.gz')[0]) as fasta_file:
+                    records = []
+                    for i, record in enumerate(SeqIO.parse(fasta_file, 'fasta')):
+                        record.id = ''
+                        record.description = f'{k}_{i}'
+                        records.append(record)
             
+            SeqIO.write(records, outfile, 'fasta')
+            fasta_dict[k] = f'{args.output}/cds/{k}.fas'
+        else:  
+            with open(fasta_dict[k], 'r') as infile:
+                records = []
+                for i, record in enumerate(SeqIO.parse(infile, 'fasta')):
+                    record.id = ''
+                    record.description = f'{k}_{i}'
+                    records.append(record)
+        
+        with open(f'{args.output}/cds/{k}.fas', 'w') as outfile:
             SeqIO.write(records, outfile, 'fasta')
             fasta_dict[k] = f'{args.output}/cds/{k}.fas'
     
@@ -312,7 +301,7 @@ if __name__ == '__main__':
     # Required Arguments
     required.add_argument('-it', '--input_tsv', metavar='<path>', type=str, required=True,
                           help=textwrap.dedent("""\
-                          Path to input tsv file which contains unique IDs and paths to cds files.
+                          Path to input tsv file which contains unique IDs and paths to nucleotide files.
                           """))
     # Optional Arguments
     optional.add_argument('-of', '--out_format', metavar='<format>', type=str, default='fasta',
@@ -351,7 +340,7 @@ if __name__ == '__main__':
     fasta_dict = parse_input_tsv(args.input_tsv)
 
     fasta_dict = cp_cds_files(fasta_dict)
-
+    
     with Pool(args.threads) as p:
         p.map(make_blast_db, fasta_dict.keys())
 
