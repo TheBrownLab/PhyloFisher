@@ -15,7 +15,7 @@ jobs:
       - image: condaforge/mambaforge
     steps:
       - checkout
-      - run: "mamba install -y -c conda-forge -c bioconda phylofisher pytest python=3.7.10"
+      - run: "mamba install -y -c conda-forge -c bioconda phylofisher pytest python"
       - run: "conda remove -y --force phylofisher"
       - run: "pip install --no-deps ."
       - run: "pytest"
