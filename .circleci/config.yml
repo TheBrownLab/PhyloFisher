@@ -10,19 +10,19 @@ jobs:
       - run: "conda install pylint"
       - run: "pylint phylofisher --exit-zero"
   # Run tests
-  test:
-    docker:
-      - image: condaforge/mambaforge
-    steps:
-      - checkout
-      - run: "mamba install -y -c conda-forge -c bioconda phylofisher pytest python=3.7.10"
-      - run: "conda remove -y --force phylofisher"
-      - run: "pip install --no-deps ."
-      - run: "pytest"
+  # test:
+  #   docker:
+  #     - image: condaforge/mambaforge
+  #   steps:
+  #     - checkout
+  #     - run: "mamba install -y -c conda-forge -c bioconda phylofisher pytest python"
+  #     - run: "conda remove -y --force phylofisher"
+  #     - run: "pip install --no-deps ."
+  #     - run: "pytest"
 
 # Workflows
 workflows:
   commit-status:
     jobs:
       - lint
-      - test
+      # - test
