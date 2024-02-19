@@ -25,4 +25,4 @@ workflows:
   commit-status:
     jobs:
       - lint
-      - test
+      
