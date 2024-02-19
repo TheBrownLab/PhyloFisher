@@ -67,7 +67,7 @@ rule divvier:
         'divvier.yaml'
     shell:
         f'''
-        divvier -minicol 4 -partial -divvygap {{input}} >{{log}} 2>{{log}}
+        divvier -mincol 4 -partial -divvygap {{input}} >{{log}} 2>{{log}}
 
         mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier >{{log}} 2>{{log}}
         mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier >{{log}} 2>{{log}}
