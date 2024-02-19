@@ -3,12 +3,13 @@ import csv
 import os
 import sys
 import subprocess
+import tarfile
 import textwrap
 from collections import defaultdict
 from glob import glob
 from multiprocessing import Pool
 import subprocess
-
+import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -44,9 +45,9 @@ def get_genes():
 
 def parse_input_tsv(input_tsv):
     '''
-    Parse input tsv file
+    Parse metadata
 
-    :param input_tsv: input tsv file
+    :param input_tsv: metadata
     :type input_tsv: str
     :return: dictionary of unique IDs and paths to nucleotide files
     :rtype: dict
@@ -59,6 +60,35 @@ def parse_input_tsv(input_tsv):
 
     return ret
 
+def cp_cds_files(fasta_dict):
+    os.makedirs(f'{args.output}/cds', exist_ok=True)
+
+    for k in fasta_dict:
+        # Determine if tar.gz and open appropriately
+        if fasta_dict[k].endswith('.tar.gz'):
+            with tarfile.open(fasta_dict[k], 'r:gz') as tar:
+                with tar.extractfile(fasta_dict[k].split('.tar.gz')[0]) as fasta_file:
+                    records = []
+                    for i, record in enumerate(SeqIO.parse(fasta_file, 'fasta')):
+                        record.id = ''
+                        record.description = f'{k}_{i}'
+                        records.append(record)
+            
+            SeqIO.write(records, outfile, 'fasta')
+            fasta_dict[k] = f'{args.output}/cds/{k}.fas'
+        else:  
+            with open(fasta_dict[k], 'r') as infile:
+                records = []
+                for i, record in enumerate(SeqIO.parse(infile, 'fasta')):
+                    record.id = ''
+                    record.description = f'{k}_{i}'
+                    records.append(record)
+        
+        with open(f'{args.output}/cds/{k}.fas', 'w') as outfile:
+            SeqIO.write(records, outfile, 'fasta')
+            fasta_dict[k] = f'{args.output}/cds/{k}.fas'
+    
+    return fasta_dict
 
 def make_blast_db(k):
     '''
@@ -220,6 +250,9 @@ def concatenate():
         outfile.write('Gene\tStart\tStop\n')
         files = sorted(glob(f'{args.output}/trimal/*'))
 
+        orgs = get_orgs(args.input)
+        occupancy_dict = {k:[] for k in orgs}
+
         total_len = 0
         res_dict = defaultdict(str)
         for file in files:
@@ -233,12 +266,17 @@ def concatenate():
             start_len = total_len + 1
             total_len += length
             outfile.write(f'{gene}\t{start_len}\t{total_len}\n')
-            for org in get_orgs(args.input):
+            for org in orgs:
                 if org in seq_dict:
                     res_dict[org] += seq_dict[org]
+                    occupancy_dict[org].append(1)
                 else:
                     res_dict[org] += ('-' * length)
-            
+                    occupancy_dict[org].append(0)
+        
+        occupancy_df = pd.DataFrame(occupancy_dict, index=[os.path.basename(file).split('.')[0] for file in files]).transpose()
+        occupancy_df.to_csv(f'{args.output}/occupancy.tsv', sep='\t')
+    
     records = []
     for org, seq in res_dict.items():
         records.append(SeqRecord(Seq(seq),
@@ -300,7 +338,7 @@ if __name__ == '__main__':
 
     # Changes help descriptions from the default input and output help descriptions
     in_help = 'Path to prep_final_dataset_<M.D.Y>'
-    args = help_formatter.get_args(parser, optional, required, in_help=in_help)
+    args = help_formatter.get_args(parser, optional, required, in_help=in_help, pre_suf=False)
 
     args.input = os.path.abspath(args.input)
     args.output = os.path.abspath(args.output)
@@ -309,6 +347,8 @@ if __name__ == '__main__':
 
     fasta_dict = parse_input_tsv(args.input_tsv)
 
+    fasta_dict = cp_cds_files(fasta_dict)
+    
     with Pool(args.threads) as p:
         p.map(make_blast_db, fasta_dict.keys())
 

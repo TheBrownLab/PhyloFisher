@@ -34,6 +34,7 @@ setup(
              'phylofisher/utilities/rtc_binner.py',
              'phylofisher/utilities/backup_restoration.py',
              'phylofisher/utilities/explore_database.py',
+             'phylofisher/utilities/nucl_matrix_constructor.py',
              'phylofisher/utilities/gfmix_runner.py',
              'phylofisher/utilities/gfmix_mammal.smk',
              'phylofisher/gfmix.yaml',
