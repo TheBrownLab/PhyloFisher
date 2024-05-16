@@ -46,9 +46,14 @@ def make_config():
 
 
 def get_output_files():
+    # Accepted out formats with respective suffix
+    out_dict = {'fasta':          'fas',
+                'phylip':         'phy',
+                'phylip-relaxed': 'phy',
+                'nexus':          'nex'}
 
     ret = [
-        f'{args.output}/matrix.fas',
+        f'{args.output}/matrix.{out_dict[args.out_format]}',
         f'{args.output}/indices.tsv',
         f'{args.output}/matrix_constructor_stats.tsv',
         f'{args.output}/occupancy.tsv',
