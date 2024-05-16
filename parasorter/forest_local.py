@@ -9,7 +9,7 @@ from multiprocessing import Pool
 from pathlib import Path
 import argparse
 from datetime import date
-import PyQt5
+
 import matplotlib.pyplot as plt
 from Bio import SeqIO
 from ete3 import Tree, TreeStyle, NodeStyle, TextFace
