@@ -497,11 +497,6 @@ def format_nodes(node, node_style, sus_clades, t):
     return supp, sus_clades
 
 
-def parallel_susp_clades(trees):
-    """Parallelizes the function suspicious_clades()"""
-    with Pool(processes=threads) as pool:
-        suspicious = list(pool.map(suspicious_clades, trees))
-        return suspicious
 
 
 def nonredundant(result_clades):
@@ -675,13 +670,19 @@ if __name__ == '__main__':
         os.mkdir(output_folder)
 
     trees = glob.glob(f"{trees_folder}/*.raxml.support")
+    trees = [os.path.normpath(path).replace('\\', '/') for path in trees]
 
     number_of_genes = len(trees)
     metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)
     threads = args.threads
+    suspicious = []
 
     if not args.backpropagate:
-        suspicious = parallel_susp_clades(trees)
+#        suspicious = parallel_susp_clades(trees)
+        for tree in trees:
+            suspicious.append(suspicious_clades(tree))
+        print(suspicious)
+
         suspicious = sorted(suspicious)
 
         make_txt = False
