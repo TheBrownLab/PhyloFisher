@@ -7,7 +7,7 @@ import textwrap
 import warnings
 from collections import defaultdict
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock
 from pathlib import Path
 from shutil import copyfile, rmtree
 
@@ -524,30 +524,31 @@ def new_best_hits(candidate_hits):
             top_candidates = candidate_hits
 
     # prepares final files with orthologs from dataset and new candidates
-    if top_candidates:
-        gene = top_candidates[0].name.split('@')[1]
-        dataset = f'{args.output}/{gene}.fas'
-        if not os.path.isfile(dataset):
-            copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), dataset)
-        n = 0
-        for cand in top_candidates:
-            n += 1
-            with open(dataset, 'a') as d:
-                seq_name = cand.name.split("@")[0]
-                gene = cand.name.split("@")[1]
-                # TODO: is this exception handling just for debugging?
-                try:
-                    # if hit is reciprocal hit to a corresponding gene
-                    if gene == reciprocal_hits[seq_name[:-4]]:
-                        d.write(f'>{seq_name}_q{n}c\n{cand.seq}\n')
-                    else:
-                        d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
-                        with open(f'{args.output}/non_corresponding_hits.txt', 'a') as nonrep:
-                            nonrep.write(
-                                f'non-corresponding hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
-                            print(f'non-corresponding hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
-                except KeyError:
-                    n -= 1
+    with lock:
+        if top_candidates:
+            gene = top_candidates[0].name.split('@')[1]
+            dataset = f'{args.output}/{gene}.fas'
+            if not os.path.isfile(dataset):
+                copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), dataset)
+            n = 0
+            for cand in top_candidates:
+                n += 1
+                with open(dataset, 'a') as d:
+                    seq_name = cand.name.split("@")[0]
+                    gene = cand.name.split("@")[1]
+                    # TODO: is this exception handling just for debugging?
+                    try:
+                        # if hit is reciprocal hit to a corresponding gene
+                        if gene == reciprocal_hits[seq_name[:-4]]:
+                            d.write(f'>{seq_name}_q{n}c\n{cand.seq}\n')
+                        else:
+                            d.write(f'>{seq_name}_q{n}n\n{cand.seq}\n')
+                            with open(f'{args.output}/non_corresponding_hits.txt', 'a') as nonrep:
+                                nonrep.write(
+                                    f'non-corresponding hit:{cand.name}; Best hit from:{reciprocal_hits[seq_name[:-4]]}\n')
+                                print(f'non-corresponding hit:{cand.name}; Best hit from: {reciprocal_hits[seq_name[:-4]]}')
+                    except KeyError:
+                        n -= 1
 
 
 def parallel_new_best_hits(gene_hits):
@@ -598,6 +599,7 @@ def additions_to_input():
 
 
 if __name__ == '__main__':
+    lock = Lock()
     config = configparser.ConfigParser()
     config.read('config.ini')
 
