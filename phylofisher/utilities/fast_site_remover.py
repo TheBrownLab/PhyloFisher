@@ -60,7 +60,7 @@ def control_file_nuc():
     seqfile = TEMP.phy * sequence data
     
     nchar = 4           * nucleic data
-    model = 2           * F81 (don't want to give rates for HKY/GTR...)
+    model = 7           * GTR
     nrate = 101         * number of rates
     ub = 10             * upper bound for rates"""
     with open('dist_est.ctl', 'w') as res:
