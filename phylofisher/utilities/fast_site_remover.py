@@ -13,6 +13,7 @@ from Bio.SeqRecord import SeqRecord
 
 from phylofisher import help_formatter
 
+# Modified from https://github.com/TheBrownLab/PhyloFisher/blob/master/phylofisher/utilities/fast_site_remover.py
 
 def id_generator(size=10, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -54,8 +55,18 @@ def fake_tree(treefile, pseudonames):
             original = original.replace(key, value)
         res.write(original)
 
+def control_file_nuc():
+    ctl = """treefile = TEMP.tre * treefile
+    seqfile = TEMP.phy * sequence data
+    
+    nchar = 4           * nucleic data
+    model = 2           * F81 (don't want to give rates for HKY/GTR...)
+    nrate = 101         * number of rates
+    ub = 10             * upper bound for rates"""
+    with open('dist_est.ctl', 'w') as res:
+        res.write(ctl)
 
-def control_file():
+def control_file_amino():
     ctl = """treefile = TEMP.tre * treefile
 seqfile = TEMP.phy * sequence data
 
@@ -89,7 +100,12 @@ def parse_rates():
 def main():
     pseudo_, pseudo_rev_ = fake_phylip(args.matrix)
     fake_tree(args.tree, pseudo_)
-    control_file()
+    if args.type == "amino":
+        control_file_amino()
+    elif args.type == "nuc":
+        control_file_nuc()
+    else:
+        ValueError("Type should be amino or nuc")
     # Checks to see if dist_est has been run. If not do so
     if not os.path.isfile('./rate_est.dat'):
         run_dist()
@@ -102,6 +118,10 @@ def main():
     iter = 0
     os.mkdir(f'{args.output}/steps_{args.step_size}')
     os.chdir(f'{args.output}/steps_{args.step_size}')
+
+    if args.pos == True:
+        with open(f'fastest_sites.txt', 'w') as res:
+            res.write(str(sorted_rates))
 
     out_dict = {'fasta'         : 'fas',
                 'phylip'        : 'phy',
@@ -166,6 +186,17 @@ if __name__ == "__main__":
                                 or phylip-relaxed (names are not truncated)
                                 Default: fasta
                                 """))
+    optional.add_argument('-t', '--type', type=str, default='amino',
+                          help=textwrap.dedent("""\
+                                               Whether file is amino or nuc (nucleic)
+                                               Default: amino
+                                               """))
+    optional.add_argument('-p', '--pos', type=bool, default=False,
+                          help=textwrap.dedent("""\
+                                Prints out fastest site positions to a file fastest_sites.txt in order of fastest
+                                               to slowest site if True.
+                                Default: False
+                                               """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False)
 
