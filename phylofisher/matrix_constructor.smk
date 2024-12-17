@@ -20,88 +20,89 @@ out_dict = {'fasta':          'fas',
             'phylip-relaxed': 'phy',
             'nexus':          'nex'}
 
-rule rm_star_gaps:
-    input:
-        f'{in_dir}/{{gene}}.fas'
-    output:
-        f'{out_dir}/prequal/{{gene}}.aa'
-    run:
-        with open(output[0], 'w') as res:
-            for record in SeqIO.parse(input[0], 'fasta'):
-                res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
-
-rule prequal:
-    input:
-        f'{out_dir}/prequal/{{gene}}.aa'
-    output:
-        f'{out_dir}/prequal/{{gene}}.aa.filtered'
-    log:
-        f'{out_dir}/logs/prequal/{{gene}}.log'
-    conda:
-        'prequal.yaml'
-    shell:
-        'prequal {input} >{log} 2>{log}'
-
-
-rule mafft:
-    input:
-        f'{out_dir}/prequal/{{gene}}.aa.filtered'
-    output:
-        f'{out_dir}/mafft/{{gene}}.aln'
-    log:
-        f'{out_dir}/logs/mafft/{{gene}}.log'
-    conda:
-        'mafft.yaml'
-    shell:
-        'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
-
-rule divvier:
-    input:
-        f'{out_dir}/mafft/{{gene}}.aln'
-    output:
-        f'{out_dir}/divvier/{{gene}}.aln.partial.fas',
-        f'{out_dir}/divvier/{{gene}}.aln.PP'
-    log:
-        f'{out_dir}/logs/divvier/{{gene}}.log'
-    conda:
-        'divvier.yaml'
-    shell:
-        f'''
-        divvier -mincol 4 -partial -divvygap {{input}} >{{log}} 2>{{log}}
-
-        mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier >{{log}} 2>{{log}}
-        mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier >{{log}} 2>{{log}}
-        '''
-
-rule trimal:
+if not concatenation_only:
+    rule rm_star_gaps:
         input:
-            f'{out_dir}/divvier/{{gene}}.aln.partial.fas'
+            f'{in_dir}/{{gene}}.fas'
         output:
-            f'{out_dir}/trimal/{{gene}}.trimal'
-        log:
-            f'{out_dir}/logs/trimal/{{gene}}.log'
-        conda:
-            'trimal.yaml'
-        params:
-            gt=trimal_gt
-        shell:
-            'trimal -in {input} -gt {params.gt} -out {output} >{log} 2>{log}'
-
-
-rule remove_gaps:
-        input:
-            f'{out_dir}/trimal/{{gene}}.trimal'
-        output:
-            f'{out_dir}/trimal/{{gene}}.final'
-        log:
-            f'{out_dir}/logs/trimal/{{gene}}.log'
+            f'{out_dir}/prequal/{{gene}}.aa'
         run:
-            records = []
-            for record in SeqIO.parse(input[0], 'fasta'):
-                if len(str(record.seq).replace('-', '').replace('X','')) > 0:
-                    records.append(record)
+            with open(output[0], 'w') as res:
+                for record in SeqIO.parse(input[0], 'fasta'):
+                    res.write(f'>{record.name}\n{str(record.seq).replace("-", "").replace("*", "")}\n')
 
-            SeqIO.write(records, output[0], "fasta")
+    rule prequal:
+        input:
+            f'{out_dir}/prequal/{{gene}}.aa'
+        output:
+            f'{out_dir}/prequal/{{gene}}.aa.filtered'
+        log:
+            f'{out_dir}/logs/prequal/{{gene}}.log'
+        conda:
+            'prequal.yaml'
+        shell:
+            'prequal {input} >{log} 2>{log}'
+
+
+    rule mafft:
+        input:
+            f'{out_dir}/prequal/{{gene}}.aa.filtered'
+        output:
+            f'{out_dir}/mafft/{{gene}}.aln'
+        log:
+            f'{out_dir}/logs/mafft/{{gene}}.log'
+        conda:
+            'mafft.yaml'
+        shell:
+            'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
+
+    rule divvier:
+        input:
+            f'{out_dir}/mafft/{{gene}}.aln'
+        output:
+            f'{out_dir}/divvier/{{gene}}.aln.partial.fas',
+            f'{out_dir}/divvier/{{gene}}.aln.PP'
+        log:
+            f'{out_dir}/logs/divvier/{{gene}}.log'
+        conda:
+            'divvier.yaml'
+        shell:
+            f'''
+            divvier -mincol 4 -partial -divvygap {{input}} >{{log}} 2>{{log}}
+
+            mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier >{{log}} 2>{{log}}
+            mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier >{{log}} 2>{{log}}
+            '''
+
+    rule trimal:
+            input:
+                f'{out_dir}/divvier/{{gene}}.aln.partial.fas'
+            output:
+                f'{out_dir}/trimal/{{gene}}.trimal'
+            log:
+                f'{out_dir}/logs/trimal/{{gene}}.log'
+            conda:
+                'trimal.yaml'
+            params:
+                gt=trimal_gt
+            shell:
+                'trimal -in {input} -gt {params.gt} -out {output} >{log} 2>{log}'
+
+
+    rule remove_gaps:
+            input:
+                f'{out_dir}/trimal/{{gene}}.trimal'
+            output:
+                f'{out_dir}/trimal/{{gene}}.final'
+            log:
+                f'{out_dir}/logs/trimal/{{gene}}.log'
+            run:
+                records = []
+                for record in SeqIO.parse(input[0], 'fasta'):
+                    if len(str(record.seq).replace('-', '').replace('X','')) > 0:
+                        records.append(record)
+
+                SeqIO.write(records, output[0], "fasta")
 
 
 def get_orgs(input_folder):
@@ -120,10 +121,15 @@ def get_orgs(input_folder):
                 name_set.add(name)
     return sorted(list(name_set))
 
+def get_construct_matrix_input(wildcards):
+    if concatenation_only:
+        return expand(f'{in_dir}/{{gene}}.fas', gene=genes)
+    else:
+        return expand(f'{out_dir}/trimal/{{gene}}.final', gene=genes)
 
 rule construct_matrix:
     input:
-        expand(f'{out_dir}/trimal/{{gene}}.final', gene=genes)
+        get_construct_matrix_input
     output:
         f'{out_dir}/indices.tsv',
         f'{out_dir}/matrix.{out_dict[out_format.lower()]}',
@@ -132,14 +138,13 @@ rule construct_matrix:
     run:
         with open(output[0], 'w') as outfile:
             outfile.write('Gene\tStart\tStop\n')
-            files = sorted(glob(f'{out_dir}/trimal/*.final'))
 
             orgs = get_orgs(in_dir)
             occupancy_dict = {k:[] for k in orgs}
 
             total_len = 0
             res_dict = defaultdict(str)
-            for file in files:
+            for file in input:
                 gene = os.path.basename(file).split('.')[0]
                 length = 0
                 seq_dict = {}
@@ -161,7 +166,7 @@ rule construct_matrix:
                         res_dict[org] += ('-' * length)
                         occupancy_dict[org].append(0)
 
-        occupancy_df = pd.DataFrame(occupancy_dict, index=[os.path.basename(file).split('.')[0] for file in files]).transpose()
+        occupancy_df = pd.DataFrame(occupancy_dict, index=[os.path.basename(file).split('.')[0] for file in input]).transpose()
         occupancy_df.to_csv(output[3], sep='\t')
 
         records = []
