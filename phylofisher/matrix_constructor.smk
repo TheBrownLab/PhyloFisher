@@ -75,34 +75,34 @@ if not concatenation_only:
             '''
 
     rule trimal:
-            input:
-                f'{out_dir}/divvier/{{gene}}.aln.partial.fas'
-            output:
-                f'{out_dir}/trimal/{{gene}}.trimal'
-            log:
-                f'{out_dir}/logs/trimal/{{gene}}.log'
-            conda:
-                'trimal.yaml'
-            params:
-                gt=trimal_gt
-            shell:
-                'trimal -in {input} -gt {params.gt} -out {output} >{log} 2>{log}'
+        input:
+            f'{out_dir}/divvier/{{gene}}.aln.partial.fas'
+        output:
+            f'{out_dir}/trimal/{{gene}}.trimal'
+        log:
+            f'{out_dir}/logs/trimal/{{gene}}.log'
+        conda:
+            'trimal.yaml'
+        params:
+            gt=trimal_gt
+        shell:
+            'trimal -in {input} -gt {params.gt} -out {output} >{log} 2>{log}'
 
 
     rule remove_gaps:
-            input:
-                f'{out_dir}/trimal/{{gene}}.trimal'
-            output:
-                f'{out_dir}/trimal/{{gene}}.final'
-            log:
-                f'{out_dir}/logs/trimal/{{gene}}.log'
-            run:
-                records = []
-                for record in SeqIO.parse(input[0], 'fasta'):
-                    if len(str(record.seq).replace('-', '').replace('X','')) > 0:
-                        records.append(record)
+        input:
+            f'{out_dir}/trimal/{{gene}}.trimal'
+        output:
+            f'{out_dir}/trimal/{{gene}}.final'
+        log:
+            f'{out_dir}/logs/trimal/{{gene}}.log'
+        run:
+            records = []
+            for record in SeqIO.parse(input[0], 'fasta'):
+                if len(str(record.seq).replace('-', '').replace('X','')) > 0:
+                    records.append(record)
 
-                SeqIO.write(records, output[0], "fasta")
+            SeqIO.write(records, output[0], "fasta")
 
 
 def get_orgs(input_folder):
