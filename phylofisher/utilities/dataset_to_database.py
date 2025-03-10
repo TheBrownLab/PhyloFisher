@@ -20,15 +20,17 @@ def connect_to_db(db_file):
     except sqlite3.Error as e:
         raise Exception(f'Database connection error: {e}')
 
-def create_columns(cursor):
+def create_tables(cursor):
     '''
-    Create tables in the SQLite database for taxonomies, metadata, and sequences.
+    Create tables in the SQLite database for taxonomies, genes, metadata, and sequences.
 
     :param cursor: SQLite database cursor
     :type cursor: sqlite3.Cursor
     :param genes: list of genes
     :type genes: list
     '''
+
+    # Create taxonomies table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS taxonomies (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,54 +38,52 @@ def create_columns(cursor):
             color TEXT
         );
     ''')
-
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_taxonomy ON taxonomies (taxonomy);
     ''')
 
+    # Create genes table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS genes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            gene VARCHAR(255) UNIQUE
+            name VARCHAR(255) UNIQUE
         );
     ''')
-
     cursor.execute('''
-        CREATE INDEX IF NOT EXISTS idx_gene ON genes (gene);
+        CREATE INDEX IF NOT EXISTS idx_gene ON genes (name);
     ''')
 
+    # Create metadata table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS metadata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            short_name VARCHAR(255) UNIQUE,
-            long_name TEXT,
-            higher_taxonomy_id INTEGER,
-            lower_taxonomy_id INTEGER,
+            short_name VARCHAR(255) UNIQUE NOT NULL,
+            long_name TEXT NOT NULL,
+            higher_taxonomy_id INTEGER NOT NULL,
+            lower_taxonomy_id INTEGER NOT NULL,
             data_type TEXT NOT NULL CHECK (data_type IN ('Genomic', 'Transcriptomic', 'EST', 'Collapsed')),
-            source TEXT,
+            source TEXT NOT NULL,
             FOREIGN KEY (higher_taxonomy_id) REFERENCES taxonomies(id),
             FOREIGN KEY (lower_taxonomy_id) REFERENCES taxonomies(id)
         );
     ''')
-
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_short_name ON metadata (short_name);
     ''')
     
-
+    # Create sequences table
     cursor.execute(f'''
         CREATE TABLE IF NOT EXISTS sequences (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            header TEXT,
-            sequence TEXT,
-            is_paralog BOOLEAN,
-            gene_id INTEGER,
-            metadata_id INTEGER,
+            header TEXT NOT NULL,
+            sequence TEXT NOT NULL,
+            is_paralog BOOLEAN NOT NULL,
+            gene_id INTEGER NOT NULL,
+            metadata_id INTEGER NOT NULL,
             FOREIGN KEY (gene_id) REFERENCES genes(id),
             FOREIGN KEY (metadata_id) REFERENCES metadata(id)
         );
     ''')
-
     cursor.execute(f'''
         CREATE INDEX IF NOT EXISTS idx_header ON sequences (header);
     ''')
@@ -135,7 +135,7 @@ def load_genes(cursor, genes):
     '''
     insert_values = [(gene,) for gene in genes]
     cursor.executemany('''
-        INSERT INTO genes (gene)
+        INSERT INTO genes (name)
         VALUES (?)
     ''', insert_values) 
 
@@ -217,7 +217,7 @@ def load_sequences(cursor, metadata_tsv_file, old_database_dir, genes):
                     print(f"Warning: No metadata entry found for {record.id}")
                     continue
                 # Get gene ID for the ortholog
-                cursor.execute('SELECT id FROM genes WHERE gene = ?', (gene,))
+                cursor.execute('SELECT id FROM genes WHERE name = ?', (gene,))
                 gene_id = cursor.fetchone()
                 if gene_id is None:
                     print(f"Warning: No gene entry found for {gene}")
@@ -238,7 +238,7 @@ def load_sequences(cursor, metadata_tsv_file, old_database_dir, genes):
                     print(f"Warning: No metadata entry found for {short_name}")
                     continue
                 # Get gene ID for the paralog
-                cursor.execute('SELECT id FROM genes WHERE gene = ?', (gene,))
+                cursor.execute('SELECT id FROM genes WHERE name = ?', (gene,))
                 gene_id = cursor.fetchone()
                 if gene_id is None:
                     print(f"Warning: No gene entry found for {gene}")
@@ -294,7 +294,7 @@ if __name__ == '__main__':
     # Initialize database connection
     conn = connect_to_db(database_file)
     cursor = conn.cursor()
-    create_columns(cursor)
+    create_tables(cursor)
 
     # Insert taxonomy data into the database
     load_taxonomies(cursor, metadata_tsv_file, tree_colors_tsv_file)
