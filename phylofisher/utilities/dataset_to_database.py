@@ -20,7 +20,7 @@ def connect_to_db(db_file):
     except sqlite3.Error as e:
         raise Exception(f'Database connection error: {e}')
 
-def create_columns(cursor, genes):
+def create_columns(cursor):
     '''
     Create tables in the SQLite database for taxonomies, metadata, and sequences.
 
@@ -42,6 +42,17 @@ def create_columns(cursor, genes):
     ''')
 
     cursor.execute('''
+        CREATE TABLE IF NOT EXISTS genes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gene VARCHAR(255) UNIQUE
+        );
+    ''')
+
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_gene ON genes (gene);
+    ''')
+
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS metadata (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             short_name VARCHAR(255) UNIQUE,
@@ -59,23 +70,23 @@ def create_columns(cursor, genes):
         CREATE INDEX IF NOT EXISTS idx_short_name ON metadata (short_name);
     ''')
     
-    for gene in genes:
-        table_name = f'"{gene}"'
 
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                header TEXT,
-                sequence TEXT,
-                is_paralog BOOLEAN,
-                metadata_id INTEGER,
-                FOREIGN KEY (metadata_id) REFERENCES metadata(id)
-            );
-        ''')
+    cursor.execute(f'''
+        CREATE TABLE IF NOT EXISTS sequences (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            header TEXT,
+            sequence TEXT,
+            is_paralog BOOLEAN,
+            gene_id INTEGER,
+            metadata_id INTEGER,
+            FOREIGN KEY (gene_id) REFERENCES genes(id),
+            FOREIGN KEY (metadata_id) REFERENCES metadata(id)
+        );
+    ''')
 
-        cursor.execute(f'''
-            CREATE INDEX IF NOT EXISTS idx_header ON {table_name} (header);
-        ''')
+    cursor.execute(f'''
+        CREATE INDEX IF NOT EXISTS idx_header ON sequences (header);
+    ''')
 
 def load_taxonomies(cursor, metadata_tsv_file, tree_colors_file):
     '''
@@ -115,6 +126,19 @@ def load_taxonomies(cursor, metadata_tsv_file, tree_colors_file):
 
     except Exception as e:
         raise Exception(f"Error while loading taxonomies: {e}")
+
+def load_genes(cursor, genes):
+    '''
+    Load genes into the genes table in the database.
+
+    :param
+    '''
+    insert_values = [(gene,) for gene in genes]
+    cursor.executemany('''
+        INSERT INTO genes (gene)
+        VALUES (?)
+    ''', insert_values) 
+
 
 def load_metadata(cursor, metadata_tsv_file):
     '''
@@ -173,11 +197,10 @@ def load_sequences(cursor, metadata_tsv_file, old_database_dir, genes):
     :type old_database_dir: str
     :param genes: list of genes
     :type genes: list
-    '''
-    for gene in genes:
-        table_name = f'"{gene}"'  
-        insert_values = []  
+    ''' 
+    insert_values = []  
 
+    for gene in genes:
         # Get path to ortholog and paralog files
         paralog_file = os.path.join(old_database_dir, 'paralogs', f'{gene}_paralogs.fas')
         ortholog_file = os.path.join(old_database_dir, 'orthologs', f'{gene}.fas')
@@ -187,12 +210,20 @@ def load_sequences(cursor, metadata_tsv_file, old_database_dir, genes):
             print(f"Warning: Missing ortholog file {ortholog_file}")
         else:
             for record in SeqIO.parse(ortholog_file, 'fasta'):
+                # Get metadata ID for the ortholog
                 cursor.execute('SELECT id FROM metadata WHERE short_name = ?', (record.id,))
                 metadata_id = cursor.fetchone()
                 if metadata_id is None:
                     print(f"Warning: No metadata entry found for {record.id}")
                     continue
-                insert_values.append((record.id, str(record.seq), False, metadata_id[0]))
+                # Get gene ID for the ortholog
+                cursor.execute('SELECT id FROM genes WHERE gene = ?', (gene,))
+                gene_id = cursor.fetchone()
+                if gene_id is None:
+                    print(f"Warning: No gene entry found for {gene}")
+                    continue
+                # Prepare data for insertion
+                insert_values.append((record.id, str(record.seq), False, gene_id[0], metadata_id[0]))
 
         # Check if files exist before attempting to parse
         if not os.path.exists(paralog_file):
@@ -200,19 +231,27 @@ def load_sequences(cursor, metadata_tsv_file, old_database_dir, genes):
         else:
             for record in SeqIO.parse(paralog_file, 'fasta'):
                 short_name = record.id.split('..')[0]
+                # Get metadata ID for the paralog
                 cursor.execute('SELECT id FROM metadata WHERE short_name = ?', (short_name,))
                 metadata_id = cursor.fetchone()
                 if metadata_id is None:
                     print(f"Warning: No metadata entry found for {short_name}")
                     continue
-                insert_values.append((short_name, str(record.seq), True, metadata_id[0]))
+                # Get gene ID for the paralog
+                cursor.execute('SELECT id FROM genes WHERE gene = ?', (gene,))
+                gene_id = cursor.fetchone()
+                if gene_id is None:
+                    print(f"Warning: No gene entry found for {gene}")
+                    continue
+                # Prepare data for insertion
+                insert_values.append((short_name, str(record.seq), True, gene_id[0], metadata_id[0]))
 
-        # Execute insertion only if data exists
-        if insert_values:
-            cursor.executemany(f'''
-                INSERT INTO {table_name} (header, sequence, is_paralog, metadata_id)
-                VALUES (?, ?, ?, ?)
-            ''', insert_values)
+    # Execute insertion only if data exists
+    if insert_values:
+        cursor.executemany(f'''
+            INSERT INTO sequences (header, sequence, is_paralog, gene_id, metadata_id)
+            VALUES (?, ?, ?, ?, ?)
+        ''', insert_values)
 
 
 def cp_everything_else(old_database_dir, output_dir):
@@ -230,7 +269,7 @@ def cp_everything_else(old_database_dir, output_dir):
         dest = os.path.join(output_dir, sub_dir)
         if os.path.exists(src):
             try:
-                shutil.copytree(src, dest, dirs_exist_ok=True)
+                shutil.copytree(src, dest)
             except Exception as e:
                 print(f'Error copying {sub_dir}: {e}')
 
@@ -255,10 +294,13 @@ if __name__ == '__main__':
     # Initialize database connection
     conn = connect_to_db(database_file)
     cursor = conn.cursor()
-    create_columns(cursor, genes)
+    create_columns(cursor)
 
     # Insert taxonomy data into the database
     load_taxonomies(cursor, metadata_tsv_file, tree_colors_tsv_file)
+
+    # Insert genes into the database
+    load_genes(cursor, genes)
 
     # Insert metadata into the database
     load_metadata(cursor, metadata_tsv_file)
