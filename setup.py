@@ -46,6 +46,7 @@ setup(
              'phylofisher/raxml.yaml',
              'phylofisher/raxml-ng.yaml',
              'phylofisher/bmge.yaml',
+             'phylofisher/db_map.py',
              },
     url='https://github.com/TheBrownLab/PhyloFisher',
     license='MIT',
