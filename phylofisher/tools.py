@@ -4,12 +4,13 @@ import os
 import shutil
 from collections import Counter
 from datetime import datetime
-
+from peewee import *
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
+from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
 
 
 def parse_aligns(args, input_dir):
@@ -46,7 +47,7 @@ def parse_aligns(args, input_dir):
     return bin_mat
 
 
-def parse_metadata(metadata, input_meta=False):
+def parse_metadata(meta_path, input_meta=False):
     """
     Parses metadata.csv to get all org names in each group and subtax
     Input: NONE
@@ -54,15 +55,24 @@ def parse_metadata(metadata, input_meta=False):
             (2) list of all orgs in metadata
     """
     taxa_dict = {}
-    with open(metadata, 'r') as infile:
-        for line in infile:
-            line = line.strip()
-            if "Unique ID" not in line:
-                if input_meta:
+    if input_meta:
+        with open(meta_path, 'r') as infile:
+            for line in infile:
+                line = line.strip()
+                if "Unique ID" not in line:
                     _, _, org, group, subtax, _, long_name, _, _ = line.split('\t')
-                else:
-                    org, long_name, group, subtax, _, _ = line.split('\t')
-                taxa_dict[org] = [group, subtax, long_name]
+                    taxa_dict[org] = [group, subtax, long_name]
+    else:
+        database.init(meta_path)
+        database.connect()
+        db_query = Metadata.select(Metadata.short_name, Metadata.higher_taxonomy, Metadata.lower_taxonomy, Metadata.long_name)
+        for result in db_query:
+            org = result.short_name
+            long_name = result.long_name
+            group = Taxonomies.get(Taxonomies.id == result.higher_taxonomy).taxonomy
+            subtax = Taxonomies.get(Taxonomies.id == result.lower_taxonomy).taxonomy
+            taxa_dict[org] = [group, subtax, long_name]
+        database.close()
 
     return taxa_dict
 
