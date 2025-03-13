@@ -6,11 +6,13 @@ import sys
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-
+from peewee import *
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 from Bio import SeqIO
+from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
+
 
 from phylofisher import help_formatter, tools
 
@@ -131,10 +133,13 @@ def check_paralogs():
     return: set of short names of organisms with at least one paralog
     """
     paralogs = set()
-    paralog_fold = os.path.dirname(args.metadata)
-    for file in glob.glob(f'{paralog_fold}/paralogs/*.fas'):
-        for record in SeqIO.parse(file, 'fasta'):
-            paralogs.add(record.name.split('.')[0])
+    database.init(os.path.join(dfo, 'phylofisher.db'))
+    database.connect()
+    db_query = Sequences.select(Sequences.metadata).where(Sequences.is_paralog == True)
+    for result in db_query:
+        org = Metadata.get(Metadata.id == result.metadata).short_name
+        paralogs.add(org)
+    database.close()
     return paralogs
 
 
@@ -294,7 +299,6 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
     args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
-    args.metadata = os.path.join(dfo, 'metadata.tsv')
 
     output_fold = os.path.basename(os.path.normpath(args.input)) + '/informant_stats'
     if os.path.isdir(output_fold):
@@ -302,7 +306,7 @@ if __name__ == '__main__':
     else:
         os.mkdir(output_fold)
 
-    db_taxa_dict = tools.parse_metadata(args.metadata)
+    db_taxa_dict = tools.parse_metadata(os.path.join(dfo, 'phylofisher.db'))
     in_taxa_dict = tools.parse_metadata(args.input_metadata, input_meta=True)
     all_taxa_dict = {**db_taxa_dict, **in_taxa_dict}
 
