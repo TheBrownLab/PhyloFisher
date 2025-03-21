@@ -10,12 +10,12 @@ from functools import partial
 from multiprocessing import Pool, Lock
 from pathlib import Path
 from shutil import copyfile, rmtree
-
+from peewee import *
 from Bio import BiopythonExperimentalWarning
 from Bio import SeqIO
 from ete3 import Tree
-
 from phylofisher import help_formatter
+from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonExperimentalWarning)
@@ -126,8 +126,13 @@ class SpecQuery:
         if gene is present in self.organisms or None"""
         at_least_one = False
         gene_dict = {}
-        for record in SeqIO.parse(str(Path(dfo, f'orthologs/{self.query}.fas')), 'fasta'):
-            gene_dict[record.name] = str(record.seq)
+        db_query = (Sequences
+                 .select(Sequences.header, Sequences.sequence)
+                 .join(Genes)
+                 .where((Genes.name == self.query) & (Sequences.is_paralog == False))
+                 )
+        for q in db_query:
+            gene_dict[q.header] = q.sequence
         for org in self.organisms:
             if org in gene_dict:
                 self.seqs.append(gene_dict[org])
@@ -314,12 +319,9 @@ def phylofisher(threads, max_hits, spec_queries=None):
 def taxonomy_dict():
     """Parses taxonomical group for all organisms from metadata."""
     tax_g = {}
-    for line_ in open(str(Path(dfo, 'metadata.tsv'))):
-        if 'Full Name' not in line_:
-            sline = line_.split('\t')
-            tax = sline[0].strip()
-            group = sline[2].strip()
-            tax_g[tax] = group
+    db_query = Metadata.select(Metadata.short_name, Metadata.higher_taxonomy)
+    for q in db_query:
+        tax_g[q.short_name] = Taxonomies.get(Taxonomies.id == q.higher_taxonomy).taxonomy
     return tax_g
 
 
@@ -445,7 +447,13 @@ def fasttree(checked_hits):
     aln = f'{args.output}/tmp/{org}/{gene}.aln'
     trim = f'{args.output}/tmp/{org}/{gene}.trimal'
     tree_file = f'{args.output}/tmp/{org}/{gene}.tree'
-    copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), f'{args.output}/tmp/{org}/{gene}.fas')
+    db_query = (Sequences
+             .select(Sequences.header, Sequences.sequence)
+             .join(Genes)
+             .where((Genes.name == gene) & (Sequences.is_paralog == False)))
+    with open(fas, 'w') as f:
+        for q in db_query:
+            f.write(f'>{q.header}\n{q.sequence}\n')
     with open(fas, 'a') as f:
         for hit in checked_hits:
             f.write(f'>{hit.name}\n{hit.seq}\n')
@@ -529,7 +537,13 @@ def new_best_hits(candidate_hits):
             gene = top_candidates[0].name.split('@')[1]
             dataset = f'{args.output}/{gene}.fas'
             if not os.path.isfile(dataset):
-                copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), dataset)
+                db_query = (Sequences
+                            .select(Sequences.header, Sequences.sequence)
+                            .join(Genes)
+                            .where((Genes.name == gene) & (Sequences.is_paralog == False)))
+                with open(dataset, 'w') as f:
+                    for q in db_query:
+                        f.write(f'>{q.header}\n{q.sequence}\n')
             n = 0
             for cand in top_candidates:
                 n += 1
@@ -644,8 +658,10 @@ if __name__ == '__main__':
     elif args.add_to and not args.add:
         parser.error("--add_to requires --add.")
 
-    # database folder
+    # Connect to database
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
+    database.init(os.path.join(dfo, 'phylofisher.db'))
+    database.connect()
 
     # taxon: group for all orgs in metadata
     tax_group = taxonomy_dict()
@@ -731,3 +747,6 @@ if __name__ == '__main__':
     # when user doesn't want to keep tmp/* files
     if not args.keep_tmp:
         rmtree(f'{args.output}/tmp/')
+
+    # Close connection to database
+    database.close()
