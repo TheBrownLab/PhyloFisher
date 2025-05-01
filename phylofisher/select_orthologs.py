@@ -3,8 +3,8 @@ import configparser
 import os
 import textwrap
 from pathlib import Path
-
 from phylofisher import help_formatter, tools
+from phylofisher.db_map import database, Metadata
 
 
 def in_out_completeness(df):
@@ -14,12 +14,8 @@ def in_out_completeness(df):
     :return:
     """
     # Gets all taxa unique IDS
-    all_taxa_set = set()
-    with open(f'{dfo}/metadata.tsv', 'r') as infile:
-        for line in infile:
-            line = line.strip().split('\t')[0]
-            all_taxa_set.add(line)
-
+    all_taxa_set = set([q.short_name for q in Metadata.select(Metadata.short_name)])
+    
     # Gets out group Unique IDS
     out_group_set = set()
     with open(args.out_group, 'r') as infile:
@@ -137,10 +133,11 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    metadata = f'{dfo}/metadata.tsv'
-    orthologs_dir = f'{dfo}/orthologs/'
+    database.init(str(Path(dfo, 'phylofisher.db')))
+    database.connect()
 
-    matrix = tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
+
+    matrix = tools.completeness(orthologs=True, genes=True)
     if os.path.isfile('select_taxa.tsv'):
         matrix = update_df_taxa(matrix)
     taxa_count, _ = matrix.shape
@@ -152,3 +149,5 @@ if __name__ == '__main__':
         tools.make_plot(gene_comp, f'gene_comp', y_count=taxa_count, genes=True)
     except ValueError:
         print('Unable to make plot. However, the TSV file was created, and you are free to move forward.')
+
+    database.close()

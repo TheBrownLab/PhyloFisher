@@ -5,12 +5,11 @@ import shutil
 import sys
 import textwrap
 from pathlib import Path
-
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-
 from phylofisher import help_formatter
+from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
 
 
 def parse_ortholog_tsv():
@@ -34,26 +33,32 @@ def parse_ortholog_tsv():
     return genes_to_include
 
 
-def subset_orthologs():
+def subset_orthologs(subset=False):
     """
     Subsets orthologs from the Database into a new directory to be included in the final dataset
     :return:
     """
-    # Creates output dir if it doesn't already exist
-    if os.path.isdir(args.output) is False:
-        os.makedirs(args.output)
-
     # Genes to include in the final dataset
-    genes = parse_ortholog_tsv()
-    # List of paths to ortholog files
-    files = [os.path.join(orthologs_dir, x) for x in os.listdir(orthologs_dir) if x.endswith('.fas')]
-    # Copies gene files to the output dir
-    for gene in genes:
-        for file in files:
-            if gene == os.path.basename(file).split('.')[0]:
-                src = file
-                dest = f'{args.output}/{os.path.basename(file)}'
-                shutil.copy(src, dest)
+    if subset:
+        genes = parse_ortholog_tsv()
+        gene_ids = [g.id for g in Genes.select(Genes.id, Genes.name).where(Genes.name.in_(genes)) if g.name in genes]
+    
+        d_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.gene_id, Sequences.metadata_id).where(Sequences.gene_id.in_(gene_ids) & Sequences.is_paralog == False)
+    else:
+        d_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.gene_id, Sequences.metadata_id).where(Sequences.is_paralog == False)
+
+    for q in d_query:
+        seq_record = SeqRecord(Seq(q.sequence), id=q.header, description='')
+        gene_name = Genes.get(Genes.id == q.gene_id).name
+
+        # Create a new file for each gene if it doesn't already exist
+        output_file = f'{args.output}/{gene_name}.fas'
+        if not os.path.isfile(output_file):
+            with open(output_file, 'w') as outfile:
+                SeqIO.write(seq_record, outfile, 'fasta')
+        else:
+            with open(output_file, 'a') as outfile:
+                SeqIO.write(seq_record, outfile, 'fasta')
 
 
 def parse_taxa_tsv():
@@ -164,19 +169,23 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    orthologs_dir = f'{dfo}/orthologs'
-
+    database.init(str(Path(dfo, 'phylofisher.db')))
+    database.connect()
+    
+    # Creates output dir if it doesn't already exist
     if os.path.isdir(args.output) is False:
-        os.mkdir(args.output)
+        os.makedirs(args.output)
+    else:
+        shutil.rmtree(args.output)
+        os.makedirs(args.output)
 
     if os.path.isfile('select_orthologs.tsv'):
         subset_orthologs()
     else:
-        files = [os.path.basename(file) for file in os.listdir(orthologs_dir)]
-        for file in files:
-            shutil.copy(f'{orthologs_dir}/{file}', f'{args.output}/{file}')
+        subset_orthologs(subset=False)
 
     if os.path.isfile('select_taxa.tsv'):
         subset_taxa()
 
     check_if_empty()
+    database.close()

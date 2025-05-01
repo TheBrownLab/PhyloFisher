@@ -2,10 +2,9 @@
 import configparser
 import os
 from pathlib import Path
-
 from Bio import SeqIO
-
 from phylofisher import help_formatter
+from phylofisher.db_map import database, Genes, Sequences
 
 
 def parse_genes(gene_file):
@@ -62,11 +61,10 @@ def fasta_filtr(file, o_to_ex, paralogs=None):
                 res.write(f'>{record.name}\n{record.seq}\n')
         if paralogs:
             # only with paralog selection option
-            para_file = str(Path(dfo, f'paralogs/{file.split(".")[0]}_paralogs.fas'))
-            if os.path.isfile(para_file):
-                for record in SeqIO.parse(para_file, 'fasta'):
-                    if record.name.split('.')[0] in paralogs:
-                        res.write(f'>{record.name}\n{record.seq}\n')
+            db_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.id).join(Genes).where((Genes.name == 'ADK2') & (Sequences.is_paralog == True))
+            
+            for q in db_query:
+                res.write(f'>{q.header}..p{q.id}\n{q.sequence}\n')
 
 
 def main():
@@ -103,7 +101,15 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
+    # Connect to database
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
+    database.init(os.path.join(dfo, 'phylofisher.db'))
+    database.connect()
+
     if args.input[-1] == '/':
         args.input = args.input[:-1]
     os.mkdir(args.output)
     main()
+
+    # Close database connection
+    database.close()

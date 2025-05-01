@@ -4,8 +4,8 @@ import os
 import textwrap
 import pandas as pd
 from pathlib import Path
-
 from phylofisher import help_formatter, tools
+from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
 
 
 def parse_user_inc_exc(input_file):
@@ -27,7 +27,7 @@ def make_subset_tsv():
 
     :return:
     """
-    taxa = tools.parse_metadata(metadata)
+    taxa = tools.parse_metadata(str(Path(dfo, 'phylofisher.db')))
     df = taxa_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
 
@@ -164,10 +164,9 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    metadata = f'{dfo}/metadata.tsv'
-    orthologs_dir = f'{dfo}/orthologs/'
-
-    matrix = tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
+    database.init(str(Path(dfo, 'phylofisher.db')))
+    database.connect()
+    matrix = tools.completeness(orthologs=True, genes=True)
     matrix = matrix.transpose()
 
     if os.path.isfile('select_orthologs.tsv'):
@@ -186,3 +185,5 @@ if __name__ == '__main__':
         tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)
     except ValueError:
         print('Unable to make plot. However, the TSV file was created, and you are free to move forward.')
+
+    database.close()
