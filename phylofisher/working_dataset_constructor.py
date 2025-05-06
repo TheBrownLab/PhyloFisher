@@ -79,7 +79,7 @@ def fasta_filtr(file, o_to_ex, paralogs=False):
                 res.write(f'>{record.name}\n{record.seq}\n')
         if paralogs:
             # only with paralog selection option
-            db_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.id).join(Genes).where((Genes.name == 'ADK2') & (Sequences.is_paralog == True))
+            db_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.id).join(Genes).where((Genes.name == gene_name) & (Sequences.is_paralog == True))
             
             for q in db_query:
                 res.write(f'>{q.header}..p{q.id}\n{q.sequence}\n')
