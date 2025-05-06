@@ -8,12 +8,13 @@ from pathlib import Path
 from phylofisher import help_formatter
 
 
-def check_input_meta(conn, input_meta):
-    """
-    Checks that all ids are unique in input_metadata and also between
-    input_metadata and metadata. 
-    Checks for illegal characters in input ids.
-    """
+def check_input_meta(input_meta):
+    '''
+    Checks the input metadata file for unique IDs and illegal characters.
+
+    :param input_meta: path to the input metadata file in tsv format
+    :type input_meta: str
+    '''
 
     cursor.execute('SELECT short_name FROM metadata')
     database_metadata_ids = set([x[0] for x in cursor.fetchall()])

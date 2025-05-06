@@ -9,10 +9,14 @@ from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
 
 
 def parse_user_inc_exc(input_file):
-    """
+    '''
+    Parse a user-provided file containing taxa to include or exclude.
 
-    :return:
-    """
+    :param input_file: path to the file containing taxa to include or exclude
+    :type input_file: str
+    :return: set of taxa to include or exclude
+    :rtype: set
+    '''
     with open(input_file, 'r') as infile:
         user_set = set()
         for line in infile:
@@ -23,10 +27,9 @@ def parse_user_inc_exc(input_file):
 
 
 def make_subset_tsv():
-    """
-
-    :return:
-    """
+    '''
+    Create a TSV file containing taxa completeness and taxonomic information.
+    '''
     taxa = tools.parse_metadata(str(Path(dfo, 'phylofisher.db')))
     df = taxa_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
@@ -80,10 +83,14 @@ def make_subset_tsv():
 
 
 def update_df_ortho(df):
-    """
+    '''
+    Update the DataFrame by dropping orthologs based on user selection.
 
-    :return:
-    """
+    :param df: dataframe containing orthologs and their completeness
+    :type df: pd.DataFrame
+    :return: updated dataframe with selected orthologs
+    :rtype: pd.DataFrame
+    '''
     with open('select_orthologs.tsv', 'r') as infile:
         infile.readline()
         to_drop = []
@@ -119,10 +126,14 @@ def gen_chimera(df):
 
 
 def update_dataframe(df):
-    """
+    '''
+    Update the DataFrame by dropping taxa based on user selection.
 
-    :return:
-    """
+    :param df: dataframe containing taxa and their completeness
+    :type df: pd.DataFrame
+    :return: updated dataframe with selected taxa
+    :rtype: pd.DataFrame
+    '''
     with open('select_taxa.tsv', 'r') as infile:
         infile.readline()
         to_drop = []

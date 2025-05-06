@@ -13,11 +13,12 @@ from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata,
 
 
 def parse_ortholog_tsv():
-    """
-    Parses select_orthologs.tsv (output of select_orthologs.py) to determine which genes are to be included in
-    the final dataset.
-    :return:
-    """
+    '''
+    Parses select_orthologs.tsv (output of select_orthologs.py) to determine which genes are to be included in the final dataset.
+
+    :return: list of genes to include in the final dataset
+    :rtype: list
+    '''
     with open('select_orthologs.tsv', 'r') as infile:
         header = infile.readline()
         genes_to_include = []
@@ -34,10 +35,12 @@ def parse_ortholog_tsv():
 
 
 def subset_orthologs(subset=False):
-    """
+    '''
     Subsets orthologs from the Database into a new directory to be included in the final dataset
-    :return:
-    """
+
+    :param subset: Flag indicating whether to subset genes based on select_orthologs.tsv, defaults to False
+    :type subset: bool, optional
+    '''
     # Genes to include in the final dataset
     if subset:
         genes = parse_ortholog_tsv()
@@ -62,12 +65,12 @@ def subset_orthologs(subset=False):
 
 
 def parse_taxa_tsv():
-    """
-    Parses select_taxa.tsv (output of select_taxa.py) to determine which taxa are to be included in
-    the final dataset.
-    :param tsv_file:
-    :return:
-    """
+    '''
+    Parses select_taxa.tsv (output of select_taxa.py) to determine which taxa are to be included in the final dataset.
+
+    :return: list of taxa to include in the final dataset
+    :rtype: list
+    '''
     with open('select_taxa.tsv', 'r') as infile:
         infile.readline()
         taxa_to_include = []
@@ -81,11 +84,12 @@ def parse_taxa_tsv():
 
 
 def get_chimeras():
-    """
-    Parses chimeras.tsv if the chimera flag is utilized
-    :return: Dict with chimera's Unique ID as the key and a list the Unique IDs of taxa comprising the chimera as the
-    value
-    """
+    '''
+    Parses chimeras.tsv (output of select_taxa.py) to determine which taxa are chimeric and their corresponding sequences.
+
+    :return: tuple containing a dictionary of chimeras and a list of chimeric taxa
+    :rtype: tuple
+    '''
     chim_dict = dict()
     chim_taxa = []
     with open(args.chimeras, 'r') as infile:
@@ -97,9 +101,9 @@ def get_chimeras():
 
 
 def subset_taxa():
-    """
+    '''
     Subsets taxa from the Database into a new directory to be included in the final dataset
-    """
+    '''
     taxa = parse_taxa_tsv()
 
     if args.chimeras:
@@ -136,10 +140,12 @@ def subset_taxa():
 
 
 def check_if_empty():
-    """
+    '''
     Checks to see if there are empty files in the output directory
-    :return: Boolian value (True if no empty files)
-    """
+
+    :return: Boolean value indicating whether there are empty files in the output directory
+    :rtype: bool
+    '''
     for subdir, dirs, files in os.walk(args.output):
         for file in files:
             filepath = subdir + os.sep + file

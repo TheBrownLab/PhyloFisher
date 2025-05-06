@@ -20,6 +20,12 @@ plt.style.use('ggplot')
 
 
 def configure_colors():
+    '''
+    Configure colors for taxonomic groups from color_conf file.
+
+    :return: dictionary with taxonomic groups as keys and colors as values
+    :rtype: dict
+    '''
     color_dict = dict()
     with open(color_conf, 'r') as infile:
         infile.readline()
@@ -32,11 +38,16 @@ def configure_colors():
 
 
 def parse_metadata(metadata, input_metadata=None):
-    """
+    '''
     Parse metadata from dataset and input_metadata (if provided)
-    input:  metadata csv file, input metadata csv file (optional)
-    return: dictionary with combined metadata, dictionary with taxonomy: color
-    """
+
+    :param metadata: _description_
+    :type metadata: _type_
+    :param input_metadata: _description_, defaults to None
+    :type input_metadata: _type_, optional
+    :return: _description_
+    :rtype: _type_
+    '''
     color_dict = configure_colors()
     metadata_comb = {}
     for line_ in open(metadata):
@@ -63,11 +74,14 @@ def parse_metadata(metadata, input_metadata=None):
 
 
 def suspicious_clades(tree):
-    """
+    '''
     Find suspicious clades (more than 70 bs and more than 2 tax groups)
-    input: phylogenetic tree
-    output: tuple of tree name and list of suspicious clades 
-    """
+
+    :param tree: phylogenetic tree file
+    :type tree: str
+    :return: tuple of tree name and list of suspicious clades
+    :rtype: tuple
+    '''
     t = Tree(tree)
     # midpoint rooted tree
     R = t.get_midpoint_outgroup()
@@ -97,12 +111,15 @@ def suspicious_clades(tree):
 
 
 def get_best_candidates(tree_file):
-    """
+    '''
     Check best candidates after trimming.
     example: if q1 doesn't survived -> q2 is ranked as best candidate == ortholog
-    input: tree file
-    output: set of best candidate sequences
-    """
+
+    :param tree_file: path to the tree file
+    :type tree_file: str
+    :return: set of best candidate sequences
+    :rtype: set
+    '''
     t = Tree(tree_file)
     top_rank = defaultdict(dict)
     for node in t.traverse('preorder'):
@@ -124,18 +141,14 @@ def get_best_candidates(tree_file):
 
 
 def parse_contaminants(file):
-    """
+    '''
     Parse contamination file.
-    example:
-    ==============================
-    Pirisoci	Alveolata	Higher Taxonomy
-    DiplDSTH	GoniavonGEN	Unique ID
-    Fucucera	Ochrophyta	Lower Taxonomy
-    ==============================
-    input: tab separated file with contaminants
-    result: dictionary with organism as key and tuple with taxonomy
-            and rank 
-    """
+
+    :param file: path to the contamination file
+    :type file: str
+    :return: dictionary with organism as key and tuple with taxonomy
+    :rtype: dict
+    '''
     cont_dict = {}
     for line in open(file):
         org, tax, rank = line.split('\t')
@@ -144,13 +157,16 @@ def parse_contaminants(file):
 
 
 def expected_neighborhood(parent, cont_key_rank):
-    """
-    Recursively check if ornanisms around target has some taxonomical group 
-    (not added in this run of fisher) and evaluete if target has expected 
-    neighbourhood.
-    input: parent node, (key, rank) => example: (Alveolata, group) or (Gonianon, org)
-    output: True/False
-    """
+    '''
+    Recursively check if organisms around target has some taxonomical group (not added in this run of fisher) and evaluate if target has expected neighborhood.
+
+    :param parent: parent node of the current node in the tree
+    :type parent: ete3.TreeNode
+    :param cont_key_rank: contamination key and rank
+    :type cont_key_rank: tuple
+    :return: True if expected neighborhood is found, False otherwise
+    :rtype: bool
+    '''
     keywords = set()
     key = cont_key_rank[0]
     rank = cont_key_rank[1]
@@ -184,12 +200,16 @@ def expected_neighborhood(parent, cont_key_rank):
 
 
 def collect_contaminants(tree_file, cont_dict):
-    """
-    Collect name of all sequences where position on tree corresponds to expected place 
-    for a contamination.
-    input: tree file, contamination dict from parse_contaminants fucntion
-    result: set of proven contaminants, set of proven contamination (same names as in csv result tables)
-    """
+    '''
+    Collect name of all sequences where position on tree corresponds to expected place for a contamination.
+
+    :param tree_file: path to the tree file
+    :type tree_file: str
+    :param cont_dict: contamination dictionary from parse_contaminants function
+    :type cont_dict: dict
+    :return: set of proven contaminants, set of proven contamination (same names as in csv result tables)
+    :rtype: tuple(set, set)
+    '''
     t = Tree(tree_file)
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
@@ -213,6 +233,14 @@ def collect_contaminants(tree_file, cont_dict):
 
 
 def get_build_len(name_):
+    '''
+    Get the length of the final alignment and the trimmed alignment if available.
+
+    :param name_: name of the gene
+    :type name_: str
+    :return: length of the final alignment, dictionary with lengths of sequences, length of the trimmed alignment if available
+    :rtype: tuple(int, dict, int or None)
+    '''
     if os.path.isfile(f'{args.input}/{name_}.trimmed') is True:
         with open(f'{args.input}/{name_}.final', 'r') as build, open(f'{args.input}/{name_}.trimmed', 'r') as trimmed:
             trimmed_len = 0
@@ -240,6 +268,16 @@ def get_build_len(name_):
 
 
 def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
+    '''
+    This function renders a tree to an SVG file and creates a corresponding TSV file with information about the sequences in the tree.
+
+    :param tree_file: path to the tree file
+    :type tree_file: str
+    :param contaminants: set of contaminants, defaults to None
+    :type contaminants: set, optional
+    :param backpropagation: Flag indicating if backpropagation is being used, defaults to None
+    :type backpropagation: bool, optional
+    '''
     if contaminants is None:
         contaminants = set()
     tree_base = str(os.path.basename(tree_file))
@@ -294,7 +332,24 @@ def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
 
 
 def format_leaves(backpropagation, contaminants, node, node_style, table, top_ranked, len_dict):
-    """This function formats the leaves for the svg file and writes to tsv file"""
+    '''
+    This function formats the leaves for the svg file and writes to tsv file
+
+    :param backpropagation: flag indicating if backpropagation is being used
+    :type backpropagation: bool
+    :param contaminants: set of contaminants
+    :type contaminants: set
+    :param node: node in the tree
+    :type node: ete3.TreeNode
+    :param node_style: style for the node
+    :type node_style: dict
+    :param table: file object to write tsv data
+    :type table: file object
+    :param top_ranked: set of top ranked sequences
+    :type top_ranked: set
+    :param len_dict: dictionary with lengths of sequences
+    :type len_dict: dict
+    '''
 
     # This parts is about leaves
     empty_face = TextFace("\t" * 20)  # just because of Sefs script
@@ -312,7 +367,24 @@ def format_leaves(backpropagation, contaminants, node, node_style, table, top_ra
 
 
 def org_in_add(backpropagation, contaminants, node, org, table, top_ranked, len_dict):
-    """for organisms that are in additions"""
+    '''
+    This function formats the leaves for the svg file and writes to tsv file for organisms in additions
+
+    :param backpropagation: flag indicating if backpropagation is being used
+    :type backpropagation: bool
+    :param contaminants: set of contaminants
+    :type contaminants: set
+    :param node: node in the tree
+    :type node: ete3.TreeNode
+    :param org: organism name
+    :type org: str
+    :param table: file object to write tsv data
+    :type table: file object
+    :param top_ranked: set of top ranked sequences
+    :type top_ranked: set
+    :param len_dict: dictionary with lengths of sequences
+    :type len_dict: dict
+    '''
     quality = f'{org.split("_")[-2]}_{org.split("_")[-1]}_{len_dict[org]}'
     org = node.name
     unique_id = org.split('_')[0]
@@ -343,7 +415,20 @@ def org_in_add(backpropagation, contaminants, node, org, table, top_ranked, len_
 
 
 def para_from_meta(backpropagation, node, org, table, len_dict):
-    """for paralogs from metadata"""
+    '''
+    This function formats the leaves for the svg file and writes to tsv file for paralogs from metadata
+
+    :param backpropagation: flag indicating if backpropagation is being used
+    :type backpropagation: bool
+    :param node: node in the tree
+    :type node: ete3.TreeNode
+    :param org: organism name
+    :type org: str
+    :param table: file object to write tsv data
+    :type table: file object
+    :param len_dict: dictionary with lengths of sequences
+    :type len_dict: dict
+    '''
     unique_id = org.split('..')[0]
     group = f"{metadata[unique_id]['Higher Taxonomy']}"
     paraf = TextFace(f'{metadata[unique_id]["full"]}_{len_dict[org]}@{org}', fgcolor='blue')
@@ -356,7 +441,22 @@ def para_from_meta(backpropagation, node, org, table, len_dict):
 
 
 def ortho_from_meta(backpropagation, node, node_style, org, table, len_dict):
-    """for orthologs from dataset"""
+    '''
+    This function formats the leaves for the svg file and writes to tsv file for orthologs from metadata
+
+    :param backpropagation: flag indicating if backpropagation is being used
+    :type backpropagation: bool
+    :param node: node in the tree
+    :type node: ete3.TreeNode
+    :param node_style: style for the node
+    :type node_style: dict
+    :param org: organism name
+    :type org: str
+    :param table: file object to write tsv data
+    :type table: file object
+    :param len_dict: dictionary with lengths of sequences
+    :type len_dict: dict
+    '''
     group = f"{metadata[org]['Higher Taxonomy']}"
     gface = TextFace(f'[{group} {metadata[org]["Lower Taxonomy"]}]')  # TODO do not touch me pleeeease
     color = metadata[org]['col']
@@ -368,8 +468,20 @@ def ortho_from_meta(backpropagation, node, node_style, org, table, len_dict):
 
 
 def format_nodes(node, node_style, sus_clades, t):
-    """This function visually formats the nodes in the svg file based on the nodes' support values and whether or not
-    the clade is suspicous"""
+    '''
+    Visually formats the nodes in the svg file based on the nodes' support values and whether or not the clade is suspicious
+
+    :param node: node in the tree
+    :type node: ete3.TreeNode
+    :param node_style: style for the node
+    :type node_style: dict
+    :param sus_clades: number of suspicious clades
+    :type sus_clades: int
+    :param t: ete3.Tree object
+    :type t: ete3.Tree
+    :return: tuple of TextFace object and updated number of suspicious clades
+    :rtype: tuple
+    '''
     supp = TextFace(f'{int(node.support)}', fsize=8)
     if node.support >= 70:
         supp.bold = True
@@ -394,13 +506,28 @@ def format_nodes(node, node_style, sus_clades, t):
 
 
 def parallel_susp_clades(trees):
-    """Parallelizes the function suspicious_clades()"""
+    '''
+    Parallelizes the function suspicious_clades
+
+    :param trees: list of tree files
+    :type trees: list
+    :return: list of tuples containing tree name and list of suspicious clades
+    :rtype: list
+    '''
     with Pool(processes=threads) as pool:
         suspicious = list(pool.map(suspicious_clades, trees))
         return suspicious
 
 
 def nonredundant(result_clades):
+    '''
+    Remove redundant clades from the list of clades.
+
+    :param result_clades: list of clades
+    :type result_clades: list
+    :return: list of non-redundant clades
+    :rtype: list
+    '''
     nonredundant = []
     for clades in result_clades:
         if clades:
@@ -418,14 +545,14 @@ def nonredundant(result_clades):
 
 
 def collect_major_taxa(nonredundant_clades_):
-    """
-    Collect information about major taxonomic group for all nonreduntant clades
-    and connect this information with all organisms in that clade. This function
-    prepares data for plot_major_taxa function.
-    input: set of nonredundant clades
-    return: dictionary with orgs as keys and list of taxonomic groups (major tax groups
-    from clades with a given organism) as values
-    """
+    '''
+    Collect information about major taxonomic group for all nonreduntant clades and connect this information with all organisms in that clade. This function prepares data for plot_major_taxa function.
+
+    :param nonredundant_clades_: set of nonredundant clades
+    :type nonredundant_clades_: list
+    :return: dictionary with organisms as keys and list of taxonomic groups as values
+    :rtype: dict
+    '''
     orgs_ = defaultdict(list)
     for clade in nonredundant_clades_:
         # collect all taxonomic groups for a given clade
@@ -456,11 +583,12 @@ def collect_major_taxa(nonredundant_clades_):
 
 
 def plot_major_taxa(orgs_taxa):
-    """
+    '''
     Plot major taxonomic groups from clades (with a given org) for all organisms.
-    input: result from collect_major_taxa function (dictionary with list as keys)
-    return: None
-    """
+
+    :param orgs_taxa: result from collect_major_taxa function
+    :type orgs_taxa: dict
+    '''
     max_ = 0
     for org, groups in sorted(orgs_taxa.items()):
         # this 'for loop' is just looking for maximum value of clades
@@ -493,12 +621,14 @@ def plot_major_taxa(orgs_taxa):
 
 
 def backpropagate_contamination(tree_file, cont_names):
-    """
-    Changes status in all csv result tables for all proven contaminants
-    to 'd' as delete.
-    input: tree file, set of proven contaminants (same name format as in csv tables)
-    result: None
-    """
+    '''
+    Changes status in all csv result tables for all proven contaminants to 'd' as delete.
+
+    :param tree_file: path to the tree file
+    :type tree_file: str
+    :param cont_names: set of contaminant names
+    :type cont_names: set
+    '''
     tree_base = str(os.path.basename(tree_file))
     output_base = f"{tree_base.split('.')[1].split('_')[0]}"
     tree_base = tree_base.split("_")[0]

@@ -31,6 +31,12 @@ class UnknownStatusError(Exception):
 
 
 def taxa_to_exclude():
+    '''
+    Parse taxa to exclude from dataset addition.
+
+    :return: list of unique IDs to exclude
+    :rtype: list
+    '''
     to_skip = []
     with open(args.to_exclude, 'r') as infile:
         for line in infile:
@@ -41,10 +47,16 @@ def taxa_to_exclude():
 
 
 def parse_input(input_metadata, orgs_to_exc):
-    """"Parse input metadata.
-    input: input metadata csv
-    return: dictionary with info about input metadata
-    """
+    '''
+    Parse input metadata.
+
+    :param input_metadata: path to input metadata file
+    :type input_metadata: str
+    :param orgs_to_exc: list of unique IDs to exclude from dataset addition
+    :type orgs_to_exc: list
+    :return: dictionary of input metadata
+    :rtype: dict
+    '''
     orgs_to_exc = set()
 
     input_info = defaultdict(dict)
@@ -74,11 +86,14 @@ def parse_input(input_metadata, orgs_to_exc):
 
 
 def collect_seqs(gene):
-    """Collect all sequences for a given gene from fasta folder (fisher result)
-    and store them in a dictionary.
-    input: gene name
-    return: dictionary of all seqs for a given gene
-    """
+    '''
+    Collect all sequences for a given gene from fasta folder (fisher result) and store them in a dictionary.
+
+    :param gene: name of the gene
+    :type gene: str
+    :return: dictionary of all sequences for a given gene
+    :rtype: dict
+    '''
     seq_dict = {}
     for record in SeqIO.parse(f'{fisher_dir}/{gene}.fas', 'fasta'):
         if record.name.count('_') == 3:
@@ -194,11 +209,12 @@ def parse_table(table):
 
 
 def add_to_meta(abbrev):
-    """"Transfer input metadata for a given organism
-    to dataset metadata.
-    input:  short name of organism
-    return: None
-    """
+    '''
+    Transfer input metadata for a given organism to database metadata.
+
+    :param abbrev: abbreviation of the organism
+    :type abbrev: str
+    '''
     tax = input_info[abbrev]['tax']
     subtax = input_info[abbrev]['subtax']
     
@@ -221,9 +237,12 @@ def add_to_meta(abbrev):
 
 
 def new_database(table):
-    """Make changes in the PhyloFisher dataset according to information from
-     parsed single gene tree."""
+    '''
+    Make changes in the PhyloFisher database according to information from parsed single homolog tree.
 
+    :param table: path to parsed tsv file of one gene
+    :type table: str
+    '''
     gene = table.split('/')[-1].split('_parsed')[0]
     # Orthologs for a given gene
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
@@ -261,10 +280,9 @@ def new_database(table):
 
 
 def rebuild_db():
-    """
-    
-    :return: 
-    """
+    '''
+    Rebuild the database after adding new data.
+    '''
     cwd = os.getcwd()
     os.chdir(dfo)
     args.rename = None
@@ -273,6 +291,9 @@ def rebuild_db():
 
 
 def cp_proteomes():
+    '''
+    Copy proteomes from input metadata to database folder.
+    '''
     with open(input_metadata, 'r') as infile:
         infile.readline()
         file_dict = {}
@@ -299,10 +320,9 @@ def cp_proteomes():
 
 
 def main():
-    """
-    Main function. Run new_database on all parsed trees (tsv files)
-    :return:
-    """
+    '''
+    Loop through all parsed tables and add new data to the database.
+    '''
     for table in glob.glob(f'{args.input}/*_parsed.tsv'):
         new_database(table)
 

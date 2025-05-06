@@ -8,11 +8,14 @@ from phylofisher.db_map import database, Metadata
 
 
 def in_out_completeness(df):
-    """
+    '''
+    Calculates completeness of genes based on in-group and out-group taxa.
 
-    :param df:
-    :return:
-    """
+    :param df: DataFrame containing gene completeness data
+    :type df: pandas.DataFrame
+    :return: Tuple containing two dictionaries: out-group completeness and in-group completeness
+    :rtype: tuple(dict, dict)
+    '''
     # Gets all taxa unique IDS
     all_taxa_set = set([q.short_name for q in Metadata.select(Metadata.short_name)])
     
@@ -38,10 +41,12 @@ def in_out_completeness(df):
 
 
 def make_subset_tsv():
-    """
+    '''
+    Creates a TSV file containing gene completeness.
 
-    :return: df
-    """
+    :return: DataFrame containing gene completeness and selection criteria
+    :rtype: pandas.DataFrame
+    '''
     df = gene_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
     df = df.sort_values(by=['Completeness'], ascending=False)
@@ -83,10 +88,14 @@ def make_subset_tsv():
 
 
 def update_df_taxa(df):
-    """
+    '''
+    Update the DataFrame by dropping taxa based on user selection.
 
-    :return:
-    """
+    :param df: DataFrame containing taxa completeness data
+    :type df: pandas.DataFrame
+    :return: updated DataFrame with selected taxa
+    :rtype: pandas.DataFrame
+    '''
     with open('select_taxa.tsv', 'r') as infile:
         infile.readline()
         to_drop = []

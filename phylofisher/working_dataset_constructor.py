@@ -8,9 +8,14 @@ from phylofisher.db_map import database, Genes, Sequences
 
 
 def parse_genes(gene_file):
-    """Select gene to exclude: where sgt column is not 'yes' 
-    input: csv file with genes
-    return: set of genes which should be exluded"""
+    '''
+    Parse csv table for genes selection
+
+    :param gene_file: path to the gene stats file
+    :type gene_file: str
+    :return: set of genes to exclude
+    :rtype: set
+    '''
     to_exlude = set()
     with open(gene_file) as lines:
         next(lines)
@@ -22,10 +27,16 @@ def parse_genes(gene_file):
 
 
 def parse_orgs(org_file, new_data=False):
-    """Parse csv table for organisms selection
-    input: csv file with organisms
-    return: set of organisms to exclude, set of organisms
-    for which we want to select paralogs"""
+    '''
+    Parse TSV table for organisms selection
+
+    :param org_file: path to the organism stats file
+    :type org_file: str
+    :param new_data: Flag indicating if the data is new, defaults to False
+    :type new_data: bool, optional
+    :return: set of organisms to exclude, set of organisms
+    :rtype: tuple(set, set) or set
+    '''
     to_exlude = set()
     paralogs = set()
     with open(org_file) as lines:
@@ -50,11 +61,18 @@ def parse_orgs(org_file, new_data=False):
             return to_exlude, paralogs
 
 
-def fasta_filtr(file, o_to_ex, paralogs=None):
-    """Filter fasta sequences with genes. Exludes organisms which should be 
-    excluded (o_to_ex)
-    input: fasta file with genes, set with orgs to exlude, paralogs=True/None
-    result: None"""
+def fasta_filtr(file, o_to_ex, paralogs=False):
+    '''
+    Filter fasta sequences with genes. Excludes organisms which should be 
+    excluded
+
+    :param file: path to the fasta file
+    :type file: str
+    :param o_to_ex: set of organisms to exclude
+    :type o_to_ex: set
+    :param paralogs: Flag indicating if paralogs should be included, defaults to False
+    :type paralogs: bool, optional
+    '''
     with open(str(Path(args.output, file)), 'w') as res:
         for record in SeqIO.parse(str(Path(args.input, file)), 'fasta'):
             if record.name.split('_')[0] not in o_to_ex:

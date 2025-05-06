@@ -18,14 +18,14 @@ from phylofisher import help_formatter, tools
 
 
 def collect_names(files):
-    """
-    Collect all short names. Collest information about 'route'
-    for newly added sequences (BBH, SBH, HMM).
-    input: fasta files with genes (from fisher)
-    return: set of sorted shortnames; dictionary with genes 
-    as a keys and deeper level dictionaries with shortnames of organisms 
-    as keys and BBH or SBH or HMM as values
-    """
+    '''
+    Collect all short names. Collest information about 'route' for newly added sequences (BBH, SBH, HMM).
+
+    :param files: list of fasta files
+    :type files: list
+    :return: set of sorted shortnames; dictionary with genes
+    :rtype: tuple(set, dict)
+    '''
     names = set()
     routes = defaultdict(dict)
     for file in files:
@@ -44,13 +44,16 @@ def collect_names(files):
 
 
 def get_gene_column(gene, names):
-    """
+    '''
     Collect information about number of gene variants for all organisms.
-    input: fasta file for a given gene
-    return:  pd.Series with information about present(>0)/absence(0) of a gene
-    for all organisms. 
-    example: Albugo: 3, Naegr: 0, ...
-    """
+
+    :param gene: path to fasta file for a given gene
+    :type gene: str
+    :param names: set of short names of organisms
+    :type names: set
+    :return: pd.Series with information about present(>0)/absence(0) of a gene
+    :rtype: pd.Series
+    '''
     gene_name = gene.split('/')[-1].split('.')[0]
     column = pd.Series(np.zeros(len(names)), index=names, name=gene_name)
     for record in SeqIO.parse(gene, "fasta"):
@@ -63,13 +66,14 @@ def get_gene_column(gene, names):
 
 
 def make_table(folder):
-    """
-    Collect information about all genes as pd.Series and organize them
-    into pd.DataFrame
-    input: fodler with genes in fasta format
-    return: pd.DataFrame with genes; dictionary with information about
-    'routes' used for sequence selection (BBH, SBH, HMM)
-    """
+    '''
+    Collect information about all genes as pd.Series and organize them into pd.DataFrame
+
+    :param folder: directory with fasta files for all genes
+    :type folder: str
+    :return: pd.DataFrame with genes; dictionary with information about 'routes' used for sequence selection (BBH, SBH, HMM)
+    :rtype: tuple(pd.DataFrame, dict)
+    '''
     genes = [gene for gene in glob.glob(f'{folder}/*.fas') if os.path.isfile(gene)]
     names, routes = collect_names(genes)
     columns = []
@@ -82,13 +86,16 @@ def make_table(folder):
 
 
 def table_with_routes(df, routes):
-    """Create occupancy table and add information about routes used for sequence
-    selection (BBH, SBH, HMM) to input dataframe
-    input: pd.DataFrame with information about all genes (present(>0)/absent(0)) 
-    for all organisms, dictionary with routes for all sequences
-    output: modified input dataframe with information about route
-    """
+    '''
+    Create occupancy table and add information about routes used for sequence selection (BBH, SBH, HMM) to input dataframe
 
+    :param df: pd.DataFrame with information about all genes (present(>0)/absent(0))
+    :type df: pd.DataFrame
+    :param routes: dictionary with information about 'routes' used for sequence selection (BBH, SBH, HMM)
+    :type routes: dict
+    :return: pd.DataFrame with genes and information about routes
+    :rtype: pd.DataFrame
+    '''
     # Convert to boolean matrix
     df = df[df.index.isin(in_taxa_dict.keys())]
 
@@ -127,11 +134,12 @@ def table_with_routes(df, routes):
 
 
 def check_paralogs():
-    """Collect all Unique IDs for organisms with at least one paralog
-    in the dataset.
-    input: None
-    return: set of short names of organisms with at least one paralog
-    """
+    '''
+    Collect all Unique IDs for organisms with at least one paralog in the dataset.
+
+    :return: set of short names of organisms with at least one paralog
+    :rtype: set
+    '''
     paralogs = set()
     database.init(os.path.join(dfo, 'phylofisher.db'))
     database.connect()
@@ -144,10 +152,12 @@ def check_paralogs():
 
 
 def get_routes():
-    """
+    '''
+    Collect information about 'routes' used for sequence selection (BBH, SBH, HMM) for all organisms.
 
-    :return:
-    """
+    :return: dictionary with information about 'routes' used for sequence selection (BBH, SBH, HMM)
+    :rtype: dict
+    '''
     my_routes = dict()
     for org in in_taxa_dict.keys():
         sbh = {'SBH': 0, 'BBH': 0, 'HMM': 0}
@@ -162,13 +172,14 @@ def get_routes():
 
 
 def update_homolog_tree(df):
-    """
-    Update homolog tree column to only include those organisms that are provided
-    by the user.
-    input: dataframe
-    return: dataframe
-    """
+    '''
+    Update homolog tree column to only include those organisms that are provided by the user.
 
+    :param df: pd.DataFrame with information about all genes and organisms
+    :type df: pd.DataFrame
+    :return: pd.DataFrame with updated homolog tree information
+    :rtype: pd.DataFrame
+    '''
     ht_include = set()
     with open(args.ht_include, 'r') as f:
         for line in f:
@@ -183,12 +194,14 @@ def update_homolog_tree(df):
 
 
 def stats_orgs(df, new_data=False):
-    """
-    Create tsv file with basic summary about analyzed dataset without information
-    about 'routes' and paralogs.
-    input: dataframe
-    return: None
-    """
+    '''
+    Create tsv file with basic summary about analyzed dataset without information about 'routes' and paralogs.
+
+    :param df: pd.DataFrame with information about all genes and organisms
+    :type df: pd.DataFrame
+    :param new_data: Boolean indicating if the data is new or from the database
+    :type new_data: bool, optional
+    '''
     rows = []
 
     if new_data:
@@ -259,10 +272,12 @@ def stats_orgs(df, new_data=False):
 
 
 def stats_gene(df):
-    """Write basic summary for all genes to a file
-    input: dataframe
-    return: None
-    """
+    '''
+    Write basic summary for all genes
+
+    :param df: pd.DataFrame with information about all genes and organisms
+    :type df: pd.DataFrame
+    '''
     # res.write(f'Gene,Total,total[%],SGT\n')
     taxa_count = len(df)
     df[df != 0] = 1
