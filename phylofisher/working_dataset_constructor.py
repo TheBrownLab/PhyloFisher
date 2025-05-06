@@ -73,6 +73,7 @@ def fasta_filtr(file, o_to_ex, paralogs=False):
     :param paralogs: Flag indicating if paralogs should be included, defaults to False
     :type paralogs: bool, optional
     '''
+    gene_name = file.split('.')[0]
     with open(str(Path(args.output, file)), 'w') as res:
         for record in SeqIO.parse(str(Path(args.input, file)), 'fasta'):
             if record.name.split('_')[0] not in o_to_ex:
