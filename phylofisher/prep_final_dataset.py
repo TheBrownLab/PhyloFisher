@@ -5,20 +5,20 @@ import shutil
 import sys
 import textwrap
 from pathlib import Path
-
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-
 from phylofisher import help_formatter
+from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
 
 
 def parse_ortholog_tsv():
-    """
-    Parses select_orthologs.tsv (output of select_orthologs.py) to determine which genes are to be included in
-    the final dataset.
-    :return:
-    """
+    '''
+    Parses select_orthologs.tsv (output of select_orthologs.py) to determine which genes are to be included in the final dataset.
+
+    :return: list of genes to include in the final dataset
+    :rtype: list
+    '''
     with open('select_orthologs.tsv', 'r') as infile:
         header = infile.readline()
         genes_to_include = []
@@ -34,35 +34,43 @@ def parse_ortholog_tsv():
     return genes_to_include
 
 
-def subset_orthologs():
-    """
+def subset_orthologs(subset=False):
+    '''
     Subsets orthologs from the Database into a new directory to be included in the final dataset
-    :return:
-    """
-    # Creates output dir if it doesn't already exist
-    if os.path.isdir(args.output) is False:
-        os.makedirs(args.output)
 
+    :param subset: Flag indicating whether to subset genes based on select_orthologs.tsv, defaults to False
+    :type subset: bool, optional
+    '''
     # Genes to include in the final dataset
-    genes = parse_ortholog_tsv()
-    # List of paths to ortholog files
-    files = [os.path.join(orthologs_dir, x) for x in os.listdir(orthologs_dir) if x.endswith('.fas')]
-    # Copies gene files to the output dir
-    for gene in genes:
-        for file in files:
-            if gene == os.path.basename(file).split('.')[0]:
-                src = file
-                dest = f'{args.output}/{os.path.basename(file)}'
-                shutil.copy(src, dest)
+    if subset:
+        genes = parse_ortholog_tsv()
+        gene_ids = [g.id for g in Genes.select(Genes.id, Genes.name).where(Genes.name.in_(genes)) if g.name in genes]
+    
+        d_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.gene_id, Sequences.metadata_id).where(Sequences.gene_id.in_(gene_ids) & Sequences.is_paralog == False)
+    else:
+        d_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.gene_id, Sequences.metadata_id).where(Sequences.is_paralog == False)
+
+    for q in d_query:
+        seq_record = SeqRecord(Seq(q.sequence), id=q.header, description='')
+        gene_name = Genes.get(Genes.id == q.gene_id).name
+
+        # Create a new file for each gene if it doesn't already exist
+        output_file = f'{args.output}/{gene_name}.fas'
+        if not os.path.isfile(output_file):
+            with open(output_file, 'w') as outfile:
+                SeqIO.write(seq_record, outfile, 'fasta')
+        else:
+            with open(output_file, 'a') as outfile:
+                SeqIO.write(seq_record, outfile, 'fasta')
 
 
 def parse_taxa_tsv():
-    """
-    Parses select_taxa.tsv (output of select_taxa.py) to determine which taxa are to be included in
-    the final dataset.
-    :param tsv_file:
-    :return:
-    """
+    '''
+    Parses select_taxa.tsv (output of select_taxa.py) to determine which taxa are to be included in the final dataset.
+
+    :return: list of taxa to include in the final dataset
+    :rtype: list
+    '''
     with open('select_taxa.tsv', 'r') as infile:
         infile.readline()
         taxa_to_include = []
@@ -76,11 +84,12 @@ def parse_taxa_tsv():
 
 
 def get_chimeras():
-    """
-    Parses chimeras.tsv if the chimera flag is utilized
-    :return: Dict with chimera's Unique ID as the key and a list the Unique IDs of taxa comprising the chimera as the
-    value
-    """
+    '''
+    Parses chimeras.tsv (output of select_taxa.py) to determine which taxa are chimeric and their corresponding sequences.
+
+    :return: tuple containing a dictionary of chimeras and a list of chimeric taxa
+    :rtype: tuple
+    '''
     chim_dict = dict()
     chim_taxa = []
     with open(args.chimeras, 'r') as infile:
@@ -92,9 +101,9 @@ def get_chimeras():
 
 
 def subset_taxa():
-    """
+    '''
     Subsets taxa from the Database into a new directory to be included in the final dataset
-    """
+    '''
     taxa = parse_taxa_tsv()
 
     if args.chimeras:
@@ -131,10 +140,12 @@ def subset_taxa():
 
 
 def check_if_empty():
-    """
+    '''
     Checks to see if there are empty files in the output directory
-    :return: Boolian value (True if no empty files)
-    """
+
+    :return: Boolean value indicating whether there are empty files in the output directory
+    :rtype: bool
+    '''
     for subdir, dirs, files in os.walk(args.output):
         for file in files:
             filepath = subdir + os.sep + file
@@ -164,19 +175,23 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    orthologs_dir = f'{dfo}/orthologs'
-
+    database.init(str(Path(dfo, 'phylofisher.db')))
+    database.connect()
+    
+    # Creates output dir if it doesn't already exist
     if os.path.isdir(args.output) is False:
-        os.mkdir(args.output)
+        os.makedirs(args.output)
+    else:
+        shutil.rmtree(args.output)
+        os.makedirs(args.output)
 
     if os.path.isfile('select_orthologs.tsv'):
         subset_orthologs()
     else:
-        files = [os.path.basename(file) for file in os.listdir(orthologs_dir)]
-        for file in files:
-            shutil.copy(f'{orthologs_dir}/{file}', f'{args.output}/{file}')
+        subset_orthologs(subset=False)
 
     if os.path.isfile('select_taxa.tsv'):
         subset_taxa()
 
     check_if_empty()
+    database.close()

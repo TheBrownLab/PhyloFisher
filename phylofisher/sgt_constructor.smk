@@ -1,6 +1,7 @@
 # The main entry point of your workflow.
 import os
-
+from peewee import *
+from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
 from Bio import SeqIO
 
 out_dir = config['out_dir']
@@ -8,8 +9,7 @@ in_dir = config['in_dir']
 genes = config['genes'].split(',')
 trees_only = config['trees_only']
 no_trees = config['no_trees']
-tree_colors = config['tree_colors']
-metadata = config['metadata']
+pf_database = config['database']
 input_metadata = config['input_metadata']
 
 
@@ -242,21 +242,42 @@ else:
             cp {input[2]} {output[5]}
             '''
 
-rule cp_metadata:
+rule cp_input_metadata:
     input:
-        f'{tree_colors}',
-        f'{metadata}',
         f'{input_metadata}',
     output:
-        f'{out_dir}-local/tree_colors.tsv',
-        f'{out_dir}-local/metadata.tsv',
         f'{out_dir}-local/input_metadata.tsv'
     shell:
         """
         cp {input[0]} {output[0]}
-        cp {input[1]} {output[1]}
-        cp {input[2]} {output[2]}
         """
+
+rule make_metadata_tsv:
+    input:
+        f'{pf_database}',
+    output:
+        f'{out_dir}-local/metadata.tsv',
+        f'{out_dir}-local/tree_colors.tsv'
+    run:
+        database.init(input[0])
+        database.connect()
+        db_query = Metadata.select()
+        tax_query = Taxonomies.select()
+
+        with open(output[0], 'w') as meta_out, open(output[1], 'w') as color_out:
+            meta_out.write('Unique ID\tLong Name\tHigher Taxonomy\tLower Taxonomy\tData Type\tSource\n')
+            color_out.write('Taxonomy\tColor\n')
+
+            tax_dict = {}
+            for taxa in tax_query:
+                if taxa.color:
+                    color_out.write(f'{taxa.taxonomy}\t{taxa.color}\n')
+                tax_dict[taxa.id] = taxa.taxonomy
+
+            for q in db_query:
+                meta_out.write(f'{q.short_name}\t{q.long_name}\t{tax_dict[int(str(q.higher_taxonomy))]}\t{tax_dict[int(str(q.lower_taxonomy))]}\t{q.data_type}\t{q.source}\n')
+            
+        database.close()
 
 def get_tar_local_dir_input(wildcards):
     ret = []

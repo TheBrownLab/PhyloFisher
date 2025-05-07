@@ -2,16 +2,20 @@
 import configparser
 import os
 from pathlib import Path
-
 from Bio import SeqIO
-
 from phylofisher import help_formatter
+from phylofisher.db_map import database, Genes, Sequences
 
 
 def parse_genes(gene_file):
-    """Select gene to exclude: where sgt column is not 'yes' 
-    input: csv file with genes
-    return: set of genes which should be exluded"""
+    '''
+    Parse csv table for genes selection
+
+    :param gene_file: path to the gene stats file
+    :type gene_file: str
+    :return: set of genes to exclude
+    :rtype: set
+    '''
     to_exlude = set()
     with open(gene_file) as lines:
         next(lines)
@@ -23,10 +27,16 @@ def parse_genes(gene_file):
 
 
 def parse_orgs(org_file, new_data=False):
-    """Parse csv table for organisms selection
-    input: csv file with organisms
-    return: set of organisms to exclude, set of organisms
-    for which we want to select paralogs"""
+    '''
+    Parse TSV table for organisms selection
+
+    :param org_file: path to the organism stats file
+    :type org_file: str
+    :param new_data: Flag indicating if the data is new, defaults to False
+    :type new_data: bool, optional
+    :return: set of organisms to exclude, set of organisms
+    :rtype: tuple(set, set) or set
+    '''
     to_exlude = set()
     paralogs = set()
     with open(org_file) as lines:
@@ -51,22 +61,29 @@ def parse_orgs(org_file, new_data=False):
             return to_exlude, paralogs
 
 
-def fasta_filtr(file, o_to_ex, paralogs=None):
-    """Filter fasta sequences with genes. Exludes organisms which should be 
-    excluded (o_to_ex)
-    input: fasta file with genes, set with orgs to exlude, paralogs=True/None
-    result: None"""
+def fasta_filtr(file, o_to_ex, paralogs=False):
+    '''
+    Filter fasta sequences with genes. Excludes organisms which should be 
+    excluded
+
+    :param file: path to the fasta file
+    :type file: str
+    :param o_to_ex: set of organisms to exclude
+    :type o_to_ex: set
+    :param paralogs: Flag indicating if paralogs should be included, defaults to False
+    :type paralogs: bool, optional
+    '''
+    gene_name = file.split('.')[0]
     with open(str(Path(args.output, file)), 'w') as res:
         for record in SeqIO.parse(str(Path(args.input, file)), 'fasta'):
             if record.name.split('_')[0] not in o_to_ex:
                 res.write(f'>{record.name}\n{record.seq}\n')
         if paralogs:
             # only with paralog selection option
-            para_file = str(Path(dfo, f'paralogs/{file.split(".")[0]}_paralogs.fas'))
-            if os.path.isfile(para_file):
-                for record in SeqIO.parse(para_file, 'fasta'):
-                    if record.name.split('.')[0] in paralogs:
-                        res.write(f'>{record.name}\n{record.seq}\n')
+            db_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.id).join(Genes).where((Genes.name == gene_name) & (Sequences.is_paralog == True))
+            
+            for q in db_query:
+                res.write(f'>{q.header}..p{q.id}\n{q.sequence}\n')
 
 
 def main():
@@ -103,7 +120,15 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
 
+    # Connect to database
+    dfo = str(Path(config['PATHS']['database_folder']).resolve())
+    database.init(os.path.join(dfo, 'phylofisher.db'))
+    database.connect()
+
     if args.input[-1] == '/':
         args.input = args.input[:-1]
     os.mkdir(args.output)
     main()
+
+    # Close database connection
+    database.close()

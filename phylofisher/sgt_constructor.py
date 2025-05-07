@@ -49,8 +49,7 @@ def make_config(length_filter):
         f'genes={",".join(get_genes(length_filter))}',
         f'trees_only={args.trees_only}',
         f'no_trees={args.no_trees}',
-        f'tree_colors={args.color_conf}',
-        f'metadata={args.metadata}',
+        f'database={args.database}',
         f'input_metadata={args.input_metadata}'
     ]
 
@@ -133,8 +132,7 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
-    args.color_conf = str(os.path.abspath(config['PATHS']['color_conf']))
+    args.database = str(os.path.join(dfo, 'phylofisher.db'))
     args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
     args.input = str(os.path.abspath(args.input[:-1])) if args.input.endswith('/') else str(os.path.abspath(args.input))
     args.output = str(os.path.abspath(args.output[:-1])) if args.output.endswith('/') else str(os.path.abspath(args.output))

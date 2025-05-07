@@ -3,23 +3,22 @@ import configparser
 import os
 import textwrap
 from pathlib import Path
-
 from phylofisher import help_formatter, tools
+from phylofisher.db_map import database, Metadata
 
 
 def in_out_completeness(df):
-    """
+    '''
+    Calculates completeness of genes based on in-group and out-group taxa.
 
-    :param df:
-    :return:
-    """
+    :param df: DataFrame containing gene completeness data
+    :type df: pandas.DataFrame
+    :return: Tuple containing two dictionaries: out-group completeness and in-group completeness
+    :rtype: tuple(dict, dict)
+    '''
     # Gets all taxa unique IDS
-    all_taxa_set = set()
-    with open(f'{dfo}/metadata.tsv', 'r') as infile:
-        for line in infile:
-            line = line.strip().split('\t')[0]
-            all_taxa_set.add(line)
-
+    all_taxa_set = set([q.short_name for q in Metadata.select(Metadata.short_name)])
+    
     # Gets out group Unique IDS
     out_group_set = set()
     with open(args.out_group, 'r') as infile:
@@ -42,10 +41,12 @@ def in_out_completeness(df):
 
 
 def make_subset_tsv():
-    """
+    '''
+    Creates a TSV file containing gene completeness.
 
-    :return: df
-    """
+    :return: DataFrame containing gene completeness and selection criteria
+    :rtype: pandas.DataFrame
+    '''
     df = gene_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
     df = df.sort_values(by=['Completeness'], ascending=False)
@@ -87,10 +88,14 @@ def make_subset_tsv():
 
 
 def update_df_taxa(df):
-    """
+    '''
+    Update the DataFrame by dropping taxa based on user selection.
 
-    :return:
-    """
+    :param df: DataFrame containing taxa completeness data
+    :type df: pandas.DataFrame
+    :return: updated DataFrame with selected taxa
+    :rtype: pandas.DataFrame
+    '''
     with open('select_taxa.tsv', 'r') as infile:
         infile.readline()
         to_drop = []
@@ -137,10 +142,11 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    metadata = f'{dfo}/metadata.tsv'
-    orthologs_dir = f'{dfo}/orthologs/'
+    database.init(str(Path(dfo, 'phylofisher.db')))
+    database.connect()
 
-    matrix = tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
+
+    matrix = tools.completeness(orthologs=True, genes=True)
     if os.path.isfile('select_taxa.tsv'):
         matrix = update_df_taxa(matrix)
     taxa_count, _ = matrix.shape
@@ -152,3 +158,5 @@ if __name__ == '__main__':
         tools.make_plot(gene_comp, f'gene_comp', y_count=taxa_count, genes=True)
     except ValueError:
         print('Unable to make plot. However, the TSV file was created, and you are free to move forward.')
+
+    database.close()
