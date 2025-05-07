@@ -41,12 +41,12 @@ def parse_metadata(metadata, input_metadata=None):
     '''
     Parse metadata from dataset and input_metadata (if provided)
 
-    :param metadata: _description_
-    :type metadata: _type_
-    :param input_metadata: _description_, defaults to None
-    :type input_metadata: _type_, optional
-    :return: _description_
-    :rtype: _type_
+    :param metadata: path to the metadata file
+    :type metadata: str
+    :param input_metadata: if input is input metadata instead of database metadata, defaults to None
+    :type input_metadata: bool, optional
+    :return: tuple of metadata dictionary and color dictionary
+    :rtype: tuple
     '''
     color_dict = configure_colors()
     metadata_comb = {}
