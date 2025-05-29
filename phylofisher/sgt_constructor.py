@@ -93,7 +93,11 @@ def run_snakemake(length_filter=False):
         
     smk_cmd = ' '.join(smk_frags)
     print(smk_cmd)
-    subprocess.run(smk_cmd, shell=True, executable='/bin/bash', check=True)
+    try:
+        subprocess.run(smk_cmd, shell=True, executable='/bin/bash', check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Command '{e.cmd}' failed with return code {e.returncode}.", file=sys.stderr)
+        sys.exit(e.returncode)
 
 
 if __name__ == '__main__':
