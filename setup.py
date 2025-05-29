@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='1.2.13',
+    version='1.2.14',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -46,6 +46,7 @@ setup(
              'phylofisher/raxml.yaml',
              'phylofisher/raxml-ng.yaml',
              'phylofisher/bmge.yaml',
+             'phylofisher/iqtree.yaml',
              'phylofisher/db_map.py',
              },
     url='https://github.com/TheBrownLab/PhyloFisher',

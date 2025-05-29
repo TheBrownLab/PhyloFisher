@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     conn = sqlite3.connect(str(Path(args.database_folder, 'phylofisher.db')))
     cursor = conn.cursor()
-    check_input_meta(conn, args.input_file)
+    check_input_meta(args.input_file)
 
     if not args.orthomcl:
         args.orthomcl = str(Path(args.database_folder, 'orthomcl'))
