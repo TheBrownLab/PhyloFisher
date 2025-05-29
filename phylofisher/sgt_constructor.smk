@@ -34,7 +34,7 @@ rule prequal:
     conda:
         'prequal.yaml'
     shell:
-        'prequal {input} &> {log}}'
+        'prequal {input} &> {log}'
 
 rule length_filter_mafft:
     input:
@@ -141,8 +141,8 @@ rule divvier:
         f'''
         divvier -minicol 4 -partial {{input}} >{{log}} 2>{{log}}
 
-        mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier >{{log}} 2>{{log}}
-        mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier >{{log}} 2>{{log}}
+        mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier &>{{log}}
+        mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier &>{{log}}
         '''
 
 rule trimal:
@@ -155,7 +155,7 @@ rule trimal:
         conda:
             'trimal.yaml'
         shell:
-            'trimal -in {input} -gt 0.01 -out {output} &> {log}}'
+            'trimal -in {input} -gt 0.01 -out {output} &> {log}'
 
 
 rule remove_gaps:
