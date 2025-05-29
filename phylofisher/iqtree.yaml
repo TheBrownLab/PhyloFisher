@@ -1,0 +1,16 @@
+name: iqtree
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - iqtree=2.4.0=h503566f_0
+  - libgcc=15.1.0=h767d61c_2
+  - libgcc-ng=15.1.0=h69a702a_2
+  - libgomp=15.1.0=h767d61c_2
+  - libstdcxx=15.1.0=h8f9b012_2
+  - libstdcxx-ng=12.1.0=ha89aaad_16
+  - libzlib=1.2.13=hd590300_5
+prefix: /mnt/scratch/brownlab/rej110/anaconda3/envs/iqtree
