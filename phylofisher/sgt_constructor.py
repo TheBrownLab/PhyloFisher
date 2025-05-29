@@ -93,7 +93,7 @@ def run_snakemake(length_filter=False):
         
     smk_cmd = ' '.join(smk_frags)
     print(smk_cmd)
-    subprocess.run(smk_cmd, shell=True, executable='/bin/bash')
+    subprocess.run(smk_cmd, shell=True, executable='/bin/bash', check=True)
 
 
 if __name__ == '__main__':

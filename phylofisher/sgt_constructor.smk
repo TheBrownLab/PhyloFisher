@@ -34,7 +34,7 @@ rule prequal:
     conda:
         'prequal.yaml'
     shell:
-        'prequal {input} >{log} 2>{log}'
+        'prequal {input} &> {log}}'
 
 rule length_filter_mafft:
     input:
@@ -62,8 +62,8 @@ rule length_filter_divvier:
         f'''
         divvier -mincol 4 -partial {{input}} >{{log}} 2>{{log}}
 
-        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/length_filtration/divvier >{{log}} 2>{{log}}
-        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.PP {out_dir}/length_filtration/divvier >{{log}} 2>{{log}}
+        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/length_filtration/divvier &> {{log}}
+        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.PP {out_dir}/length_filtration/divvier &> {{log}}
         '''
 
 rule x_to_dash:
@@ -88,7 +88,7 @@ rule length_filter_bmge:
     conda:
         'bmge.yaml'
     shell:
-        'bmge -t AA -g 0.3 -i {input} -of {output} >{log} 2>&1'
+        'bmge -t AA -g 0.3 -i {input} -of {output} &> {log}'
 
 rule length_filtration:
     input:
@@ -155,7 +155,7 @@ rule trimal:
         conda:
             'trimal.yaml'
         shell:
-            'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
+            'trimal -in {input} -gt 0.01 -out {output} &> {log}}'
 
 
 rule remove_gaps:
@@ -181,37 +181,38 @@ def get_raxml_input(wildcards):
     else:
         return f'{out_dir}/trimal/{gene}.final'
 
-rule raxml:
+rule iqtree:
     input:
         get_raxml_input
     output:
-        f'{out_dir}/raxml/{{gene}}.raxml.rba',
-        f'{out_dir}/raxml/{{gene}}.raxml.startTree',
-        f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
-        f'{out_dir}/raxml/{{gene}}.raxml.mlTrees',
-        f'{out_dir}/raxml/{{gene}}.raxml.support',
-        f'{out_dir}/raxml/{{gene}}.raxml.bestModel',
-        f'{out_dir}/raxml/{{gene}}.raxml.bootstraps',
-        f'{out_dir}/raxml/{{gene}}.raxml.log'
+        f'{out_dir}/iqtree/{{gene}}.treefile'
     log:
-        f'{out_dir}/logs/raxml/{{gene}}.log'
+        f'{out_dir}/logs/iqtree/{{gene}}.log'
     conda:
-        'raxml-ng.yaml'
+        'iqtree.yaml'
     params:
-        raxml_out=f'{out_dir}/raxml'
+        iqtree_out=lambda wildcards: f'{out_dir}/iqtree/{wildcards.gene}'
     shell:
-        'raxml-ng --all --msa {input} --prefix {params.raxml_out}/{wildcards.gene} --model LG4X+G4 --tree pars{{10}} --bs-trees 100 --force  --threads 1 >{log} 2>{log}'
+        '''
+        iqtree -s {input} \
+        -pre {params.iqtree_out} \
+        -m ELM+C20 \
+        -B 1000 \
+        -alrt 1000 \
+        -T 1 \
+        &> {log}
+        '''
 
 if trees_only:
     rule cp_trees:
         input:
             f'{in_dir}/{{gene}}.fas',
-            f'{out_dir}/raxml/{{gene}}.raxml.support',
+            f'{out_dir}/iqtree/{{gene}}.treefile'
         output:
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/{{gene}}.raxml.support',
+            f'{out_dir}/trees/{{gene}}.treefile',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/{{gene}}.raxml.support'
+            f'{out_dir}-local/trees/{{gene}}.treefile'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -219,19 +220,20 @@ if trees_only:
             cp {input[1]} {output[1]}
             cp {input[1]} {output[3]}
             '''
+            
 else:
     rule cp_trees:
         input:
             f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
             f'{out_dir}/trimal/{{gene}}.final',
-            f'{out_dir}/raxml/{{gene}}.raxml.support',
+            f'{out_dir}/iqtree/{{gene}}.treefile'
         output:
             f'{out_dir}/trees/{{gene}}.trimmed',
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/{{gene}}.raxml.support',
+            f'{out_dir}/trees/{{gene}}.treefile',
             f'{out_dir}-local/trees/{{gene}}.trimmed',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/{{gene}}.raxml.support'
+            f'{out_dir}-local/trees/{{gene}}.treefile'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -248,9 +250,9 @@ rule cp_input_metadata:
     output:
         f'{out_dir}-local/input_metadata.tsv'
     shell:
-        """
+        '''
         cp {input[0]} {output[0]}
-        """
+        '''
 
 rule make_metadata_tsv:
     input:
@@ -285,7 +287,7 @@ def get_tar_local_dir_input(wildcards):
         if not trees_only:
             ret.append(f'{out_dir}-local/trees/{gene}.trimmed')
         ret.append(f'{out_dir}-local/trees/{gene}.final')
-        ret.append(f'{out_dir}-local/trees/{gene}.raxml.support')
+        ret.append(f'{out_dir}-local/trees/{gene}.treefile')
 
     ret.append(f'{out_dir}-local/tree_colors.tsv')
     ret.append(f'{out_dir}-local/metadata.tsv')
