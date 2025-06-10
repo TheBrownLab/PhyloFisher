@@ -334,7 +334,7 @@ if __name__ == '__main__':
                           help="TSV file to update taxonomy colors. Columns: Taxonomy, Color.")
     optional.add_argument('--update_unique_ids', type=str,
                           help="TSV file to update Unique IDs and sequence headers. Columns: Old ID, New ID.")
-    optional.add_argument('--threads', type=int,
+    optional.add_argument('--threads', type=int, default=1,
                           help="Number of threads. Default is 1. Only to be used with --update_unique_ids.")
     optional.add_argument('--dry_run', default=False, action='store_true',
                           help="Do not update the database, just print what would be changed.\n" \
