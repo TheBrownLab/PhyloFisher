@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 import configparser
-import os, sys
+import os
+import sys
 import textwrap
-from glob import glob
 from pathlib import Path
 import pandas as pd
 from peewee import *
-from Bio import SeqIO
 from phylofisher import help_formatter
 from phylofisher.utilities import build_database
-from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
+from phylofisher.db_map import database, Taxonomies, Metadata, Sequences
 
 pd.options.display.float_format = '{:,.0f}'.format
 
@@ -202,7 +201,7 @@ def update_metadata_table(tsv_path, dry_run=False):
                     meta.higher_taxonomy = ht
                     meta.lower_taxonomy = lt
                     meta.save()
-                    print(f"Metadata table updated using {args.update_metadata}")
+                    print(f"Metadata table updated using {tsv_path}")
             else:
                 print(f"Skipping {row['Unique ID']}: No changes detected.")
 
@@ -335,7 +334,7 @@ if __name__ == '__main__':
                           help="TSV file to update taxonomy colors. Columns: Taxonomy, Color.")
     optional.add_argument('--update_unique_ids', type=str,
                           help="TSV file to update Unique IDs and sequence headers. Columns: Old ID, New ID.")
-    optional.add_argument('--threads', type=str,
+    optional.add_argument('--threads', type=int,
                           help="Number of threads. Default is 1. Only to be used with --update_unique_ids.")
     optional.add_argument('--dry_run', default=False, action='store_true',
                           help="Do not update the database, just print what would be changed.\n" \
@@ -355,10 +354,6 @@ if __name__ == '__main__':
     db_path = os.path.join(dfo, 'phylofisher.db')
     database.init(db_path) 
     database.connect()
-
-    ortholog_folder = str(Path(dfo, 'orthologs'))
-    paralog_folder = str(Path(dfo, 'paralogs'))
-    metadata_file = str(Path(dfo, 'metadata.tsv'))
 
     metadata_handle = MetadataHandler()
 
