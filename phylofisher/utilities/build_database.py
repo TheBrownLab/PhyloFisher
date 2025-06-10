@@ -8,44 +8,9 @@ import textwrap
 from collections import defaultdict, Counter
 from glob import glob
 import matplotlib.colors as mcolors
-import pandas as pd
 from Bio import SeqIO
 from phylofisher import help_formatter
-from phylofisher import tools
-from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
-
-
-def rename_taxa():
-    """"""
-
-
-    # Read in to_rename.tsv
-    rename_dict = dict()
-    with open(args.rename, 'r') as infile:
-        infile.readline()
-        for line in infile:
-            line = line.strip()
-            line_list = line.split('\t')
-            rename_dict[line_list[0]] = line_list[1:]
-
-    # Rename in orthologs/ and paralogs/
-    files = glob('orthologs/*.fas') + glob('paralogs/*.fas')
-    for file in files:
-        with open(file, 'r') as infile, open('tmp', 'w') as tmp_file:
-            for line in infile:
-                line = line.strip()
-                for key, value in rename_dict.items():
-                    if key in line:
-                        line = line.replace(key, value[0])
-                tmp_file.write(f'{line}\n')
-        shutil.move('tmp', file)
-
-    df = pd.read_csv('metadata.tsv', sep='\t')
-    for key, value in rename_dict.items():
-        df.loc[df['Unique ID'] == key, 'Long Name'] = value[1]
-        df.loc[df['Unique ID'] == key, 'Unique ID'] = value[0]
-    
-    df.to_csv('metadata.tsv', sep='\t', index=False)
+from phylofisher.db_map import database, Genes, Sequences
 
 
 def prepare_diamond_input():
@@ -200,7 +165,7 @@ def generate_tree_colors():
         for i, higher_tax in enumerate(sorted(list(higher_tax_set))):
             outfile.write(f'{higher_tax}\t{colors[i]}\n')
 
-def main(args, threads, no_og_file, threshold):
+def main(threads, no_og_file, threshold):
     """
     :param args:
     :param threads: number of threads
@@ -214,12 +179,7 @@ def main(args, threads, no_og_file, threshold):
     if os.path.isdir('profiles') is True:
         shutil.rmtree('profiles')
 
-    if args.rename:
-        tools.backup(os.getcwd())
-        rename_taxa()
-        tools.backup(os.getcwd())
-
-    # datasetdb(threads)  # creates datasetdb
+    datasetdb(threads)  # creates datasetdb
 
     if not no_og_file:
         get_og_file(threshold)
@@ -248,12 +208,7 @@ if __name__ == "__main__":
                           OrthoMCL orthogroup for the group to be assigned.
                           Default: 0.1 (10%%)
                           """))
-    optional.add_argument('--rename', type=str, metavar='<to_rename.tsv>',
-                          help=textwrap.dedent("""\
-                          Rename taxa in the database.
-                          Takes a TSV file containing the Old Unique ID, New Unique ID, and New Long Name.
-                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
-    main(args, args.threads, args.no_og_file, args.og_threshold)
+    main(args.threads, args.no_og_file, args.og_threshold)
