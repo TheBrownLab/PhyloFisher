@@ -34,7 +34,7 @@ def parse_ortholog_tsv():
     return genes_to_include
 
 
-def subset_orthologs(subset=False):
+def subset_orthologs(subset=True):
     '''
     Subsets orthologs from the Database into a new directory to be included in the final dataset
 
@@ -44,11 +44,24 @@ def subset_orthologs(subset=False):
     # Genes to include in the final dataset
     if subset:
         genes = parse_ortholog_tsv()
-        gene_ids = [g.id for g in Genes.select(Genes.id, Genes.name).where(Genes.name.in_(genes)) if g.name in genes]
-    
-        d_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.gene_id, Sequences.metadata_id).where(Sequences.gene_id.in_(gene_ids) & Sequences.is_paralog == False)
+        subquery = Genes.select(Genes.id).where(Genes.name.in_(genes))
+
+        d_query = Sequences.select(
+            Sequences.header,
+            Sequences.sequence,
+            Sequences.gene_id,
+            Sequences.metadata_id
+        ).where(
+            (Sequences.gene_id.in_(subquery)) & (Sequences.is_paralog == False)
+)
     else:
-        d_query = Sequences.select(Sequences.header, Sequences.sequence, Sequences.gene_id, Sequences.metadata_id).where(Sequences.is_paralog == False)
+        d_query = Sequences.select(
+            Sequences.header, 
+            Sequences.sequence, 
+            Sequences.gene_id, 
+            Sequences.metadata_id
+            ).where(
+                Sequences.is_paralog == False)
 
     for q in d_query:
         seq_record = SeqRecord(Seq(q.sequence), id=q.header, description='')
