@@ -15,53 +15,77 @@ from ete3 import Tree, TreeStyle, NodeStyle, TextFace
 from matplotlib.backends.backend_pdf import PdfPages
 
 from phylofisher import help_formatter
+from phylofisher.db_map import database, Taxonomies, Metadata
 
 plt.style.use('ggplot')
 
 
 def configure_colors():
     '''
-    Configure colors for taxonomic groups from color_conf file.
+    Configure colors for taxonomic groups from database.
 
     :return: dictionary with taxonomic groups as keys and colors as values
     :rtype: dict
     '''
     color_dict = dict()
-    with open(color_conf, 'r') as infile:
-        infile.readline()
-        for line in infile:
-            line = line.strip()
-            tax, color = line.split('\t')
-            color_dict[tax] = color
+    
+    # If we're in local run mode and have a color_conf file, use it
+    if 'color_conf' in globals() and os.path.exists(color_conf):
+        with open(color_conf, 'r') as infile:
+            infile.readline()
+            for line in infile:
+                line = line.strip()
+                tax, color = line.split('\t')
+                color_dict[tax] = color
+    else:
+        # Use database colors
+        db_query = Taxonomies.select(Taxonomies.taxonomy, Taxonomies.color)
+        for q in db_query:
+            if q.color:
+                color_dict[q.taxonomy] = q.color
+            else:
+                color_dict[q.taxonomy] = 'white'
 
     return color_dict
 
 
-def parse_metadata(metadata, input_metadata=None):
+def parse_metadata(database_path, input_metadata=None):
     '''
-    Parse metadata from dataset and input_metadata (if provided)
+    Parse metadata from database and input_metadata (if provided)
 
-    :param metadata: path to the metadata file
-    :type metadata: str
-    :param input_metadata: if input is input metadata instead of database metadata, defaults to None
-    :type input_metadata: bool, optional
+    :param database_path: path to the database file
+    :type database_path: str
+    :param input_metadata: path to input metadata file, defaults to None
+    :type input_metadata: str, optional
     :return: tuple of metadata dictionary and color dictionary
     :rtype: tuple
     '''
-    color_dict = configure_colors()
+    # Parse database metadata
     metadata_comb = {}
-    for line_ in open(metadata):
-        if 'Full Name' not in line_:
-            sline = line_.split('\t')
-            tax = sline[0].strip()
-            group = sline[2].strip()
-            sub_tax = sline[3]
-            full = sline[1].strip()
-            if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
-                color_dict[group] = 'white'
-            metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full,
-                                  'Lower Taxonomy': sub_tax}
-    if input_metadata:
+
+
+    database.init(database_path)
+    database.connect()
+    
+    color_dict = configure_colors()
+    
+    db_query = Metadata.select(Metadata.short_name, Metadata.long_name, Metadata.higher_taxonomy, Metadata.lower_taxonomy)
+    for q in db_query:
+        tax = q.short_name
+        full = q.long_name
+        group = Taxonomies.get(Taxonomies.id == q.higher_taxonomy).taxonomy
+        sub_tax = Taxonomies.get(Taxonomies.id == q.lower_taxonomy).taxonomy
+        
+        if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
+            color_dict[group] = 'white'
+        metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full,
+                                'Lower Taxonomy': sub_tax}
+    
+    database.close()
+
+    
+    # Parse input metadata if provided
+    if input_metadata and os.path.exists(input_metadata):
         for line in open(input_metadata):
             if "FILE_NAME" not in line:
                 metadata_input = line.split('\t')
@@ -70,6 +94,49 @@ def parse_metadata(metadata, input_metadata=None):
                 full = metadata_input[6].strip()
                 sub_tax = metadata_input[4]
                 metadata_comb[tax] = {'Higher Taxonomy': group, 'col': "white", 'full': full, 'Lower Taxonomy': sub_tax}
+    
+    return metadata_comb, color_dict
+
+
+def parse_metadata_tsv(metadata_file, input_metadata=None):
+    '''
+    Parse metadata from TSV files (for backward compatibility with local runs)
+
+    :param metadata_file: path to the metadata TSV file
+    :type metadata_file: str
+    :param input_metadata: path to input metadata file, defaults to None
+    :type input_metadata: str, optional
+    :return: tuple of metadata dictionary and color dictionary
+    :rtype: tuple
+    '''
+    color_dict = configure_colors()
+    metadata_comb = {}
+    
+    # Parse database metadata from TSV
+    if os.path.exists(metadata_file):
+        for line_ in open(metadata_file):
+            if 'Full Name' not in line_:
+                sline = line_.split('\t')
+                tax = sline[0].strip()
+                group = sline[2].strip()
+                sub_tax = sline[3]
+                full = sline[1].strip()
+                if group not in color_dict or color_dict[group].lower() in ['x', 'xx']:
+                    color_dict[group] = 'white'
+                metadata_comb[tax] = {'Higher Taxonomy': group, 'col': color_dict[group], 'full': full,
+                                      'Lower Taxonomy': sub_tax}
+    
+    # Parse input metadata if provided
+    if input_metadata and os.path.exists(input_metadata):
+        for line in open(input_metadata):
+            if "FILE_NAME" not in line:
+                metadata_input = line.split('\t')
+                tax = metadata_input[2].strip().split('_')[0]
+                group = metadata_input[3].strip()
+                full = metadata_input[6].strip()
+                sub_tax = metadata_input[4]
+                metadata_comb[tax] = {'Higher Taxonomy': group, 'col': "white", 'full': full, 'Lower Taxonomy': sub_tax}
+    
     return metadata_comb, color_dict
 
 
@@ -82,7 +149,7 @@ def suspicious_clades(tree):
     :return: tuple of tree name and list of suspicious clades
     :rtype: tuple
     '''
-    t = Tree(tree)
+    t = Tree(tree, format=1)
     # midpoint rooted tree
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
@@ -91,7 +158,17 @@ def suspicious_clades(tree):
     for node in t.traverse('preorder'):
         if (node.is_root() is False) and (node.is_leaf() is False):
             # report only clades which encompass less than a half of all oranisms
-            if node.support >= 70 and (len(node) < (len(t) - len(node))):
+            try:
+                ufboot = float(node.name.split('/')[0])
+                sh_alrt = float(node.name.split('/')[1])
+            except IndexError:
+                ufboot = 0
+                sh_alrt = 0
+            except ValueError:
+                ufboot = 0
+                sh_alrt = 0
+            
+            if ufboot >= 95 and sh_alrt >= 80 and (len(node) < (len(t) - len(node))):
                 clade = node.get_leaf_names()
                 if len(clade) > 1:  # do we need this statement?
                     supported_clades.append(clade)
@@ -120,7 +197,7 @@ def get_best_candidates(tree_file):
     :return: set of best candidate sequences
     :rtype: set
     '''
-    t = Tree(tree_file)
+    t = Tree(tree_file, format=1)
     top_rank = defaultdict(dict)
     for node in t.traverse('preorder'):
         if node.is_leaf():
@@ -210,7 +287,7 @@ def collect_contaminants(tree_file, cont_dict):
     :return: set of proven contaminants, set of proven contamination (same names as in csv result tables)
     :rtype: tuple(set, set)
     '''
-    t = Tree(tree_file)
+    t = Tree(tree_file, format=1)
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
     cont_table_names = set()
@@ -300,7 +377,7 @@ def tree_to_tsvg(tree_file, contaminants=None, backpropagation=None):
         table = open(f"{output_folder}/{name_.split('_')[0]}.tsv", 'r')
 
     top_ranked = get_best_candidates(tree_file)
-    t = Tree(tree_file)
+    t = Tree(tree_file, format=1)
     ts = TreeStyle()
     R = t.get_midpoint_outgroup()
     t.set_outgroup(R)
@@ -482,8 +559,18 @@ def format_nodes(node, node_style, sus_clades, t):
     :return: tuple of TextFace object and updated number of suspicious clades
     :rtype: tuple
     '''
-    supp = TextFace(f'{int(node.support)}', fsize=8)
-    if node.support >= 70:
+    try:
+        ufboot = float(node.name.split('/')[0])
+        sh_alrt = float(node.name.split('/')[1])
+    except IndexError:
+        ufboot = 0
+        sh_alrt = 0
+    except ValueError:
+        ufboot = 0
+        sh_alrt = 0
+    
+    supp = TextFace(f'{int(ufboot)}/{int(sh_alrt)}', fsize=8)
+    if ufboot >= 80 and sh_alrt >= 95:
         supp.bold = True
         taxons = set()
         orgs = node.get_leaf_names()
@@ -699,6 +786,10 @@ if __name__ == '__main__':
         args.metadata = f'{args.input}/metadata.tsv'
         args.input_metadata = f'{args.input}/input_metadata.tsv'
         color_conf = f'{args.input}/tree_colors.tsv'
+        
+        # For local runs, we might need to parse TSV files if database is not available
+        # This maintains backward compatibility
+        args.database_path = None  # Indicates to use TSV files
 
         args.input = f'{args.input}/trees'
 
@@ -707,17 +798,24 @@ if __name__ == '__main__':
         config = configparser.ConfigParser()
         config.read('config.ini')
         dfo = str(Path(config['PATHS']['database_folder']).resolve())
-        args.metadata = str(os.path.join(dfo, 'metadata.tsv'))
-        color_conf = str(Path(config['PATHS']['color_conf']).resolve())
+        args.database_path = str(os.path.join(dfo, 'phylofisher.db'))
         args.input_metadata = str(os.path.abspath(config['PATHS']['input_file']))
 
     if not args.backpropagate:
         os.mkdir(output_folder)
 
-    trees = glob.glob(f"{trees_folder}/*.raxml.support")
+    trees = glob.glob(f"{trees_folder}/*.treefile")
 
     number_of_genes = len(trees)
-    metadata, tax_col = parse_metadata(args.metadata, args.input_metadata)
+    
+    # Parse metadata based on whether we're using database or local TSV files
+    if args.local_run and hasattr(args, 'metadata') and os.path.exists(args.metadata):
+        # For local runs with TSV files, use a modified parse function
+        metadata, tax_col = parse_metadata_tsv(args.metadata, args.input_metadata)
+    else:
+        # Use database
+        metadata, tax_col = parse_metadata(args.database_path, args.input_metadata)
+    
     threads = args.threads
 
     if not args.backpropagate:
