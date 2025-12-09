@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='phylofisher',
-    version='1.2.14',
+    version='2.0.0',
     packages=find_packages(),
     scripts={'phylofisher/fisher.py',
              'phylofisher/config.py',
@@ -32,11 +32,13 @@ setup(
              'phylofisher/utilities/random_resampler.py',
              'phylofisher/utilities/astral_runner.py',
              'phylofisher/utilities/rtc_binner.py',
+             'phylofisher/utilities/leaf_renamer.py',
              'phylofisher/utilities/backup_restoration.py',
              'phylofisher/utilities/explore_database.py',
              'phylofisher/utilities/nucl_matrix_constructor.py',
              'phylofisher/utilities/gfmix_runner.py',
              'phylofisher/utilities/gfmix_mammal.smk',
+             'phylofisher/utilities/dataset_to_database.py',
              'phylofisher/gfmix.yaml',
              'phylofisher/mammal.yaml',
              'phylofisher/prequal.yaml',
@@ -53,6 +55,5 @@ setup(
     license='MIT',
     author='David Zihala',
     author_email='zihaladavid@gmail.com',
-    description='PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic '
-                'datasets that consist of protein sequences from eukaryotic organisms.'
+    description='PhyloFisher is a software package for the creation, analysis, and visualization of phylogenomic datasets that consist of protein sequences from eukaryotic organisms.'
 )
