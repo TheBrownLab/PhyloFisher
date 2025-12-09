@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import configparser
 import os
-import shutil
+import sys
 import subprocess
 import textwrap
 from pathlib import Path
@@ -23,15 +23,15 @@ def get_genes(length_filter):
     
     else:
         ret = []
-        len_filt_bmge_dir = f'{args.output}/length_filtration/bmge'
-        bmge_out_files = [file for file in os.listdir(len_filt_bmge_dir) if file.endswith('.bmge')]
+        len_filt_dir = f'{args.output}/length_filtered'
+        bmge_out_files = [file for file in os.listdir(len_filt_dir) if file.endswith('.length_filtered')]
         for bmge_out_file in bmge_out_files:
-            with open(f'{len_filt_bmge_dir}/{bmge_out_file}', 'r') as infile:
+            with open(f'{len_filt_dir}/{bmge_out_file}', 'r') as infile:
                 line = infile.readline()
                 if line == '':
                     pass
                 else:
-                    ret.append(bmge_out_file.split('.bmge')[0])
+                    ret.append(bmge_out_file.split('.length_filtered')[0])
 
     return ret
     
@@ -50,7 +50,8 @@ def make_config(length_filter):
         f'trees_only={args.trees_only}',
         f'no_trees={args.no_trees}',
         f'database={args.database}',
-        f'input_metadata={args.input_metadata}'
+        f'input_metadata={args.input_metadata}',
+        f'threads_per_job={args.threads_per_job}'
     ]
 
     return ' '.join(ret)
@@ -62,7 +63,7 @@ def get_output_files(length_filter):
 
     if length_filter:
         for gene in get_genes(length_filter):
-            ret.append(f'{args.output}/length_filtration/bmge/{gene}.bmge')
+            ret.append(f'{args.output}/length_filtered/{gene}.length_filtered')
     
     else:
         if args.no_trees:
@@ -82,12 +83,19 @@ def run_snakemake(length_filter=False):
         f'snakemake',
         f'-s {SNAKEFILE_PATH}',
         f'--config {make_config(length_filter)}',
-        f'--cores {args.threads}',
         f'--rerun-incomplete',
         f'--keep-going',
         f'--nolock',
         f'--use-conda',
     ]
+
+    if args.profile is not None:
+        smk_frags.append(f'--profile {args.profile}')
+    else:
+        smk_frags.append(f'--cores {args.threads}')
+    
+    if args.dry_run:
+        smk_frags.append(f'-n')
 
     smk_frags.append(get_output_files(length_filter))
         
@@ -110,7 +118,12 @@ if __name__ == '__main__':
     # Optional Arguments
     optional.add_argument('-t', '--threads', metavar='N', type=int, default=1,
                           help=textwrap.dedent("""\
-                          Desired number of threads to be utilized.
+                          Total number of cores/threads for Snakemake to use for parallel job execution.
+                          Default: 1
+                          """))
+    optional.add_argument('--threads-per-job', metavar='N', type=int, default=1,
+                          help=textwrap.dedent("""\
+                          Number of threads each individual tool (mafft, iqtree) should use.
                           Default: 1
                           """))
     optional.add_argument('--no_trees', action='store_true',
@@ -129,6 +142,15 @@ if __name__ == '__main__':
                           Options: fasta, phylip (names truncated at 10 characters), 
                           phylip-relaxed (names are not truncated), or nexus.
                           Default: fasta
+                          """))
+    optional.add_argument('--profile', metavar='<profile>', type=str, default=None,
+                          help=textwrap.dedent("""\
+                          Snakemake cluster profile to use for running jobs.
+                          Default: None
+                          """))
+    optional.add_argument('-n', '--dry-run', action='store_true',
+                          help=textwrap.dedent("""\
+                          Perform a dry-run of the Snakemake workflow without executing any jobs.
                           """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=True)

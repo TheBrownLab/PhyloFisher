@@ -11,6 +11,7 @@ trees_only = config['trees_only']
 no_trees = config['no_trees']
 pf_database = config['database']
 input_metadata = config['input_metadata']
+threads_per_job = config['threads_per_job']
 
 
 # if not trees_only:
@@ -40,20 +41,22 @@ rule length_filter_mafft:
     input:
         f'{out_dir}/prequal/{{gene}}.aa.filtered'
     output:
-        f'{out_dir}/length_filtration/mafft/{{gene}}.aln'
+        f'{out_dir}/length_filter_mafft/{{gene}}.aln'
     log:
         f'{out_dir}/logs/length_filter_mafft/{{gene}}.log'
+    threads: 
+        threads_per_job
     conda:
         'mafft.yaml'
     shell:
-        'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
+        'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
 rule length_filter_divvier:
     input:
-        f'{out_dir}/length_filtration/mafft/{{gene}}.aln'
+        f'{out_dir}/length_filter_mafft/{{gene}}.aln'
     output:
-        f'{out_dir}/length_filtration/divvier/{{gene}}.aln.partial.fas',
-        f'{out_dir}/length_filtration/divvier/{{gene}}.aln.PP'
+        f'{out_dir}/length_filter_divvier/{{gene}}.aln.partial.fas',
+        f'{out_dir}/length_filter_divvier/{{gene}}.aln.PP'
     log:
         f'{out_dir}/logs/length_filter_divvier/{{gene}}.log'
     conda:
@@ -62,15 +65,15 @@ rule length_filter_divvier:
         f'''
         divvier -mincol 4 -partial {{input}} >{{log}} 2>{{log}}
 
-        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/length_filtration/divvier &> {{log}}
-        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.PP {out_dir}/length_filtration/divvier &> {{log}}
+        mv {out_dir}/length_filter_mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/length_filter_divvier &> {{log}}
+        mv {out_dir}/length_filter_mafft/{{wildcards.gene}}.aln.PP {out_dir}/length_filter_divvier &> {{log}}
         '''
 
 rule x_to_dash:
     input:
-        f'{out_dir}/length_filtration/divvier/{{gene}}.aln.partial.fas'
+        f'{out_dir}/length_filter_divvier/{{gene}}.aln.partial.fas'
     output:
-        f'{out_dir}/length_filtration/bmge/{{gene}}.pre_bmge'
+        f'{out_dir}/length_filter_bmge/{{gene}}.pre_bmge'
     log: 
         f'{out_dir}/logs/x_to_dash/{{gene}}.log'
     run:
@@ -80,9 +83,9 @@ rule x_to_dash:
 
 rule length_filter_bmge:
     input:
-        f'{out_dir}/length_filtration/bmge/{{gene}}.pre_bmge'
+        f'{out_dir}/length_filter_bmge/{{gene}}.pre_bmge'
     output:
-        f'{out_dir}/length_filtration/bmge/{{gene}}.bmge'
+        f'{out_dir}/length_filter_bmge/{{gene}}.bmge'
     log:
         f'{out_dir}/logs/length_filter_bmge/{{gene}}.log'
     conda:
@@ -92,40 +95,49 @@ rule length_filter_bmge:
 
 rule length_filtration:
     input:
-        f'{out_dir}/length_filtration/bmge/{{gene}}.bmge'
+        f'{out_dir}/prequal/{{gene}}.aa',
+        f'{out_dir}/length_filter_bmge/{{gene}}.bmge'
     output:
-        f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered'
+        f'{out_dir}/length_filtered/{{gene}}.length_filtered'
     params:
         threshold=0.5
     log:
-        f'{out_dir}/logs/length_filtration/{{gene}}.log'
+        f'{out_dir}/logs/length_filtered/{{gene}}.log'
     run:
         original_name = f'{wildcards.gene}.length_filtered'
         length = None
-        with open(output[0], 'w') as outfile, open(log[0], 'w') as logfile:
-            for record in SeqIO.parse(input[0], 'fasta'):
+        with open(log[0], 'w') as logfile:
+            ids_to_keep = []
+            for record in SeqIO.parse(input[1], 'fasta'):
                 if length is None:
                     length = len(record.seq)
-                coverage = len(str(record.seq).replace('-', '').replace('X', '')) / len(record.seq)
+                coverage = len(str(record.seq).replace('-', '').replace('X', '')) / len(record.seq)             
                 if coverage > params.threshold:
-                    outfile.write(f'>{record.description}\n{record.seq}\n')
+                    ids_to_keep.append(record.description)
                 else:
-                    logfile.write(f'deleted: {record.name} {coverage}')
+                    logfile.write(f'deleted: {record.name} {coverage}\n')
             
             if os.stat(input[0]).st_size == 0:
                 logfile.write(f'All sequences were removed during length filtration')
 
+            with open(output[0], 'w') as outfile:
+                for record in SeqIO.parse(input[0], 'fasta'):
+                    if record.description in ids_to_keep:
+                        outfile.write(f'>{record.description}\n{str(record.seq)}\n')
+            
 rule mafft:
     input:
-        f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered'
+        f'{out_dir}/length_filtered/{{gene}}.length_filtered'
     output:
         f'{out_dir}/mafft/{{gene}}.aln'
     log:
         f'{out_dir}/logs/mafft/{{gene}}.log'
+    threads: 
+        threads_per_job
     conda:
         'mafft.yaml'
     shell:
-        'mafft --thread 1 --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
+        'mafft --thread {threads} --globalpair --maxiterate 1000 --unalignlevel 0.6 {input} >{output} 2>{log}'
 
 rule divvier:
     input:
@@ -174,7 +186,7 @@ rule remove_gaps:
             SeqIO.write(records, output[0], "fasta")
             
 
-def get_raxml_input(wildcards):
+def get_iqtree_input(wildcards):
     gene = '{wildcards.gene}'.format(wildcards=wildcards)
     if trees_only:
         return f'{in_dir}/{gene}.fas'
@@ -183,11 +195,13 @@ def get_raxml_input(wildcards):
 
 rule iqtree:
     input:
-        get_raxml_input
+        get_iqtree_input
     output:
         f'{out_dir}/iqtree/{{gene}}.treefile'
     log:
         f'{out_dir}/logs/iqtree/{{gene}}.log'
+    threads: 
+        threads_per_job
     conda:
         'iqtree.yaml'
     params:
@@ -195,12 +209,12 @@ rule iqtree:
     shell:
         '''
         iqtree -s {input} \
-        -pre {params.iqtree_out} \
-        -m ELM+C20 \
-        -B 1000 \
-        -alrt 1000 \
-        -T 1 \
-        &> {log}
+            -pre {params.iqtree_out} \
+            -m ELM+C20 \
+            -B 1000 \
+            -alrt 1000 \
+            -T {threads} \
+            &> {log}
         '''
 
 if trees_only:
@@ -224,7 +238,7 @@ if trees_only:
 else:
     rule cp_trees:
         input:
-            f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
+            f'{out_dir}/length_filter_bmge/{{gene}}.bmge',
             f'{out_dir}/trimal/{{gene}}.final',
             f'{out_dir}/iqtree/{{gene}}.treefile'
         output:
