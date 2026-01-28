@@ -1,9 +1,9 @@
 import argparse
 import textwrap
 from datetime import date
-import pkg_resources  # part of setuptools
+from importlib.metadata import version as get_version
 
-version = pkg_resources.require("phylofisher")[0].version
+version = get_version("phylofisher")
 today = date.today()
 
 
