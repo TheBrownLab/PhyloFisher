@@ -9,22 +9,47 @@ from glob import glob
 from pathlib import Path
 
 from Bio import SeqIO
+from peewee import *
 
 from phylofisher import help_formatter, tools
+from phylofisher.db_map import database, Taxonomies, Metadata, Sequences
 
 
 def parse_metadata():
     '''
-    Parses metadata.tsv file
+    Queries metadata from SQLite database
 
-    :return: lines
+    :return: list of tuples (short_name, higher_taxonomy, lower_taxonomy, long_name, source)
     :rtype: list
     '''
-    meta = os.path.join(dfo, 'metadata.tsv')
-    with open(meta, 'r') as f:
-        reader = csv.reader(f, delimiter='\t')
-        lines = list(reader)
-        return lines
+    higher = Taxonomies.alias('higher')
+    lower = Taxonomies.alias('lower')
+    
+    query = (
+        Metadata
+        .select(
+            Metadata.short_name,
+            higher.taxonomy.alias('higher_taxonomy'),
+            lower.taxonomy.alias('lower_taxonomy'),
+            Metadata.long_name,
+            Metadata.source
+        )
+        .join(higher, on=(Metadata.higher_taxonomy == higher.id))
+        .switch(Metadata)
+        .join(lower, on=(Metadata.lower_taxonomy == lower.id))
+    )
+    
+    lines = []
+    for row in query.dicts():
+        lines.append([
+            row['short_name'],
+            row['long_name'],
+            row['higher_taxonomy'],
+            row['lower_taxonomy'],
+            row['source']
+        ])
+    
+    return lines
 
 
 def parse_input():
@@ -45,7 +70,7 @@ def parse_input():
 
 def check_metadata():
     '''
-    Checks that taxa to remove are in metadata.tsv and returns a list of collapsed taxa
+    Checks that taxa to remove are in database and returns a list of collapsed taxa
 
     :return: collapsed taxa
     :rtype: list
@@ -96,29 +121,39 @@ def delete_homologs(org_set):
 
 def purge(collapsed_taxa):
     '''
-    Purges taxa from database
+    Purges taxa from SQLite database
 
     :param collapsed_taxa: collapsed taxa
     :type collapsed_taxa: list
     '''
     to_remove = parse_input()
-    meta = os.path.join(dfo, 'metadata.tsv')
-
     lines = parse_metadata()
     orgs_to_del = set()
+    metadata_to_del = []
     
-    with open(meta, 'w') as out_file:
-        res = csv.writer(out_file, delimiter='\t')
-        for line in lines:
-            if line[2] in to_remove:
-                orgs_to_del.add(line[0])
-            elif line[3] in to_remove:
-                orgs_to_del.add(line[0])
-            elif line[0] in to_remove:
-                orgs_to_del.add(line[0])
-            else:
-                res.writerow(line)
-                
+    # Identify organisms to delete
+    for line in lines:
+        # line format: [short_name, long_name, higher_taxonomy, lower_taxonomy, source]
+        if line[2] in to_remove:  # higher_taxonomy
+            orgs_to_del.add(line[0])
+            metadata_to_del.append(line[0])
+        elif line[3] in to_remove:  # lower_taxonomy
+            orgs_to_del.add(line[0])
+            metadata_to_del.append(line[0])
+        elif line[0] in to_remove:  # short_name
+            orgs_to_del.add(line[0])
+            metadata_to_del.append(line[0])
+    
+    # Delete sequences first (due to foreign key constraints)
+    for org_name in metadata_to_del:
+        meta = Metadata.get(Metadata.short_name == org_name)
+        Sequences.delete().where(Sequences.metadata == meta).execute()
+    
+    # Delete metadata entries
+    for org_name in metadata_to_del:
+        Metadata.delete().where(Metadata.short_name == org_name).execute()
+    
+    # Also delete from fasta files
     delete_homologs(orgs_to_del)
 
 
@@ -128,7 +163,7 @@ if __name__ == '__main__':
                                                                     desc=description,
                                                                     usage='purge.py [OPTIONS] -i to_purge.txt -d path/to/database')
 
-    # Optional Arguments
+    # Required Arguments
     required.add_argument('-i', '--input', type=str, metavar='to_purge.txt',
                           help=textwrap.dedent("""\
                           Path to text file containing Unique IDs and Taxonomic designations of organisms for deletion.
@@ -138,11 +173,17 @@ if __name__ == '__main__':
                           Path to database to purge.
                           """))
 
-    in_help = 'Path to database directory'
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
     dfo = os.path.abspath(args.database)
+    
+    # Connect to SQLite database
+    db_path = os.path.join(dfo, 'phylofisher.db')
+    database.init(db_path)
+    database.connect()
 
     collapsed_taxa = check_metadata()
     tools.backup(dfo)
     purge(collapsed_taxa)
+    
+    database.close()
