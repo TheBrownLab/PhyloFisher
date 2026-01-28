@@ -8,6 +8,7 @@ import pandas as pd
 from peewee import *
 from phylofisher import help_formatter
 from phylofisher.utilities import build_database
+from phylofisher.tools import backup
 from phylofisher.db_map import database, Taxonomies, Metadata, Sequences
 
 pd.options.display.float_format = '{:,.0f}'.format
@@ -288,13 +289,13 @@ def update_unique_ids(threads, tsv_path, dry_run=False):
                 org.short_name = new_id
                 org.save()
 
-                # Update Sequences headers (name field)
+                # Update Sequences headers (header field)
                 update = (
                     Sequences
-                    .update({Sequences.name: fn.REPLACE(Sequences.name, old_id, new_id)})
-                    .where(Sequences.organism == org)
+                    .update({Sequences.header: fn.REPLACE(Sequences.header, old_id, new_id)})
+                    .where(Sequences.header.contains(old_id))
                 )
-                updated_rows = update.execute()
+                update.execute()
 
                 print(f"Updated {old_id} -> {new_id}")
 
@@ -302,6 +303,7 @@ def update_unique_ids(threads, tsv_path, dry_run=False):
             print(f"Skipping: {old_id} not found in metadata table.")
     
     if not dry_run:
+        os.chdir(dfo)
         build_database.main(threads, no_og_file=True, threshold=0.1)
 
 
