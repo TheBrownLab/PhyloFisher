@@ -37,6 +37,7 @@ setup(
              'phylofisher/utilities/nucl_matrix_constructor.py',
              'phylofisher/utilities/gfmix_runner.py',
              'phylofisher/utilities/gfmix_mammal.smk',
+             'phylofisher/utilities/plot_matrix_completeness.py',
              'phylofisher/gfmix.yaml',
              'phylofisher/mammal.yaml',
              'phylofisher/prequal.yaml',
