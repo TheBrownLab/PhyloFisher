@@ -19,6 +19,10 @@ from phylofisher.db_map import database, Taxonomies, Metadata
 
 plt.style.use('ggplot')
 
+# Module-level variables for multiprocessing compatibility
+metadata = None
+tax_col = None
+
 
 def configure_colors():
     '''
@@ -592,6 +596,21 @@ def format_nodes(node, node_style, sus_clades, t):
     return supp, sus_clades
 
 
+def init_worker(metadata_dict, tax_col_dict):
+    '''
+    Initializer function for multiprocessing pool workers.
+    Sets global metadata and tax_col variables in each worker process.
+    
+    :param metadata_dict: metadata dictionary
+    :type metadata_dict: dict
+    :param tax_col_dict: taxonomy color dictionary
+    :type tax_col_dict: dict
+    '''
+    global metadata, tax_col
+    metadata = metadata_dict
+    tax_col = tax_col_dict
+
+
 def parallel_susp_clades(trees):
     '''
     Parallelizes the function suspicious_clades
@@ -601,7 +620,7 @@ def parallel_susp_clades(trees):
     :return: list of tuples containing tree name and list of suspicious clades
     :rtype: list
     '''
-    with Pool(processes=threads) as pool:
+    with Pool(processes=threads, initializer=init_worker, initargs=(metadata, tax_col)) as pool:
         suspicious = list(pool.map(suspicious_clades, trees))
         return suspicious
 
