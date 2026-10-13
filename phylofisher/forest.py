@@ -62,6 +62,13 @@ def parse_metadata(metadata, input_metadata=None):
     return metadata_comb, color_dict
 
 
+def init_worker(metadata_dict, threads_count):
+    """Initialize global variables for multiprocessing workers"""
+    global metadata, threads
+    metadata = metadata_dict
+    threads = threads_count
+
+
 def suspicious_clades(tree):
     """
     Find suspicious clades (more than 70 bs and more than 2 tax groups)
@@ -393,9 +400,9 @@ def format_nodes(node, node_style, sus_clades, t):
     return supp, sus_clades
 
 
-def parallel_susp_clades(trees):
+def parallel_susp_clades(trees, metadata_dict, threads_count):
     """Parallelizes the function suspicious_clades()"""
-    with Pool(processes=threads) as pool:
+    with Pool(processes=threads_count, initializer=init_worker, initargs=(metadata_dict, threads_count)) as pool:
         suspicious = list(pool.map(suspicious_clades, trees))
         return suspicious
 
@@ -591,7 +598,7 @@ if __name__ == '__main__':
     threads = args.threads
 
     if not args.backpropagate:
-        suspicious = parallel_susp_clades(trees)
+        suspicious = parallel_susp_clades(trees, metadata, threads)
         suspicious = sorted(suspicious)
 
         make_txt = False
