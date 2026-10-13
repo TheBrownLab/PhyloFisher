@@ -6,26 +6,24 @@ import sys
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from peewee import *
+
 import numpy as np
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 from Bio import SeqIO
-from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
-
 
 from phylofisher import help_formatter, tools
 
 
 def collect_names(files):
-    '''
-    Collect all short names. Collest information about 'route' for newly added sequences (BBH, SBH, HMM).
-
-    :param files: list of fasta files
-    :type files: list
-    :return: set of sorted shortnames; dictionary with genes
-    :rtype: tuple(set, dict)
-    '''
+    """
+    Collect all short names. Collest information about 'route'
+    for newly added sequences (BBH, SBH, HMM).
+    input: fasta files with genes (from fisher)
+    return: set of sorted shortnames; dictionary with genes 
+    as a keys and deeper level dictionaries with shortnames of organisms 
+    as keys and BBH or SBH or HMM as values
+    """
     names = set()
     routes = defaultdict(dict)
     for file in files:
@@ -44,16 +42,13 @@ def collect_names(files):
 
 
 def get_gene_column(gene, names):
-    '''
+    """
     Collect information about number of gene variants for all organisms.
-
-    :param gene: path to fasta file for a given gene
-    :type gene: str
-    :param names: set of short names of organisms
-    :type names: set
-    :return: pd.Series with information about present(>0)/absence(0) of a gene
-    :rtype: pd.Series
-    '''
+    input: fasta file for a given gene
+    return:  pd.Series with information about present(>0)/absence(0) of a gene
+    for all organisms. 
+    example: Albugo: 3, Naegr: 0, ...
+    """
     gene_name = gene.split('/')[-1].split('.')[0]
     column = pd.Series(np.zeros(len(names)), index=names, name=gene_name)
     for record in SeqIO.parse(gene, "fasta"):
@@ -66,14 +61,13 @@ def get_gene_column(gene, names):
 
 
 def make_table(folder):
-    '''
-    Collect information about all genes as pd.Series and organize them into pd.DataFrame
-
-    :param folder: directory with fasta files for all genes
-    :type folder: str
-    :return: pd.DataFrame with genes; dictionary with information about 'routes' used for sequence selection (BBH, SBH, HMM)
-    :rtype: tuple(pd.DataFrame, dict)
-    '''
+    """
+    Collect information about all genes as pd.Series and organize them
+    into pd.DataFrame
+    input: fodler with genes in fasta format
+    return: pd.DataFrame with genes; dictionary with information about
+    'routes' used for sequence selection (BBH, SBH, HMM)
+    """
     genes = [gene for gene in glob.glob(f'{folder}/*.fas') if os.path.isfile(gene)]
     names, routes = collect_names(genes)
     columns = []
@@ -86,16 +80,13 @@ def make_table(folder):
 
 
 def table_with_routes(df, routes):
-    '''
-    Create occupancy table and add information about routes used for sequence selection (BBH, SBH, HMM) to input dataframe
+    """Create occupancy table and add information about routes used for sequence
+    selection (BBH, SBH, HMM) to input dataframe
+    input: pd.DataFrame with information about all genes (present(>0)/absent(0)) 
+    for all organisms, dictionary with routes for all sequences
+    output: modified input dataframe with information about route
+    """
 
-    :param df: pd.DataFrame with information about all genes (present(>0)/absent(0))
-    :type df: pd.DataFrame
-    :param routes: dictionary with information about 'routes' used for sequence selection (BBH, SBH, HMM)
-    :type routes: dict
-    :return: pd.DataFrame with genes and information about routes
-    :rtype: pd.DataFrame
-    '''
     # Convert to boolean matrix
     df = df[df.index.isin(in_taxa_dict.keys())]
 
@@ -134,30 +125,24 @@ def table_with_routes(df, routes):
 
 
 def check_paralogs():
-    '''
-    Collect all Unique IDs for organisms with at least one paralog in the dataset.
-
-    :return: set of short names of organisms with at least one paralog
-    :rtype: set
-    '''
+    """Collect all Unique IDs for organisms with at least one paralog
+    in the dataset.
+    input: None
+    return: set of short names of organisms with at least one paralog
+    """
     paralogs = set()
-    database.init(os.path.join(dfo, 'phylofisher.db'))
-    database.connect()
-    db_query = Sequences.select(Sequences.metadata).where(Sequences.is_paralog == True)
-    for result in db_query:
-        org = Metadata.get(Metadata.id == result.metadata).short_name
-        paralogs.add(org)
-    database.close()
+    paralog_fold = os.path.dirname(args.metadata)
+    for file in glob.glob(f'{paralog_fold}/paralogs/*.fas'):
+        for record in SeqIO.parse(file, 'fasta'):
+            paralogs.add(record.name.split('.')[0])
     return paralogs
 
 
 def get_routes():
-    '''
-    Collect information about 'routes' used for sequence selection (BBH, SBH, HMM) for all organisms.
+    """
 
-    :return: dictionary with information about 'routes' used for sequence selection (BBH, SBH, HMM)
-    :rtype: dict
-    '''
+    :return:
+    """
     my_routes = dict()
     for org in in_taxa_dict.keys():
         sbh = {'SBH': 0, 'BBH': 0, 'HMM': 0}
@@ -172,14 +157,13 @@ def get_routes():
 
 
 def update_homolog_tree(df):
-    '''
-    Update homolog tree column to only include those organisms that are provided by the user.
+    """
+    Update homolog tree column to only include those organisms that are provided
+    by the user.
+    input: dataframe
+    return: dataframe
+    """
 
-    :param df: pd.DataFrame with information about all genes and organisms
-    :type df: pd.DataFrame
-    :return: pd.DataFrame with updated homolog tree information
-    :rtype: pd.DataFrame
-    '''
     ht_include = set()
     with open(args.ht_include, 'r') as f:
         for line in f:
@@ -194,14 +178,12 @@ def update_homolog_tree(df):
 
 
 def stats_orgs(df, new_data=False):
-    '''
-    Create tsv file with basic summary about analyzed dataset without information about 'routes' and paralogs.
-
-    :param df: pd.DataFrame with information about all genes and organisms
-    :type df: pd.DataFrame
-    :param new_data: Boolean indicating if the data is new or from the database
-    :type new_data: bool, optional
-    '''
+    """
+    Create tsv file with basic summary about analyzed dataset without information
+    about 'routes' and paralogs.
+    input: dataframe
+    return: None
+    """
     rows = []
 
     if new_data:
@@ -272,12 +254,10 @@ def stats_orgs(df, new_data=False):
 
 
 def stats_gene(df):
-    '''
-    Write basic summary for all genes
-
-    :param df: pd.DataFrame with information about all genes and organisms
-    :type df: pd.DataFrame
-    '''
+    """Write basic summary for all genes to a file
+    input: dataframe
+    return: None
+    """
     # res.write(f'Gene,Total,total[%],SGT\n')
     taxa_count = len(df)
     df[df != 0] = 1
@@ -314,6 +294,7 @@ if __name__ == '__main__':
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
     args.input_metadata = os.path.abspath(config['PATHS']['input_file'])
+    args.metadata = os.path.join(dfo, 'metadata.tsv')
 
     output_fold = os.path.basename(os.path.normpath(args.input)) + '/informant_stats'
     if os.path.isdir(output_fold):
@@ -321,7 +302,7 @@ if __name__ == '__main__':
     else:
         os.mkdir(output_fold)
 
-    db_taxa_dict = tools.parse_metadata(os.path.join(dfo, 'phylofisher.db'))
+    db_taxa_dict = tools.parse_metadata(args.metadata)
     in_taxa_dict = tools.parse_metadata(args.input_metadata, input_meta=True)
     all_taxa_dict = {**db_taxa_dict, **in_taxa_dict}
 

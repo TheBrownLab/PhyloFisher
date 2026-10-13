@@ -1,7 +1,6 @@
 # The main entry point of your workflow.
 import os
-from peewee import *
-from phylofisher.db_map import database, BaseModel, Genes, Taxonomies, Metadata, Sequences
+
 from Bio import SeqIO
 
 out_dir = config['out_dir']
@@ -9,7 +8,8 @@ in_dir = config['in_dir']
 genes = config['genes'].split(',')
 trees_only = config['trees_only']
 no_trees = config['no_trees']
-pf_database = config['database']
+tree_colors = config['tree_colors']
+metadata = config['metadata']
 input_metadata = config['input_metadata']
 
 
@@ -34,7 +34,7 @@ rule prequal:
     conda:
         'prequal.yaml'
     shell:
-        'prequal {input} &> {log}'
+        'prequal {input} >{log} 2>{log}'
 
 rule length_filter_mafft:
     input:
@@ -62,8 +62,8 @@ rule length_filter_divvier:
         f'''
         divvier -mincol 4 -partial {{input}} >{{log}} 2>{{log}}
 
-        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/length_filtration/divvier &> {{log}}
-        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.PP {out_dir}/length_filtration/divvier &> {{log}}
+        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/length_filtration/divvier >{{log}} 2>{{log}}
+        mv {out_dir}/length_filtration/mafft/{{wildcards.gene}}.aln.PP {out_dir}/length_filtration/divvier >{{log}} 2>{{log}}
         '''
 
 rule x_to_dash:
@@ -88,7 +88,7 @@ rule length_filter_bmge:
     conda:
         'bmge.yaml'
     shell:
-        'bmge -t AA -g 0.3 -i {input} -of {output} &> {log}'
+        'bmge -t AA -g 0.3 -i {input} -of {output} >{log} 2>&1'
 
 rule length_filtration:
     input:
@@ -141,8 +141,8 @@ rule divvier:
         f'''
         divvier -minicol 4 -partial {{input}} >{{log}} 2>{{log}}
 
-        mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier &>{{log}}
-        mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier &>{{log}}
+        mv {out_dir}/mafft/{{wildcards.gene}}.aln.partial.fas {out_dir}/divvier >{{log}} 2>{{log}}
+        mv {out_dir}/mafft/{{wildcards.gene}}.aln.PP {out_dir}/divvier >{{log}} 2>{{log}}
         '''
 
 rule trimal:
@@ -155,7 +155,7 @@ rule trimal:
         conda:
             'trimal.yaml'
         shell:
-            'trimal -in {input} -gt 0.01 -out {output} &> {log}'
+            'trimal -in {input} -gt 0.01 -out {output} >{log} 2>{log}'
 
 
 rule remove_gaps:
@@ -181,38 +181,37 @@ def get_raxml_input(wildcards):
     else:
         return f'{out_dir}/trimal/{gene}.final'
 
-rule iqtree:
+rule raxml:
     input:
         get_raxml_input
     output:
-        f'{out_dir}/iqtree/{{gene}}.treefile'
+        f'{out_dir}/raxml/{{gene}}.raxml.rba',
+        f'{out_dir}/raxml/{{gene}}.raxml.startTree',
+        f'{out_dir}/raxml/{{gene}}.raxml.bestTree',
+        f'{out_dir}/raxml/{{gene}}.raxml.mlTrees',
+        f'{out_dir}/raxml/{{gene}}.raxml.support',
+        f'{out_dir}/raxml/{{gene}}.raxml.bestModel',
+        f'{out_dir}/raxml/{{gene}}.raxml.bootstraps',
+        f'{out_dir}/raxml/{{gene}}.raxml.log'
     log:
-        f'{out_dir}/logs/iqtree/{{gene}}.log'
+        f'{out_dir}/logs/raxml/{{gene}}.log'
     conda:
-        'iqtree.yaml'
+        'raxml-ng.yaml'
     params:
-        iqtree_out=lambda wildcards: f'{out_dir}/iqtree/{wildcards.gene}'
+        raxml_out=f'{out_dir}/raxml'
     shell:
-        '''
-        iqtree -s {input} \
-        -pre {params.iqtree_out} \
-        -m ELM+C20 \
-        -B 1000 \
-        -alrt 1000 \
-        -T 1 \
-        &> {log}
-        '''
+        'raxml-ng --all --msa {input} --prefix {params.raxml_out}/{wildcards.gene} --model LG4X+G4 --tree pars{{10}} --bs-trees 100 --force  --threads 1 >{log} 2>{log}'
 
 if trees_only:
     rule cp_trees:
         input:
             f'{in_dir}/{{gene}}.fas',
-            f'{out_dir}/iqtree/{{gene}}.treefile'
+            f'{out_dir}/raxml/{{gene}}.raxml.support',
         output:
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/{{gene}}.treefile',
+            f'{out_dir}/trees/{{gene}}.raxml.support',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/{{gene}}.treefile'
+            f'{out_dir}-local/trees/{{gene}}.raxml.support'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -220,20 +219,19 @@ if trees_only:
             cp {input[1]} {output[1]}
             cp {input[1]} {output[3]}
             '''
-            
 else:
     rule cp_trees:
         input:
             f'{out_dir}/length_filtration/bmge/{{gene}}.length_filtered',
             f'{out_dir}/trimal/{{gene}}.final',
-            f'{out_dir}/iqtree/{{gene}}.treefile'
+            f'{out_dir}/raxml/{{gene}}.raxml.support',
         output:
             f'{out_dir}/trees/{{gene}}.trimmed',
             f'{out_dir}/trees/{{gene}}.final',
-            f'{out_dir}/trees/{{gene}}.treefile',
+            f'{out_dir}/trees/{{gene}}.raxml.support',
             f'{out_dir}-local/trees/{{gene}}.trimmed',
             f'{out_dir}-local/trees/{{gene}}.final',
-            f'{out_dir}-local/trees/{{gene}}.treefile'
+            f'{out_dir}-local/trees/{{gene}}.raxml.support'
         shell:
             '''
             cp {input[0]} {output[0]}
@@ -244,42 +242,21 @@ else:
             cp {input[2]} {output[5]}
             '''
 
-rule cp_input_metadata:
+rule cp_metadata:
     input:
+        f'{tree_colors}',
+        f'{metadata}',
         f'{input_metadata}',
     output:
+        f'{out_dir}-local/tree_colors.tsv',
+        f'{out_dir}-local/metadata.tsv',
         f'{out_dir}-local/input_metadata.tsv'
     shell:
-        '''
+        """
         cp {input[0]} {output[0]}
-        '''
-
-rule make_metadata_tsv:
-    input:
-        f'{pf_database}',
-    output:
-        f'{out_dir}-local/metadata.tsv',
-        f'{out_dir}-local/tree_colors.tsv'
-    run:
-        database.init(input[0])
-        database.connect()
-        db_query = Metadata.select()
-        tax_query = Taxonomies.select()
-
-        with open(output[0], 'w') as meta_out, open(output[1], 'w') as color_out:
-            meta_out.write('Unique ID\tLong Name\tHigher Taxonomy\tLower Taxonomy\tData Type\tSource\n')
-            color_out.write('Taxonomy\tColor\n')
-
-            tax_dict = {}
-            for taxa in tax_query:
-                if taxa.color:
-                    color_out.write(f'{taxa.taxonomy}\t{taxa.color}\n')
-                tax_dict[taxa.id] = taxa.taxonomy
-
-            for q in db_query:
-                meta_out.write(f'{q.short_name}\t{q.long_name}\t{tax_dict[int(str(q.higher_taxonomy))]}\t{tax_dict[int(str(q.lower_taxonomy))]}\t{q.data_type}\t{q.source}\n')
-            
-        database.close()
+        cp {input[1]} {output[1]}
+        cp {input[2]} {output[2]}
+        """
 
 def get_tar_local_dir_input(wildcards):
     ret = []
@@ -287,7 +264,7 @@ def get_tar_local_dir_input(wildcards):
         if not trees_only:
             ret.append(f'{out_dir}-local/trees/{gene}.trimmed')
         ret.append(f'{out_dir}-local/trees/{gene}.final')
-        ret.append(f'{out_dir}-local/trees/{gene}.treefile')
+        ret.append(f'{out_dir}-local/trees/{gene}.raxml.support')
 
     ret.append(f'{out_dir}-local/tree_colors.tsv')
     ret.append(f'{out_dir}-local/metadata.tsv')

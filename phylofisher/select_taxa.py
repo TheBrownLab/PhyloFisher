@@ -4,19 +4,15 @@ import os
 import textwrap
 import pandas as pd
 from pathlib import Path
+
 from phylofisher import help_formatter, tools
-from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
 
 
 def parse_user_inc_exc(input_file):
-    '''
-    Parse a user-provided file containing taxa to include or exclude.
+    """
 
-    :param input_file: path to the file containing taxa to include or exclude
-    :type input_file: str
-    :return: set of taxa to include or exclude
-    :rtype: set
-    '''
+    :return:
+    """
     with open(input_file, 'r') as infile:
         user_set = set()
         for line in infile:
@@ -27,10 +23,11 @@ def parse_user_inc_exc(input_file):
 
 
 def make_subset_tsv():
-    '''
-    Create a TSV file containing taxa completeness and taxonomic information.
-    '''
-    taxa = tools.parse_metadata(str(Path(dfo, 'phylofisher.db')))
+    """
+
+    :return:
+    """
+    taxa = tools.parse_metadata(metadata)
     df = taxa_comp.to_frame()
     df = df.rename(columns={0: 'Completeness'})
 
@@ -83,14 +80,10 @@ def make_subset_tsv():
 
 
 def update_df_ortho(df):
-    '''
-    Update the DataFrame by dropping orthologs based on user selection.
+    """
 
-    :param df: dataframe containing orthologs and their completeness
-    :type df: pd.DataFrame
-    :return: updated dataframe with selected orthologs
-    :rtype: pd.DataFrame
-    '''
+    :return:
+    """
     with open('select_orthologs.tsv', 'r') as infile:
         infile.readline()
         to_drop = []
@@ -126,14 +119,10 @@ def gen_chimera(df):
 
 
 def update_dataframe(df):
-    '''
-    Update the DataFrame by dropping taxa based on user selection.
+    """
 
-    :param df: dataframe containing taxa and their completeness
-    :type df: pd.DataFrame
-    :return: updated dataframe with selected taxa
-    :rtype: pd.DataFrame
-    '''
+    :return:
+    """
     with open('select_taxa.tsv', 'r') as infile:
         infile.readline()
         to_drop = []
@@ -175,9 +164,10 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    database.init(str(Path(dfo, 'phylofisher.db')))
-    database.connect()
-    matrix = tools.completeness(orthologs=True, genes=True)
+    metadata = f'{dfo}/metadata.tsv'
+    orthologs_dir = f'{dfo}/orthologs/'
+
+    matrix = tools.completeness(args=args, input_dir=orthologs_dir, genes=True)
     matrix = matrix.transpose()
 
     if os.path.isfile('select_orthologs.tsv'):
@@ -196,5 +186,3 @@ if __name__ == '__main__':
         tools.make_plot(taxa_comp, f'taxa_comp', y_count=gene_count, genes=False)
     except ValueError:
         print('Unable to make plot. However, the TSV file was created, and you are free to move forward.')
-
-    database.close()
