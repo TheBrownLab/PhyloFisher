@@ -46,12 +46,6 @@ def make_config():
 
 
 def get_output_files():
-    '''
-    Get final output files
-
-    :return: list of output files
-    :rtype: list
-    '''
     # Accepted out formats with respective suffix
     out_dict = {'fasta':          'fas',
                 'phylip':         'phy',

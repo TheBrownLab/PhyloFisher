@@ -12,11 +12,12 @@ import textwrap
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
+
 import pandas as pd
 from Bio import SeqIO
+
 from phylofisher import help_formatter, tools
 from phylofisher.utilities import build_database
-from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
 
 
 class UnknownStatusError(Exception):
@@ -30,13 +31,20 @@ class UnknownStatusError(Exception):
         super().__init__(self.message)
 
 
-def taxa_to_exclude():
-    '''
-    Parse taxa to exclude from dataset addition.
+def dataset_orgs():
+    """"Collect all short names from dataset metadata table."""
+    orgs = set()
+    with open(metadata) as md:
+        # skip header
+        next(md)
+        for line_ in md:
+            sline = line_.split('\t')
+            abbrev = sline[0].strip()
+            orgs.add(abbrev)
+    return orgs
 
-    :return: list of unique IDs to exclude
-    :rtype: list
-    '''
+
+def taxa_to_exclude():
     to_skip = []
     with open(args.to_exclude, 'r') as infile:
         for line in infile:
@@ -47,16 +55,10 @@ def taxa_to_exclude():
 
 
 def parse_input(input_metadata, orgs_to_exc):
-    '''
-    Parse input metadata.
-
-    :param input_metadata: path to input metadata file
-    :type input_metadata: str
-    :param orgs_to_exc: list of unique IDs to exclude from dataset addition
-    :type orgs_to_exc: list
-    :return: dictionary of input metadata
-    :rtype: dict
-    '''
+    """"Parse input metadata.
+    input: input metadata csv
+    return: dictionary with info about input metadata
+    """
     orgs_to_exc = set()
 
     input_info = defaultdict(dict)
@@ -86,14 +88,11 @@ def parse_input(input_metadata, orgs_to_exc):
 
 
 def collect_seqs(gene):
-    '''
-    Collect all sequences for a given gene from fasta folder (fisher result) and store them in a dictionary.
-
-    :param gene: name of the gene
-    :type gene: str
-    :return: dictionary of all sequences for a given gene
-    :rtype: dict
-    '''
+    """Collect all sequences for a given gene from fasta folder (fisher result)
+    and store them in a dictionary.
+    input: gene name
+    return: dictionary of all seqs for a given gene
+    """
     seq_dict = {}
     for record in SeqIO.parse(f'{fisher_dir}/{gene}.fas', 'fasta'):
         if record.name.count('_') == 3:
@@ -103,6 +102,26 @@ def collect_seqs(gene):
         else:
             seq_dict[record.name] = record
     return seq_dict
+
+
+def id_generator(size=5, chars=string.digits):
+    """"Generate random number with 5 digits."""
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def paralog_name(abbrev, keys):
+    """"Prepare paralog name (short name + 5 random digits).
+    Recursive function.
+    example: Homosap..12345
+    input: short name of an organism, names of already existing paralogs
+    for a given organism
+    return: unique paralog name"""
+    id_ = id_generator()
+    pname = f'{abbrev}..p{id_}'
+    if pname not in keys:
+        return pname
+    else:
+        paralog_name(abbrev, keys)
 
 
 def parse_table(table):
@@ -118,49 +137,40 @@ def parse_table(table):
 
     # gene name
     gene = table.split('/')[-1].split('_parsed')[0]
-    g_id = Genes.select(Genes.id).where(Genes.name == gene).get().id
+
+    # paths to orthologs and in the dataset folder
+    orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
+    paralogs_path = str(Path(dfo, f'paralogs/{gene}_paralogs.fas'))
 
     # parse orthologs for a given gene into a dictionary
-    orthologs = {}
-    db_guery = Sequences.select(
-        Sequences.header, Sequences.sequence).where(
-            Sequences.is_paralog == False, Sequences.gene_id == g_id)
-    for q in db_guery:
-        orthologs[q.header] = q.sequence
-    
-    
+    orthologs = SeqIO.to_dict(SeqIO.parse(orthologs_path, "fasta"))
+
     # parse paralogs into a dictionary (if they exist); else make an empty dict
-    paralogs = {}
-    db_guery = Sequences.select(
-        Sequences.header, Sequences.sequence, Sequences.id).where(
-            Sequences.is_paralog == True, Sequences.gene_id == g_id)
-    for q in db_guery:
-        paralogs[f'{q.header}..p{q.id}'] = q.sequence
+    if os.path.isfile(paralogs_path):
+        paralogs = SeqIO.to_dict(SeqIO.parse(paralogs_path, "fasta"))
+    else:
+        paralogs = {}
 
     # collect all candidate sequences for a given gen from the fisher.py result
     seq_dict = collect_seqs(gene)
 
     for line in open(table):
-        # for orthologs from the dataset
-        tree_name, tax, status = line.split('\t')
-        status = status.strip()  # o,p,d (ortholog, paralog, delete)
-        abbrev = tree_name.split('@')[-1]
-        if tree_name.count('_') != 3 and '..' not in abbrev:
-            record = seq_dict[abbrev]
-            db_guery = Sequences.select(
-                Sequences.id, Sequences.header, Sequences.sequence).where(
-                    Sequences.is_paralog == False, Sequences.gene_id == g_id, Sequences.header == abbrev)
-            assert db_guery.count() == 1
-            if status == 'd':
-                # delete sequence from orthologs
-                del orthologs[abbrev]
-            elif status == 'p':
-                # chance status from paralog to ortholog
-                # prepare paralog name
-                pname = f'{abbrev}..p{db_guery.get().id}'
-                paralogs[pname] = record
-                # delete sequence from orthologs
-                del orthologs[abbrev]
+         # for orthologs from the dataset
+         tree_name, tax, status = line.split('\t')
+         status = status.strip()  # o,p,d (ortholog, paralog, delete)
+         abbrev = tree_name.split('@')[-1]
+         if tree_name.count('_') != 3 and '..' not in abbrev:
+             record = seq_dict[abbrev]
+             if status == 'd':
+                 # delete sequence from orthologs
+                 del orthologs[abbrev]
+             elif status == 'p':
+                 # chance status from paralog to ortholog
+                 # prepare paralog name
+                 pname = paralog_name(abbrev, paralogs.keys())
+                 paralogs[pname] = record
+                 # delete sequence from orthologs
+                 del orthologs[abbrev]
 
     for line in open(table):
         # for new sequences
@@ -173,11 +183,11 @@ def parse_table(table):
             record = seq_dict[qname]
             if status == 'o':
                 # add to orthologs
-                orthologs[abbrev] = record.seq
+                orthologs[abbrev] = record
             elif status == 'p':
                 # add to paralogs
-                pname = f'{abbrev}..p{db_guery.get().id}'
-                paralogs[pname] = record.seq
+                pname = paralog_name(abbrev, paralogs.keys())
+                paralogs[pname] = record
 
     for line in open(table):
         # for paralogs from the dataset
@@ -185,16 +195,13 @@ def parse_table(table):
         status = status.strip()
         name = tree_name.split('@')[-1]
         abbrev = name.split('.')[0]
-        db_guery = Sequences.select(
-            Sequences.id, Sequences.header, Sequences.sequence).where(
-                Sequences.is_paralog == True, Sequences.gene_id == g_id, Sequences.header == abbrev)
         if '..' in name:
             if status == 'o':
                 record = paralogs[name]
                 # for cases when ortholog has not survived trimming
                 if abbrev in orthologs:
                     # prepare paralog name
-                    pname = f'{abbrev}..p{db_guery.get().id}'
+                    pname = paralog_name(abbrev, paralogs.keys())
                     # chance status from paralog to ortholog
                     paralogs[pname] = orthologs[abbrev]
                     # record in orthologs will be replaced
@@ -209,40 +216,31 @@ def parse_table(table):
 
 
 def add_to_meta(abbrev):
-    '''
-    Transfer input metadata for a given organism to database metadata.
+    """"Transfer input metadata for a given organism
+    to dataset metadata.
+    input:  short name of organism
+    return: None
+    """
+    new_row = {'Unique ID': abbrev,
+               'Long Name': input_info[abbrev]['full_name'],
+               'Higher Taxonomy': input_info[abbrev]['tax'].replace('*', ''),
+               'Lower Taxonomy': input_info[abbrev]['subtax'].replace('*', ''),
+               'Data Type': input_info[abbrev]['data_type'],
+               'Source': input_info[abbrev]['notes']
+               }
 
-    :param abbrev: abbreviation of the organism
-    :type abbrev: str
-    '''
-    tax = input_info[abbrev]['tax']
-    subtax = input_info[abbrev]['subtax']
-    
-    # Check if taxonomies exist in the database
-    if '*' in tax:
-        tax = tax.replace('*', '')
-        Taxonomies.insert(taxonomy=tax).execute()
-    if '*' in subtax:
-        subtax = subtax.replace('*', '')
-        Taxonomies.insert(taxonomy=subtax).execute()
-    
-    # Insert new metadata rows
-    q = Metadata.insert(short_name=abbrev,
-                        long_name=input_info[abbrev]['full_name'],
-                        higher_taxonomy_id=Taxonomies.select().where(Taxonomies.taxonomy == tax).get().id,
-                        lower_taxonomy_id=Taxonomies.select().where(Taxonomies.taxonomy == subtax).get().id,
-                        data_type=input_info[abbrev]['data_type'],
-                        source=input_info[abbrev]['notes'])
-    q.execute()
+    df = pd.read_csv(metadata, delimiter='\t')
+    df.index = df['Unique ID']
+
+    df = df.append(new_row, ignore_index=True)
+    df = df.sort_values(by=['Higher Taxonomy', 'Lower Taxonomy', 'Unique ID'])
+    df.to_csv(str(Path(dfo, 'metadata.tsv')), sep='\t', index=False)
 
 
 def new_database(table):
-    '''
-    Make changes in the PhyloFisher database according to information from parsed single homolog tree.
+    """Make changes in the PhyloFisher dataset according to information from
+     parsed single gene tree."""
 
-    :param table: path to parsed tsv file of one gene
-    :type table: str
-    '''
     gene = table.split('/')[-1].split('_parsed')[0]
     # Orthologs for a given gene
     orthologs_path = str(Path(dfo, f'orthologs/{gene}.fas'))
@@ -251,38 +249,40 @@ def new_database(table):
 
     orthologs, paralogs = parse_table(table)
 
-    # make changes in orthologs
-    for name, seq in orthologs.items():
-        if name not in meta_orgs and name not in to_exclude:
-            meta_orgs.add(name)
-            add_to_meta(name)
-        if name.split('..')[0] not in to_exclude:
-            q = Sequences.insert(header=name,
-                                 sequence=seq,
-                                 is_paralog=False,
-                                 gene_id=Genes.select().where(Genes.name == gene).get().id,
-                                 metadata_id=Metadata.select().where(Metadata.short_name == name).get().id)
-            q.execute()
+    with open(orthologs_path, 'w') as res:
+        # make changes in orthologs
+        for name, record in orthologs.items():
+            if name not in meta_orgs and name not in to_exclude:
+                meta_orgs.add(name)
+                add_to_meta(name)
+            if name.split('..')[0] not in to_exclude:
+                res.write(f'>{name}\n{record.seq}\n')
 
-    # make changes in paralogs
-    for name, seq in paralogs.items():
-        if name.split('..')[0] not in meta_orgs and name.split('..')[0] not in to_exclude:
-            meta_orgs.add(name.split('.')[0])
-            add_to_meta(name.split('.')[0])
-        if name.split('..')[0] not in to_exclude:
-            name = name.split('..')[0]
-            q = Sequences.insert(header=name,
-                                 sequence=seq,
-                                 is_paralog=True,
-                                 gene_id=Genes.select().where(Genes.name == gene).get().id,
-                                 metadata_id=Metadata.select().where(Metadata.short_name == name).get().id)
-            q.execute()
+    with open(paralogs_path, 'w') as res:
+        # make changes in paralogs
+        for name, record in paralogs.items():
+            if name.split('..')[0] not in meta_orgs and name.split('..')[0] not in to_exclude:
+                meta_orgs.add(name.split('.')[0])
+                add_to_meta(name.split('.')[0])
+            if name.split('..')[0] not in to_exclude:
+                res.write(f'>{name}\n{record.seq}\n')
 
 
 def rebuild_db():
-    '''
-    Rebuild the database after adding new data.
-    '''
+    """
+    
+    :return: 
+    """
+    try:
+        shutil.rmtree(f'{dfo}/profiles')
+    except FileNotFoundError:
+        pass
+
+    try:
+        shutil.rmtree(f'{dfo}/datasetdb')
+    except FileNotFoundError:
+        pass
+    
     cwd = os.getcwd()
     os.chdir(dfo)
     args.rename = None
@@ -291,9 +291,6 @@ def rebuild_db():
 
 
 def cp_proteomes():
-    '''
-    Copy proteomes from input metadata to database folder.
-    '''
     with open(input_metadata, 'r') as infile:
         infile.readline()
         file_dict = {}
@@ -320,9 +317,10 @@ def cp_proteomes():
 
 
 def main():
-    '''
-    Loop through all parsed tables and add new data to the database.
-    '''
+    """
+    Main function. Run new_database on all parsed trees (tsv files)
+    :return:
+    """
     for table in glob.glob(f'{args.input}/*_parsed.tsv'):
         new_database(table)
 
@@ -366,8 +364,6 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    database.init(str(Path(dfo, 'phylofisher.db')))
-    database.connect()
 
     tools.backup(dfo)
     
@@ -378,8 +374,6 @@ if __name__ == '__main__':
         
     input_metadata = os.path.abspath(config['PATHS']['input_file'])
     metadata = str(Path(dfo, 'metadata.tsv'))
-    meta_orgs = set([x.short_name for x in Metadata.select(Metadata.short_name)])
+    meta_orgs = dataset_orgs()
     input_info = parse_input(input_metadata, to_exclude)
     main()
-
-    database.close()

@@ -97,18 +97,18 @@ if __name__ == "__main__":
                           help=textwrap.dedent("""\
                               Path to tree.
                               """))
-    required.add_argument('-iq', '--iqtree', required=True, type=str, metavar='<tree>',
+    required.add_argument('-iq', '--iqtree', required=True, type=str, metavar='<iqtree>',
                           help=textwrap.dedent("""\
-                              Path to iqtree.
+                              Path to IQTree's iqtree.
                               """))
-    required.add_argument('-r', '--rootfile', required=True, type=str, metavar='<tree>',
+    required.add_argument('-r', '--rootfile', required=True, type=str, metavar='<rootfile>',
                           help=textwrap.dedent("""\
                               Path root file. A txt file containing a list of taxa on one side of the root split.
                               Example:
                                 taxonA
                                 taxonB
                               """))
-    required.add_argument('-b', '--basename', required=True, type=str, metavar='<tree>',
+    required.add_argument('-b', '--basename', required=True, type=str, metavar='<basename>',
                           help=textwrap.dedent("""\
                               Output file basename.
                               """))

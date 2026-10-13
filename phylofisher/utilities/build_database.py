@@ -1,16 +1,177 @@
 #!/usr/bin/env python
 import csv
 import os
+import random
 import shutil
+import string
 import subprocess
 import sys
 import textwrap
 from collections import defaultdict, Counter
 from glob import glob
 import matplotlib.colors as mcolors
+import pandas as pd
 from Bio import SeqIO
+
 from phylofisher import help_formatter
-from phylofisher.db_map import database, Genes, Sequences
+from phylofisher import tools
+
+
+def csv_to_tsv():
+    csvs = [csv for csv in os.listdir('.') if csv.endswith('csv')]
+    for csv in csvs:
+        with open(csv, 'r') as infile, open(f'{csv.split(".")[0]}.tsv', 'w')as outfile:
+            for line in infile:
+                line = line.strip().replace(',', '\t')
+                outfile.write(f'{line}\n')
+        os.remove(csv)
+
+    tsvs = [tsv for tsv in os.listdir('.') if tsv.endswith('tsv')]
+    for tsv in tsvs:
+        with open(tsv, 'r') as infile, open('tmp', 'w') as outfile:
+            for line in infile:
+                line = line.strip().replace(',', '\t')
+                outfile.write(f'{line}\n')
+        shutil.move('tmp', tsv)
+
+
+def rename_taxa():
+    """"""
+
+
+    # Read in to_rename.tsv
+    rename_dict = dict()
+    with open(args.rename, 'r') as infile:
+        infile.readline()
+        for line in infile:
+            line = line.strip()
+            line_list = line.split('\t')
+            rename_dict[line_list[0]] = line_list[1:]
+
+    # Rename in orthologs/ and paralogs/
+    files = glob('orthologs/*.fas') + glob('paralogs/*.fas')
+    for file in files:
+        with open(file, 'r') as infile, open('tmp', 'w') as tmp_file:
+            for line in infile:
+                line = line.strip()
+                for key, value in rename_dict.items():
+                    if key in line:
+                        line = line.replace(key, value[0])
+                tmp_file.write(f'{line}\n')
+        shutil.move('tmp', file)
+
+    df = pd.read_csv('metadata.tsv', sep='\t')
+    for key, value in rename_dict.items():
+        df.loc[df['Unique ID'] == key, 'Long Name'] = value[1]
+        df.loc[df['Unique ID'] == key, 'Unique ID'] = value[0]
+    
+    df.to_csv('metadata.tsv', sep='\t', index=False)
+
+
+def get_ortho_taxa():
+    """
+    Returns unique set of taxa in orthologs dir
+    """
+    unique_orgs_orthos = set()
+    files = glob('orthologs/*.fas')
+    for file in files:
+        with open(file, 'r') as infile:
+            records = SeqIO.parse(infile, 'fasta')
+            for record in records:
+                unique_orgs_orthos.add(record.description)
+
+    return unique_orgs_orthos
+
+
+def check_orthologs():
+    """
+    Check that IDs in orthologs are all unique in the file.
+    """
+    files = glob('orthologs/*.fas')
+    for file in files:
+        ids = set()
+        with open(file, 'r') as infile:
+            records = SeqIO.parse(infile, 'fasta')
+            for record in records:
+                if record.name in ids:
+                    print(f"ERROR: {record.name} is not a unique ID in {file}")
+                    sys.exit()
+                ids.add(record.name)
+
+
+def get_meta_taxa():
+    """
+    Returns unique set of taxa in metadata
+    """
+    unique_orgs_meta = set()
+    with open('metadata.tsv', 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter='\t')
+        for row in reader:
+            id_ = row[0]
+            if id_ == 'Unique ID':
+                continue
+            
+            #check that ID is unique
+            if id_ in unique_orgs_meta:
+                print("ERROR: ", id_, "is not a unique ID")
+                sys.exit()
+
+            #check illegal characters
+            for ch in ["_", '@', '..', '*', ' ']:
+                if ch in id_:
+                    print(f"ERROR: illegal character {ch} in {id_}")
+                    sys.exit()
+
+            unique_orgs_meta.add(id_)
+    return unique_orgs_meta
+
+
+def check_taxa():
+    """
+    Checks to see if all taxa in metadata is in ortholog dir and vice-versa. If there are differences the script exits
+    here and prints the discrepancies.
+
+    :return: None
+    """
+    unique_orgs_orthos = get_ortho_taxa()
+    unique_orgs_meta = get_meta_taxa()
+
+    # Exits if there are differences and prints those differences
+    if len(unique_orgs_meta - unique_orgs_orthos) > 0 or len(unique_orgs_orthos - unique_orgs_meta) > 0:
+        if len(unique_orgs_meta - unique_orgs_orthos) > 0:
+            print(f'Taxa in metadata but not in orthologs dir:')
+            for org in (unique_orgs_meta - unique_orgs_orthos):
+                print(org)
+        if len(unique_orgs_orthos - unique_orgs_meta) > 0:
+            print(f'Taxa in orthlog dir but not in metadata:')
+            for org in (unique_orgs_orthos - unique_orgs_meta):
+                print(org)
+        sys.exit()
+
+
+def id_generator(size=5, chars=string.digits):
+    """
+    Generate random number with 5 digits.
+    :param size:
+    :param chars:
+    :return:
+    """
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def paralog_name(abbrev, keys):
+    """"Prepare paralog name (short name + 5 random digits).
+    Recursive function.
+    example: Homosap..12345
+    input: short name of an organism, names of already existing paralogs
+    for a given organism
+    return: unique paralog name"""
+    id_ = id_generator()
+    pname = f'{abbrev}..p{id_}'
+    if pname not in keys:
+        return pname
+    else:
+        paralog_name(abbrev, keys)
 
 
 def prepare_diamond_input():
@@ -100,56 +261,57 @@ def get_og_file(threshold):
             res.write(f'{gene}\t{",".join(ogs)}\n')
     os.remove('diamond.res')
     os.remove('for_diamond.fasta')
-    
 
-def datasetdb(threads):
-    '''
-    
 
-    :param threads: threads to use for multithreading
-    :type threads: int
-    '''
-    os.mkdir('datasetdb')
-    os.chdir('datasetdb')
+def concat_gene_files():
+    files = glob('*.fas')
 
     with open('datasetdb.fasta', 'w') as outfile:
-        db_query = Sequences.select(
-            Sequences.header, Sequences.sequence, Sequences.id).where(
-                Sequences.is_paralog == False)
-        for q in db_query:
-            outfile.write(f'>{q.header}\n{q.sequence}\n')
-    
+        for file in files:
+            with open(file, 'r') as infile:
+                for line in infile:
+                    line = line.strip()
+                    if line.startswith('>'):
+                        line = f'>{file.split(".")[0]}'
+                    outfile.write(f'{line}\n')
+
+
+def datasetdb():
+    # TODO fix me
+    os.mkdir('datasetdb')
+    os.chdir('orthologs')
+    concat_gene_files()
+    shutil.move('datasetdb.fasta', '../datasetdb')
+    os.chdir('../datasetdb')
     dmd_db = 'diamond makedb --in datasetdb.fasta -d datasetdb'
     subprocess.run(dmd_db, shell=True)
+    # os.remove('datasetdb.fasta')
+    os.chdir('..')
 
-    os.mkdir('../profiles')
-    os.chdir('../profiles')
 
+def make_profiles(threads):
+    """
+    Prepares hmm profiles from all fasta files with orthologs
+    from orthologs folder.
+
+    :param threads: number of threads
+    :return: None
+    """
+
+    os.mkdir('profiles')
+    os.chdir('orthologs')
 
     # prepares alignments for all fasta files with orthologs
-    for q in Genes.select(Genes.id, Genes.name):
-        gene_id = q.id
-        gene = q.name
-        alns = ''
-        db_query = Sequences.select(
-            Sequences.header, Sequences.sequence, Sequences.id).where(
-                Sequences.is_paralog == False, Sequences.gene_id == gene_id)
-        
-        for q in db_query:
-            alns += f'>{q.header}\n{q.sequence}\n'
+    aln = f'for i in $(ls *.fas); do mafft --auto' \
+          f' --thread {threads} --reorder $i > $(basename $i .fas).aln; done'
+    subprocess.run(aln, shell=True)
 
-        with open('tmp.fas', 'w') as outfile:
-            outfile.write(alns)
-        
-        aln = f'mafft --globalpair --thread {threads} --reorder tmp.fas> {gene}.fas.aln'
-        subprocess.run(aln, shell=True, check=True)
-        os.remove('tmp.fas')  # delete tmp file
-
-        # prepares hmm profiles from alignmets made in prev. step
-        hmm = f'hmmbuild {gene}.hmm {gene}.fas.aln'
-        subprocess.run(hmm, shell=True, check=True)
-        os.remove(f'{gene}.fas.aln') # delete alignment file
-
+    # prepares hmm profiles from alignmets made in prev. step
+    hmm = 'for i in $(ls *.aln); do hmmbuild $(basename $i .aln).hmm $i; done'
+    subprocess.run(hmm, shell=True)
+    subprocess.run('mv *.hmm ../profiles', shell=True)
+    subprocess.run('rm *.aln', shell=True)  # delete alignments
+    os.chdir('..')
 
 def generate_tree_colors():
 
@@ -165,7 +327,7 @@ def generate_tree_colors():
         for i, higher_tax in enumerate(sorted(list(higher_tax_set))):
             outfile.write(f'{higher_tax}\t{colors[i]}\n')
 
-def main(threads, no_og_file, threshold):
+def main(args, threads, no_og_file, threshold):
     """
     :param args:
     :param threads: number of threads
@@ -174,12 +336,23 @@ def main(threads, no_og_file, threshold):
     :return: None
     """
 
+    # checks if paralogs folder exists and creates
+    # it if not
+    if os.path.isdir('paralogs') is False:
+        os.mkdir('paralogs')
     if os.path.isdir('datasetdb') is True:
         shutil.rmtree('datasetdb')
     if os.path.isdir('profiles') is True:
         shutil.rmtree('profiles')
 
-    datasetdb(threads)  # creates datasetdb
+    if args.rename:
+        tools.backup(os.getcwd())
+        rename_taxa()
+        tools.backup(os.getcwd())
+
+    datasetdb()  # creates datasetdb
+
+    make_profiles(threads)
 
     if not no_og_file:
         get_og_file(threshold)
@@ -208,7 +381,18 @@ if __name__ == "__main__":
                           OrthoMCL orthogroup for the group to be assigned.
                           Default: 0.1 (10%%)
                           """))
+    optional.add_argument('--rename', type=str, metavar='<to_rename.tsv>',
+                          help=textwrap.dedent("""\
+                          Rename taxa in the database.
+                          Takes a TSV file containing the Old Unique ID, New Unique ID, and New Long Name.
+                          """))
 
     args = help_formatter.get_args(parser, optional, required, pre_suf=False, inp_dir=False, out_dir=False)
 
-    main(args.threads, args.no_og_file, args.og_threshold)
+    csv_to_tsv()
+    check_orthologs()
+    check_taxa()
+    main(args, args.threads, args.no_og_file, args.og_threshold)
+    
+    if not os.path.exists('tree_colors.tsv'):
+        generate_tree_colors()

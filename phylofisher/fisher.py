@@ -9,13 +9,13 @@ from collections import defaultdict
 from functools import partial
 from multiprocessing import Pool, Lock
 from pathlib import Path
-from shutil import rmtree
-from peewee import *
+from shutil import copyfile, rmtree
+
 from Bio import BiopythonExperimentalWarning
 from Bio import SeqIO
 from ete3 import Tree
+
 from phylofisher import help_formatter
-from phylofisher.db_map import database, Genes, Taxonomies, Metadata, Sequences
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', BiopythonExperimentalWarning)
@@ -49,9 +49,21 @@ def run_bash(cmd):
 
 
 class Hit:
-    '''
-    Represents a hit from hmmsearch or blast.
-    '''
+    # TODO: it would be nice to refractor me
+    """ Represents candidate hit.
+
+    attributes:
+    - query: refers to a gene
+    - path_: refers to 'SBH' - specific query best hit
+                    'BBH' - best blast hit (doesnt cluster with
+                            expected taxonomical group)
+                    'HMM' - selected just according to Hmmsearch
+    - quality: q1,q2...qn refers to position in blast/hmmsearch
+                quality also contains 'r' or 'n' after number
+                which mean corresponding and non_corresponding best blast hit
+                example: q1r means best blast/hmmer hit (depends on path_)
+                        which is also reciprocal best blast hit to query
+                        gene in our database"""
 
     def __init__(self, name, seq, query, hmm_hits):
         self.name = name
@@ -69,9 +81,11 @@ class Hit:
 
 
 class Query:
-    '''
-    Represents phylogeneticaly not specific query (only hmmsearch)
-    '''
+    """Represents phylogeneticaly not specific query (only hmmsearch)
+
+    attributes:
+    - query: refers to a gene
+    - squery: always False, not a sprcific query (fix it)"""
 
     def __init__(self, query, hmm_hits, infile_proteins):
         self.query = query
@@ -89,9 +103,12 @@ class Query:
 
 
 class SpecQuery:
-    '''
-    Represents phylogeneticaly specific query.
-    '''
+    """Represents phylogeneticaly specific query.
+
+    attributes:
+    - query: refers to a gene
+    - organisms: organisms from which blast queries should be selected.
+    """
 
     def __init__(self, query, spec_queries, hmm_hits, infile_proteins):
         self.query = query
@@ -101,23 +118,16 @@ class SpecQuery:
         self.organisms = [org.strip(' "\'') for org in spec_queries.split(',')]
 
     def get_specific_query(self):
-        '''
-        This function returns seed blast sequence from selected specific queries(organisms).
+        """This function returns seed blast sequence from selected specific queries(organisms).
         When target gene is not present in the first organism (first in the list) it
         will check next one.
-
-        :return: True if at_least_one organism has a specific query gene and set seed sequences for blast as self.seqs
-        :rtype: bool
-        '''
+        Returns: - True if at_least_one organism has a specific query gene
+         and set seed sequences for blast as self.seqs
+        if gene is present in self.organisms or None"""
         at_least_one = False
         gene_dict = {}
-        db_query = (Sequences
-                 .select(Sequences.header, Sequences.sequence)
-                 .join(Genes)
-                 .where((Genes.name == self.query) & (Sequences.is_paralog == False))
-                 )
-        for q in db_query:
-            gene_dict[q.header] = q.sequence
+        for record in SeqIO.parse(str(Path(dfo, f'orthologs/{self.query}.fas')), 'fasta'):
+            gene_dict[record.name] = str(record.seq)
         for org in self.organisms:
             if org in gene_dict:
                 self.seqs.append(gene_dict[org])
@@ -125,12 +135,8 @@ class SpecQuery:
         return at_least_one
 
     def spec_query_blast(self):
-        '''
-        Blast against sample with sequence selected according to spec queries.
-
-        :return: ordered best blast hits
-        :rtype: list
-        '''
+        """Blast against sample with sequence selected according to spec queries.
+        Returns: list with ordered best blast hits."""
         db = f'{args.output}/tmp/{sample_name}/{os.path.basename(infile)}.blastdb'
         qfile = f'{args.output}/tmp/{sample_name}/{self.query}_collected.fas'
         bout = f'{args.output}/tmp/{sample_name}/{self.query}.blastout'
@@ -149,15 +155,8 @@ class SpecQuery:
         return blast_hits
 
     def hits(self):
-        '''
-        Generator function which return Hit objects prioritized by blast search
-        when some specific query is present or prioritized by hmmsearch
-
-        :return: ordered hits as Hit objects
-        :rtype: generator
-        :yield: Hit objects
-        :rtype: generator
-        '''
+        """Generator function which return Hit objects prioritized by blast search
+        when some specific query is present or prioritized by hmmsearch"""
         spec_query = self.get_specific_query()
         if spec_query:
             blast_hits = self.spec_query_blast()
@@ -174,14 +173,8 @@ class SpecQuery:
                 yield hit
 
 def length_check(trimmed_aln):
-    '''
-    Returns set of names of sequences which have meaningful part (without X or -) longer than 30% of trimmed alignment.
-
-    :param trimmed_aln: path to trimmed alignment file
-    :type trimmed_aln: str
-    :return: sequence names as keys and their length ratio as values
-    :rtype: dict
-    '''
+    """Returns set of names of sequenes which have meaningful part
+    (without X or -) longer than 30% of trimmed alignment."""
     correct_length = {}
     for record in SeqIO.parse(trimmed_aln, 'fasta'):
         if '@' in record.name:
@@ -192,22 +185,15 @@ def length_check(trimmed_aln):
 
 
 def makeblastdb():
-    '''
-    Creates blast database
-    '''
+    """Prepares blast database from sample input file"""
     cmd = f"makeblastdb -in {infile} -out {args.output}/tmp/{sample_name}/{os.path.basename(infile)}.blastdb -dbtype prot"
     run_bash(cmd)
 
 
 def hmmer(query):
-    '''
-    Runs hmmsearch for a given query against input proteins.
+    """Performs hmmsearch with a given gene.
 
-    :param query: name of the query profile
-    :type query: str
-    :return: query name and list of hits found
-    :rtype: tuple
-    '''
+    returns: tuple with (gene_name, list of hmm hits [hmm1, hmm2 ... hmmn]"""
     hmm_prof = str(Path(dfo, f'profiles/{query}.hmm'))
     cmd = f'hmmsearch -E 1e-10 {hmm_prof} {infile} > {args.output}/tmp/{sample_name}/{query}.hmmout'
     run_bash(cmd)
@@ -218,20 +204,9 @@ def hmmer(query):
 
 
 def get_gene_dict(threads, infile_proteins, spec_queries=None):
-    '''
-    This function prepare SpeqQeury or Query for all genes.
+    """This function prepare SpeqQeury or Query for all genes.
     Query type depends if spec_queries are specified in input metadata
-    for a given organism.
-
-    :param threads: number of threads to use for parallel processing
-    :type threads: int
-    :param infile_proteins: path to input proteins
-    :type infile_proteins: str
-    :param spec_queries: specific query, defaults to None
-    :type spec_queries: str, optional
-    :return: gene_dict with Query or SpecQuery objects
-    :rtype: dict
-    '''
+    for a given organism."""
     gene_dict = {}
     with Pool(processes=threads) as pool:
         hmm_pool = list(pool.map(hmmer, profiles))
@@ -249,17 +224,10 @@ def get_gene_dict(threads, infile_proteins, spec_queries=None):
 
 
 def best_hits(max_hits, gene):
-    '''
-    Selects candidates (hits) up to max_hits.
-    Candidates have to be in hmm_hits.
+    """Selects candidates(hits) up to max_hits.
+    Candidates have to be in hmm_hits
 
-    :param max_hits: number of maximum hits to select
-    :type max_hits: int
-    :param gene: gene name
-    :type gene: str
-    :return: tuple with gene name and list with candidates names
-    :rtype: tuple
-    '''
+    returns: tuple with gene name and list with candidates names"""
     candidates = []
     hits = gene.hits()
     counter = 0
@@ -274,12 +242,9 @@ def best_hits(max_hits, gene):
 
 
 def bac_gog_db():
-    '''
-    Parses bacterial names and gene: orthogroup/df from orthomcl
+    """Parses bacterial names and gene: orthogroup/df from orthomcl.
 
-    :return: returns tuple with ls of [bacterial names] and {gene: orthogtoup/df} dir
-    :rtype: tuple
-    '''
+    returns tuple with ls of [bacterial names] and {gene: orthogtoup/df} dir"""
     bac = set()
     for line_ in open(str(Path(dfo, 'orthomcl/bacterial'))):
         bac.add(line_[:-1])
@@ -291,12 +256,9 @@ def bac_gog_db():
 
 
 def get_infile_proteins():
-    '''
-    Parses infile proteins
+    """Parses infile proteins.
 
-    :return: dict with protein names as keys and sequences as values
-    :rtype: dict
-    '''
+    returns: dict {prot_name:seq}"""
     infile_proteins = {}
     for record in SeqIO.parse(infile, 'fasta'):
         infile_proteins[record.id] = str(record.seq)
@@ -304,18 +266,8 @@ def get_infile_proteins():
 
 
 def get_candidates(threads, max_hits, queries):
-    '''
-    pararellized best_hits
-
-    :param threads: number of threads to use for parallel processing
-    :type threads: int
-    :param max_hits: maximum number of hits to select
-    :type max_hits: int
-    :param queries: list of Query or SpecQuery objects
-    :type queries: list
-    :return: list of tuples with gene name and list of candidates
-    :rtype: list
-    '''
+    """pararellized best_hits function
+    return list of tuples (gene:[candidate names],..)"""
     with Pool(processes=threads) as pool:
         func = partial(best_hits, max_hits)
         candidates = list(pool.map(func, queries))
@@ -323,12 +275,9 @@ def get_candidates(threads, max_hits, queries):
 
 
 def get_hmm_profiles():
-    '''
-    Parses gene names
+    """Parses gene names.
 
-    :return: gene names
-    :rtype: list
-    '''
+    Returns: list with gene names"""
     hmm_profiles = []
     for file in os.listdir(str(Path(dfo, 'profiles/'))):
         hmm_profiles.append(file.split('.')[0])
@@ -336,9 +285,7 @@ def get_hmm_profiles():
 
 
 def makedirs():
-    '''
-    Creates output dictionaries tmp and fasta
-    '''
+    """Creates output dictionaries tmp and fasta"""
     directories = [args.output, f'{args.output}/tmp']
     for directory in directories:
         if not os.path.isdir(directory):
@@ -346,16 +293,6 @@ def makedirs():
 
 
 def phylofisher(threads, max_hits, spec_queries=None):
-    '''
-    This function prepares candidates for all genes (according to blast and/or hmmsearch)
-
-    :param threads: number of threads to use for parallel processing
-    :type threads: int
-    :param max_hits: maximum number of hits to select
-    :type max_hits: int
-    :param spec_queries: specific queries from input metadata, defaults to None
-    :type spec_queries: str, optional
-    '''
     infile_proteins = get_infile_proteins()
     if spec_queries:
         # makes blastdb from input proteins
@@ -375,26 +312,22 @@ def phylofisher(threads, max_hits, spec_queries=None):
 
 
 def taxonomy_dict():
-    '''
-    Parses taxonomical group for all organisms from metadata
-
-    :return: dict with organism short name as keys and taxonomical group as values
-    :rtype: dict
-    '''
+    """Parses taxonomical group for all organisms from metadata."""
     tax_g = {}
-    db_query = Metadata.select(Metadata.short_name, Metadata.higher_taxonomy)
-    for q in db_query:
-        tax_g[q.short_name] = Taxonomies.get(Taxonomies.id == q.higher_taxonomy).taxonomy
+    for line_ in open(str(Path(dfo, 'metadata.tsv'))):
+        if 'Full Name' not in line_:
+            sline = line_.split('\t')
+            tax = sline[0].strip()
+            group = sline[2].strip()
+            tax_g[tax] = group
     return tax_g
 
 
 def cluster_rename_sequences():
-    '''
-    Clusters sequences in input fasta file for given organism and rename every sequence with shortname_number
+    """Clusters sequences in input fasta file for given organism
+    and rename every sequence with shortname_number
 
-    :return: abs path to the file with clustered and renamed sequences
-    :rtype: str
-    '''
+    returns: abs path to the file with clustered and renamed sequences"""
     clustered = f'{args.output}/tmp/{sample_name}/clustered.fasta'
     cmd = f'cd-hit -i {fasta_file} -o {clustered} -c 0.98'
     # performs cd-hit
@@ -418,14 +351,7 @@ def cluster_rename_sequences():
 
 
 def is_aa_seq(file):
-    '''
-    Check input gene files to make sure they are amino acid sequences and not nucletotide sequences
-
-    :param file: path to input file
-    :type file: str
-    :return: true or false
-    :rtype: bool
-    '''
+    """check input gene files to make sure they are amino acid sequences and not nucletotide sequences"""
     with open(file, 'r') as infile:
         all_count, atcg_count = 0, 0
         for line in infile:
@@ -443,9 +369,7 @@ def is_aa_seq(file):
 
 
 def check_input():
-    '''
-    Checks input metadata file for possible mistakes.
-    '''
+    """Checks input metadata file for possible mistakes."""
     errors = ''
     taxonomic_groups = set(tax_group.values())
     n = 1
@@ -483,9 +407,7 @@ def check_input():
 
 
 def diamond():
-    '''
-    Executes diamond against orthomcl and datasetdb database
-    '''
+    """executes diamond against orthomcl and datasetdb database"""
     for_diamond = f'{args.output}/tmp/for_diamond.fasta'
 
     db = str(Path(dfo, 'orthomcl/orthomcl.diamonddb'))
@@ -504,16 +426,6 @@ def diamond():
 
 
 def correct_phylo_group(parent, sample_taxomomy):
-    '''
-    Checks if the sample taxonomy is in the same group as the parent node.
-
-    :param parent: parent node in the phylogenetic tree
-    :type parent: ete3.TreeNode
-    :param sample_taxomomy: taxonomy of the sample organism
-    :type sample_taxomomy: str
-    :return: True if sample taxonomy is in the same group as parent node, False otherwise
-    :rtype: bool
-    '''
     groups = set()
     for org in parent.get_leaf_names():
         if org in tax_group:
@@ -526,14 +438,6 @@ def correct_phylo_group(parent, sample_taxomomy):
 
 
 def fasttree(checked_hits):
-    '''
-    Performs phylogenetic analysis using FastTree on the provided hits.
-
-    :param checked_hits: list of Hit objects to analyze
-    :type checked_hits: list
-    :return: list of Hit objects that are phylogenetically significant
-    :rtype: list
-    '''
     full_name = checked_hits[0].name
     org = full_name.split('_')[0]
     gene = full_name.split('@')[1]
@@ -541,13 +445,7 @@ def fasttree(checked_hits):
     aln = f'{args.output}/tmp/{org}/{gene}.aln'
     trim = f'{args.output}/tmp/{org}/{gene}.trimal'
     tree_file = f'{args.output}/tmp/{org}/{gene}.tree'
-    db_query = (Sequences
-             .select(Sequences.header, Sequences.sequence)
-             .join(Genes)
-             .where((Genes.name == gene) & (Sequences.is_paralog == False)))
-    with open(fas, 'w') as f:
-        for q in db_query:
-            f.write(f'>{q.header}\n{q.sequence}\n')
+    copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), f'{args.output}/tmp/{org}/{gene}.fas')
     with open(fas, 'a') as f:
         for hit in checked_hits:
             f.write(f'>{hit.name}\n{hit.seq}\n')
@@ -592,12 +490,10 @@ def fasttree(checked_hits):
 
 
 def parse_diamond_output():
-    '''
-    Checks if best hit from database is not bacterial or from wrong orthogroups
+    """checks if best hit from database is not bacterial or
+    from wrong orthogroups
 
-    :return: names of filtered hits with info about gene
-    :rtype: set
-    '''
+    returns: names of filtered hits with info about gene"""
     correct_hits = set()
     proccesed = set()
     for line in open(f'{args.output}/tmp/orthomcl_diamond.res'):
@@ -615,12 +511,10 @@ def parse_diamond_output():
 
 
 def new_best_hits(candidate_hits):
-    '''
-    Prepares fasta files with result sequences. In case of _SBH path also checks phylogenetic posisiton of hits by fasttree function
+    """Final function. Prepares fasta files with result sequences.
+    In case of _SBH path also checks phylogenetic posisiton of hits
+    by fasttree function"""
 
-    :param candidate_hits: list of Hit objects to analyze
-    :type candidate_hits: list
-    '''
     # if _SBH path: check for phylogenetically best candidates
     top_candidates = []
     if candidate_hits:
@@ -635,13 +529,7 @@ def new_best_hits(candidate_hits):
             gene = top_candidates[0].name.split('@')[1]
             dataset = f'{args.output}/{gene}.fas'
             if not os.path.isfile(dataset):
-                db_query = (Sequences
-                            .select(Sequences.header, Sequences.sequence)
-                            .join(Genes)
-                            .where((Genes.name == gene) & (Sequences.is_paralog == False)))
-                with open(dataset, 'w') as f:
-                    for q in db_query:
-                        f.write(f'>{q.header}\n{q.sequence}\n')
+                copyfile(str(Path(dfo, f'orthologs/{gene}.fas')), dataset)
             n = 0
             for cand in top_candidates:
                 n += 1
@@ -664,20 +552,15 @@ def new_best_hits(candidate_hits):
 
 
 def parallel_new_best_hits(gene_hits):
-    '''
-    Parallel run of new_best_candidates 
-
-    :param gene_hits: list of Hit objects to analyze
-    :type gene_hits: list
-    '''
+    """Just pararallel run of new_best_candidates """
     with Pool(processes=int(args.threads)) as pool:
         pool.map(new_best_hits, gene_hits)
 
 
 def prepare_good_hits():
-    '''
-    Prepares all hits for filtration. It filters everything which is not in correct hits (wrongs orthogroups or bacterial best diamond hit from orthomcl database)
-    '''
+    """Prepares all hits for filtration. It filters everything which is
+    not in correct hits (wrongs orthogroups or bacterial best diamond
+    hit from orthomcl database)"""
     gene_hits = defaultdict(list)
     for record in SeqIO.parse(f'{args.output}/tmp/for_diamond.fasta', 'fasta'):
         if record.name in correct_hits:
@@ -689,12 +572,9 @@ def prepare_good_hits():
 
 
 def get_reciprocal_hits():
-    '''
-    Checks if candidate is reciprocal best blast hit with gene
+    """Checks if candidate is reciprocal best blast hit with gene
 
-    :return: dict with reciprocal hits where keys are sequence names and values are corresponding gene names
-    :rtype: dict
-    '''
+    returns: list with reciprocal hits"""
     reciprocal = {}
     proccesed = set()
     for line in open(f'{args.output}/tmp/dataset_diamond.res'):
@@ -710,9 +590,7 @@ def get_reciprocal_hits():
 
 
 def additions_to_input():
-    '''
-    Appends additional input to original input metadata
-    '''
+    """appends additional input to original input metadata"""
     original_input = config['PATHS']['input_file']
     with open(original_input, 'a') as ori:
         for line in open(args.add):
@@ -766,10 +644,8 @@ if __name__ == '__main__':
     elif args.add_to and not args.add:
         parser.error("--add_to requires --add.")
 
-    # Connect to database
+    # database folder
     dfo = str(Path(config['PATHS']['database_folder']).resolve())
-    database.init(os.path.join(dfo, 'phylofisher.db'))
-    database.connect()
 
     # taxon: group for all orgs in metadata
     tax_group = taxonomy_dict()
@@ -855,6 +731,3 @@ if __name__ == '__main__':
     # when user doesn't want to keep tmp/* files
     if not args.keep_tmp:
         rmtree(f'{args.output}/tmp/')
-
-    # Close connection to database
-    database.close()
