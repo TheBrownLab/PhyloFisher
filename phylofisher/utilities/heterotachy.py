@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import random
+import re
 import string
 import subprocess
 import sys
@@ -28,24 +29,35 @@ def id_generator(size=10, chars=string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def unique_name(keys):
+def unique_name(used):
+    """
+    Generates a temporary ID that has not already been assigned
+    @param used: collection of IDs already in use
+    @return: unique temporary ID
+    """
     id_ = id_generator()
-    if id_ not in keys:
-        return id_
-    else:
-        unique_name(keys)
+    while id_ in used:
+        id_ = id_generator()
+    return id_
 
 
 def fake_phylip(matrix):
-    length = None
+    """
+    Substitutes taxon names in the matrix with temporary IDs so that arbitrary
+    (non-PhyloFisher) taxon names can be handled by strict phylip and dist_est
+    @param matrix: path to input matrix
+    @return: dictionaries mapping original names to IDs and IDs to original names
+    """
     pseudonames = {}
     pseudonames_rev = {}
     records = []
 
     for record in SeqIO.parse(matrix, args.in_format):
-        uname = unique_name(pseudonames)
-        pseudonames[record.name] = uname
-        pseudonames_rev[uname] = record.name
+        if record.id in pseudonames:
+            sys.exit(f'Duplicate taxon name in matrix: {record.id}')
+        uname = unique_name(pseudonames_rev)
+        pseudonames[record.id] = uname
+        pseudonames_rev[uname] = record.id
         seq = str(record.seq)
         records.append(SeqRecord(Seq(seq),
                                  id=uname,
@@ -58,11 +70,41 @@ def fake_phylip(matrix):
 
 
 def fake_tree(treefile, pseudonames):
+    """
+    Substitutes taxon names in the tree with the temporary IDs used in the matrix.
+    Only whole leaf labels are replaced, so names that are substrings of other
+    names, or that look like branch lengths, are handled correctly.
+    @param treefile: path to input tree
+    @param pseudonames: dictionary mapping original names to IDs
+    @return: NONE
+    """
+    with open(treefile) as infile:
+        newick = ''.join(line.strip() for line in infile)
+
+    # Leaf labels follow '(' or ',' and end at ':', ',', ')' or ';'
+    leaf_re = re.compile(r"([(,]\s*)('(?:[^']|'')*'|[^\s:,();]+)")
+    found = set()
+    missing = set()
+
+    def replace(match):
+        label = match.group(2)
+        name = label[1:-1].replace("''", "'") if label.startswith("'") else label
+        if name in pseudonames:
+            found.add(name)
+            return match.group(1) + pseudonames[name]
+        missing.add(name)
+        return match.group(0)
+
+    newick = leaf_re.sub(replace, newick)
+
+    if missing:
+        sys.exit(f'Taxa in tree not found in matrix: {", ".join(sorted(missing))}')
+    not_in_tree = set(pseudonames) - found
+    if not_in_tree:
+        sys.exit(f'Taxa in matrix not found in tree: {", ".join(sorted(not_in_tree))}')
+
     with open('renamed.tre', 'w') as res:
-        original = open(treefile).readline()
-        for key, value in pseudonames.items():
-            original = original.replace(key, value)
-        res.write(original)
+        res.write(newick + '\n')
 
 
 def get_taxa():
@@ -84,7 +126,7 @@ def get_branch_lens():
     Parse input tree and retrieve branch lengths
     @return:
     """
-    tree = Tree('renamed.tre')
+    tree = Tree('renamed.tre', format=1)
     dist_mat = []
     for i, taxon1 in enumerate(taxa):
         dist_mat.append([])
@@ -115,10 +157,10 @@ def prune_tree(speed):
         mylist = list(series.nlargest(size).index)
     else:
         mylist = list(series.nsmallest(size).index)
-    tree = Tree('renamed.tre')
+    tree = Tree('renamed.tre', format=1)
     nodes = [tree & x for x in mylist]
     tree.prune(nodes, preserve_branch_length=True)
-    tree.write(outfile=f'{speed}.tre')
+    tree.write(outfile=f'{speed}.tre', format=5)
 
     return mylist
 
@@ -217,7 +259,7 @@ def site_removal():
                 'nexus': 'nex'}
 
     for i, step in enumerate(range(args.step_size, len(sorted_sites), args.step_size)):
-        with open(f'step{i}.{out_dict[args.in_format]}', 'w') as outfile:
+        with open(f'step{i}.{out_dict.get(args.out_format.lower(), "txt")}', 'w') as outfile:
             records = []
             for name, seq in matrix_dict.items():
                 seq = "".join(seq[sorted_sites[step:]].values)
