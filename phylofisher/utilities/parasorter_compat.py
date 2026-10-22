@@ -2,6 +2,7 @@
 import gzip
 import os
 import re
+import shutil
 import sqlite3
 import sys
 import tarfile
@@ -123,9 +124,74 @@ def forest_name(tip):
     return None
 
 
+def concat_name(unique_id, group_id):
+    '''
+    Names for a concatenation group's merged sequence: (record name in the fisher <gene>.fas,
+    name for the _parsed.tsv).
+
+    Both have three underscores, so apply_to_db.py treats the merged sequence as a new candidate
+    for unique_id; it matches the two on <UniqueID>_<field 2 of the tsv name>, so "merged<N>" has
+    to be unique within the gene and must not look like a fisher quality (q1c, ...).
+    '''
+    return (f'{unique_id}_{group_id}_CONCAT_merged{group_id}',
+            f'{unique_id}_CONCAT_merged{group_id}_NA@{unique_id}')
+
+
+def read_concat_groups(conn, tables):
+    '''
+    Read ParaSorter2's concatenation groups and their merged sequences.
+
+    :return: dictionary of gene -> list of (group_id, member tips in priority order, mode,
+             merged sequence or None if ParaSorter has not saved an up-to-date one)
+    :rtype: dict
+    '''
+    if 'concat_groups' not in tables:
+        return {}
+    members = defaultdict(lambda: defaultdict(list))
+    modes = {}
+    # rowid order is the order ParaSorter wrote each group's tips in, i.e. merge priority
+    for gene, group_id, tip, mode in conn.execute(
+            'SELECT gene_id, group_id, tip, mode FROM concat_groups ORDER BY gene_id, group_id, rowid'):
+        members[gene][group_id].append(tip)
+        modes[(gene, group_id)] = mode
+
+    merged = {}
+    if 'concat_sequences' in tables:
+        for gene, group_id, tips, sequence in conn.execute(
+                'SELECT gene_id, group_id, tips, sequence FROM concat_sequences'):
+            merged[(gene, group_id)] = (tips.split('\n'), sequence)
+
+    groups = defaultdict(list)
+    for gene, gene_groups in members.items():
+        for group_id, tips in sorted(gene_groups.items()):
+            saved_tips, sequence = merged.get((gene, group_id), (None, None))
+            groups[gene].append((group_id, tips, modes[(gene, group_id)],
+                                 sequence if saved_tips == tips else None))
+    return groups
+
+
+def copy_fisher_dir(fisher_dir, fisher_out):
+    '''
+    Copy the top-level files of a fisher.py output directory (the <gene>.fas files apply_to_db.py
+    reads, plus its small tables); tmp/ is not needed by apply_to_db.py and is skipped.
+    '''
+    if not os.path.isdir(fisher_dir):
+        sys.exit(f'{fisher_dir} is not a fisher.py output directory')
+    if os.path.abspath(fisher_dir) == os.path.abspath(fisher_out):
+        sys.exit('--fisher_out must be different from --fisher_dir')
+    os.makedirs(fisher_out, exist_ok=True)
+    for entry in os.scandir(fisher_dir):
+        if entry.is_file():
+            shutil.copy2(entry.path, fisher_out)
+
+
 def to_tsv(args):
     '''
     Export ParaSorter2's saved (Parsed) decisions as <gene>_parsed.tsv files for apply_to_db.py.
+
+    Each concatenation group becomes one new candidate: its merged sequence is appended to the
+    gene's .fas in a copy of the fisher.py output (--fisher_out), tagged with the group's o/p, and
+    its member tips are tagged d.
     '''
     if not os.path.isfile(args.input):
         sys.exit(f'{args.input} does not exist')
@@ -154,45 +220,91 @@ def to_tsv(args):
                 return gzip.decompress(row[0]).decode()
         return ''
 
-    if 'concat_groups' in tables and conn.execute('SELECT 1 FROM concat_groups LIMIT 1').fetchone():
-        print('Warning: this project has concatenation groups; PhyloFisher v1 cannot apply them and '
-              'they are not exported.')
+    concat_groups = read_concat_groups(conn, tables)
+    if concat_groups and not args.fisher_dir:
+        sys.exit('This project has concatenation groups. Re-run with -fi <fisher_dir> so their merged '
+                 'sequences can be added to a copy of the fisher.py output.')
+    fisher_out = args.fisher_out or f'{args.output}/fisher_out'
+    if args.fisher_dir:
+        copy_fisher_dir(args.fisher_dir, fisher_out)
 
     os.makedirs(args.output, exist_ok=True)
+    genes = sorted(set(decisions) | set(concat_groups))
     failed = []
-    for gene in sorted(decisions):
-        rows = decisions[gene]
+    for gene in genes:
+        groups = concat_groups.get(gene, [])
+        grouped_tips = {tip for _, tips, _, _ in groups for tip in tips}
+        # ParaSorter pauses a tip's own o/p/d while it is grouped, but a Parsed save from before it
+        # was grouped can still be there; the group decides what happens to it
+        rows = [row for row in decisions[gene] if row[0] not in grouped_tips]
         problems = []
 
         unrecognized = [tip for tip, _, _ in rows if forest_name(tip) is None]
+        unrecognized += [tip for tip in sorted(grouped_tips) if forest_name(tip) is None]
         if unrecognized:
             problems.append(f'unrecognized tip names: {", ".join(unrecognized)}')
+            failed.append(gene)
+            print(f'Error: {gene} not exported; ' + '; '.join(problems))
+            continue
+
+        out_rows = [(forest_name(tip), tax, mode) for tip, tax, mode in rows]
+        merged_records = []
+        for group_id, tips, mode, sequence in groups:
+            unique_ids = {forest_name(tip).split('@')[-1].split('..')[0] for tip in tips}
+            if len(unique_ids) > 1:
+                problems.append(f'concatenation group {group_id} mixes taxa: {", ".join(sorted(unique_ids))}')
+                continue
+            if not sequence:
+                problems.append(f'no up-to-date merged sequence for concatenation group {group_id} '
+                                f'(open {gene} in ParaSorter to save it; the gene needs an untrimmed .aln '
+                                f'alignment containing every member)')
+                continue
+            unique_id = unique_ids.pop()
+            for tip in tips:
+                if '..' in tip:
+                    print(f'Warning: {gene}: {tip} is a database paralog in concatenation group {group_id}; '
+                          f'apply_to_db.py cannot remove paralogs, so it will stay in the database too')
+                out_rows.append((forest_name(tip), '', 'd'))
+            record_name, tsv_name = concat_name(unique_id, group_id)
+            out_rows.append((tsv_name, '', mode))
+            merged_records.append((record_name, sequence))
 
         # apply_to_db.py keeps only one ortholog per Unique ID, so more than one would silently drop data
-        ortholog_ids = Counter(forest_name(tip).split('@')[-1].split('..')[0]
-                               for tip, _, mode in rows if mode == 'o' and forest_name(tip))
+        ortholog_ids = Counter(name.split('@')[-1].split('..')[0] for name, _, mode in out_rows if mode == 'o')
         duplicated = sorted(uid for uid, count in ortholog_ids.items() if count > 1)
         if duplicated:
             problems.append(f'more than one ortholog for: {", ".join(duplicated)}')
+
+        fas_path = f'{fisher_out}/{gene}.fas'
+        if merged_records and not os.path.isfile(fas_path):
+            problems.append(f'{gene}.fas not found in {args.fisher_dir}')
 
         if problems:
             failed.append(gene)
             print(f'Error: {gene} not exported; ' + '; '.join(problems))
             continue
 
-        untagged = tree_tips(tree_text(gene)) - {tip for tip, _, _ in rows}
+        untagged = tree_tips(tree_text(gene)) - {tip for tip, _, _ in rows} - grouped_tips
         if untagged:
             print(f'Warning: {gene} has {len(untagged)} untagged tips, which apply_to_db.py will leave '
                   f'unchanged: {", ".join(sorted(untagged))}')
 
+        if merged_records:
+            with open(fas_path, 'a') as outfile:
+                for record_name, sequence in merged_records:
+                    outfile.write(f'>{record_name}\n{sequence}\n')
+
         with open(f'{args.output}/{gene}_parsed.tsv', 'w') as outfile:
-            for tip, tax, mode in rows:
-                outfile.write(f'{forest_name(tip)}\t{tax}\t{mode}\n')
+            for name, tax, mode in out_rows:
+                outfile.write(f'{name}\t{tax}\t{mode}\n')
 
     conn.close()
 
-    not_reviewed = sorted(all_genes - set(decisions))
-    print(f'Exported {len(decisions) - len(failed)} reviewed genes to {args.output}')
+    not_reviewed = sorted(all_genes - set(genes))
+    print(f'Exported {len(genes) - len(failed)} reviewed genes to {args.output}')
+    if args.fisher_dir:
+        print(f'Wrote fisher.py output with merged sequences to {fisher_out}; '
+              f'run apply_to_db.py -i {args.output} -fi {fisher_out}')
     if not_reviewed:
         print(f'{len(not_reviewed)} genes have no saved (Parsed) decisions and were skipped')
     if failed:
@@ -206,9 +318,11 @@ if __name__ == '__main__':
         to_sqlite: package sgt_constructor.py output into a ParaSorter2 project database
                    (<sgt_constructor_out>-local.sqlite).
         to_tsv:    export the decisions saved in ParaSorter2 as <gene>_parsed.tsv files,
-                   ready for apply_to_db.py -i <out_dir>.''')
+                   ready for apply_to_db.py -i <out_dir>. With -fi, also writes a copy of the
+                   fisher.py output with concatenation groups' merged sequences added, for
+                   apply_to_db.py -fi.''')
     usage = ('parasorter_compat.py to_sqlite -i <sgt_constructor_out-local.tar.gz> [OPTIONS]\n'
-             '       parasorter_compat.py to_tsv -i <project.sqlite> [OPTIONS]')
+             '       parasorter_compat.py to_tsv -i <project.sqlite> [-fi <fisher_dir>] [OPTIONS]')
 
     mode = sys.argv.pop(1) if len(sys.argv) > 1 and sys.argv[1] in ('to_sqlite', 'to_tsv') else None
     name = f'parasorter_compat.py {mode}' if mode else 'parasorter_compat.py'
@@ -229,6 +343,17 @@ if __name__ == '__main__':
                               help=textwrap.dedent("""\
                               Directory to write <gene>_parsed.tsv files to.
                               Default: ./parasorter_out_<M.D.Y>
+                              """))
+        optional.add_argument('-fi', '--fisher_dir', type=str, metavar='<fisher_dir>', default=None,
+                              help=textwrap.dedent("""\
+                              Path to the fisher.py output directory the project was built from.
+                              Required if the project has concatenation groups.
+                              """))
+        optional.add_argument('-fo', '--fisher_out', type=str, metavar='<fisher_out>', default=None,
+                              help=textwrap.dedent("""\
+                              Where to write the copy of <fisher_dir> with merged sequences added,
+                              to give to apply_to_db.py -fi.
+                              Default: <out_dir>/fisher_out
                               """))
         in_help = 'Path to the ParaSorter2 project database (.sqlite)'
     else:
