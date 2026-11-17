@@ -669,7 +669,7 @@ if __name__ == '__main__':
     if not args.backpropagate:
         os.mkdir(output_folder)
 
-    trees = glob.glob(f"{trees_folder}/*.raxml.support")
+    trees = glob.glob(f"{trees_folder}/*.treefile") + glob.glob(f"{trees_folder}/*.raxml.support")
     trees = [os.path.normpath(path).replace('\\', '/') for path in trees]
 
     number_of_genes = len(trees)
